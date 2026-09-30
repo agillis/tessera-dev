@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# A branch for the upstream project: the change alone, on top of upstream/main, without this fork's own name.
-# fork/README.md is the whole procedure.
+# A branch for the upstream project: the change alone, on top of upstream/main, without this project's own name.
+# upstream/README.md is the whole procedure.
 #
-#   fork/pr.sh <branch> <commit>...    a new branch off upstream/main with those commits cherry-picked
-#   fork/pr.sh --dry-run <branch> ...  only say what it would do
+#   upstream/pr.sh <branch> <commit>...    a new branch off upstream/main with those commits cherry-picked
+#   upstream/pr.sh --dry-run <branch> ...  only say what it would do
 #
 # The branch starts at upstream/main, not at this fork's main, so the pull request holds the change and nothing else:
 # no Tessera Dev name, no commits of yours that are not ready. Nothing is pushed; the commands to push and to open the
@@ -27,7 +27,7 @@ commits=("$@")
 git show-ref --quiet --verify "refs/heads/$branch" && { echo "The branch $branch already exists." >&2; exit 1; }
 [[ -n $(git status --porcelain) ]] && { echo "Commit or stash your changes first." >&2; git status --short >&2; exit 1; }
 
-git remote get-url upstream >/dev/null 2>&1 || { echo "No upstream remote yet: run fork/sync.sh --fetch once." >&2; exit 1; }
+git remote get-url upstream >/dev/null 2>&1 || { echo "No upstream remote yet: run upstream/sync.sh --fetch once." >&2; exit 1; }
 git fetch upstream
 
 echo "Commits to take over, oldest first:"
@@ -42,10 +42,10 @@ git cherry-pick "${commits[@]}"
 
 # The fork's own name must not ride along. It normally cannot, because it lives in a commit of its own that is not
 # cherry-picked here, but a squashed or amended commit can carry it.
-if python3 fork/brand.py --check >/dev/null 2>&1; then
+if python3 upstream/brand.py --check >/dev/null 2>&1; then
   echo >&2
   echo "This branch carries the Tessera Dev name, which must not go upstream." >&2
-  echo "Run: python3 fork/brand.py --remove && git commit --amend --all --no-edit" >&2
+  echo "Run: python3 upstream/brand.py --remove && git commit --amend --all --no-edit" >&2
   exit 1
 fi
 

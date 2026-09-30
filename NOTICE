@@ -1,7 +1,9 @@
 Tessera Dev
-A fork of ESP Screens (Tessera), https://github.com/MaxGramser/homeassistant_espscreen, which it is derived from and
-which holds the copyright below. This fork runs as a project of its own: its add-on is named Tessera Dev and its
-screens build their firmware from this repository (fork/README.md).
+https://github.com/agillis/tessera-dev
+
+A project of its own, derived under the MIT License from ESP Screens (Tessera),
+https://github.com/MaxGramser/homeassistant_espscreen, which holds the copyright below. Its add-on is named
+Tessera Dev and its screens build their firmware from this repository (upstream/README.md).
 
 ESP Screens (Tessera)
 Copyright (c) 2026 Max Gramser. Licensed under the MIT License (see LICENSE).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""This fork's own identity: Tessera Dev, a project of its own that runs entirely from this repository.
+"""Tessera Dev's own identity: what tells this project apart from the one it came from.
 
 Two kinds of change live here, and neither may ever go upstream:
 
@@ -10,13 +10,13 @@ Two kinds of change live here, and neither may ever go upstream:
   repository the docs tell people to add to Home Assistant, and the website the feedback card would post to, which is
   the upstream project's and must not receive this fork's installations.
 
-    python3 fork/brand.py            make this checkout Tessera Dev
-    python3 fork/brand.py --check    say whether it is (exit 1 when it is not, for a hook or CI)
-    python3 fork/brand.py --remove   put upstream's identity back, for a branch that goes upstream
+    python3 upstream/brand.py            make this checkout Tessera Dev
+    python3 upstream/brand.py --check    say whether it is (exit 1 when it is not, for a hook or CI)
+    python3 upstream/brand.py --remove   put upstream's identity back, for a branch that goes upstream
 
 Both directions are the same tables read the other way, so this is safe to run twice and after a rebase: it says what
 it changed and leaves alone what is already the way it wants it. packages/<board>.yaml is not edited here: it is
-generated from core.REPO, so this runs tools/generate_entries.py afterwards. fork/README.md is the whole procedure.
+generated from core.REPO, so this runs tools/generate_entries.py afterwards. upstream/README.md is the whole procedure.
 """
 import argparse
 from pathlib import Path
@@ -26,7 +26,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 
 UPSTREAM_SLUG = 'MaxGramser/homeassistant_espscreen'
-FORK_SLUG = 'agillis/tessera'
+FORK_SLUG = 'agillis/tessera-dev'
 
 # (file, what upstream says, what this fork says). The text has to be unique in the file: an exact swap keeps the rest
 # of the line, and the comments and the order of the YAML, as they are.
@@ -39,7 +39,7 @@ BRANDING = [
     ('screen_manager/config.yaml', 'panel_title: Tessera\n', 'panel_title: Tessera Dev\n'),
     ('screen_manager/config.yaml',
      'description: "Tessera: touch screens for Home Assistant.',
-     'description: "Tessera Dev, a development fork: touch screens for Home Assistant.'),
+     'description: "Tessera Dev: touch screens for Home Assistant.'),
     # The screens build their firmware from this repository, so a firmware change here reaches them once it is pushed.
     ('screen_manager/app/core.py', f"REPO = 'https://github.com/{UPSTREAM_SLUG}'",
      f"REPO = 'https://github.com/{FORK_SLUG}'"),
@@ -100,7 +100,7 @@ def check():
             left.append(f'{name}: {source.strip()[:70]}')
     for line in left:
         print(f'still upstream: {line}')
-    print('branded as Tessera Dev' if not left else 'run python3 fork/brand.py')
+    print('branded as Tessera Dev' if not left else 'run python3 upstream/brand.py')
     return 1 if left else 0
 
 

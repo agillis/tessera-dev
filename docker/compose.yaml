@@ -1,5 +1,5 @@
 # ESP Screen Manager for Home Assistant Container (Docker), without the Supervisor.
-# Guide: https://github.com/agillis/tessera/blob/main/docs/DOCKER.md
+# Guide: https://github.com/agillis/tessera-dev/blob/main/docs/DOCKER.md
 #
 # Next to this file, create `ha_token` with a long-lived access token, then:
 #   docker compose up -d
@@ -10,8 +10,8 @@ services:
     # The same image as the Home Assistant app, built by GitHub from the main branch. To stay on one version, use
     # its number instead of latest, such as :0.3.22. To build it yourself instead (needs git), replace this line with:
     #   build:
-    #     context: https://github.com/agillis/tessera.git#main:screen_manager
-    image: ghcr.io/agillis/tessera:latest
+    #     context: https://github.com/agillis/tessera-dev.git#main:screen_manager
+    image: ghcr.io/agillis/tessera-dev:latest
     restart: unless-stopped
     # A small init as process 1, like the Home Assistant app gets: it passes on docker stop and reaps finished builds.
     init: true

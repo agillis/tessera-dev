@@ -6,7 +6,7 @@
 # of that lives here. The screen is two packages: core.yaml, which every board shares, and boards/hosyond40.yaml with this
 # board's hardware and sizes (docs/PROFILES.md). checkout/hosyond40.yaml builds the same two from a checkout.
 substitutions:
-  FONT_DIR: "https://raw.githubusercontent.com/agillis/tessera/main/fonts"
+  FONT_DIR: "https://raw.githubusercontent.com/agillis/tessera-dev/main/fonts"
 
 packages:
   core: !include core.yaml
@@ -15,7 +15,7 @@ packages:
 external_components:
   - source:
       type: git
-      url: https://github.com/agillis/tessera.git
+      url: https://github.com/agillis/tessera-dev.git
       ref: main
       path: components
     refresh: 0s

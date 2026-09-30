@@ -349,7 +349,7 @@ For Home Assistant Container (Docker) without the App store, follow [Install wit
 For Home Assistant OS with Apps/Add-ons on **aarch64 or amd64**:
 
 1. Open the App store and add this repository:
-   `https://github.com/agillis/tessera`.
+   `https://github.com/agillis/tessera-dev`.
 2. Install **ESP Screen Manager**, start the app, and open **ESP Screens**.
    ESPHome Device Builder is optional: the ESPHome CLI is already in this app.
 3. Connect the screen with a USB data cable to the **Home Assistant machine**
