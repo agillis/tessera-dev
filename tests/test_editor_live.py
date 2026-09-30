@@ -470,12 +470,14 @@ class Editor(unittest.TestCase):
     def test_full_page_and_navigation_tiles_are_in_the_editor(self):
         import editor_sources
         layout = editor_sources.source('model/layout.ts')
-        for marker in ('export const SIZES: Size[] = ["single", "wide", "tall", "square", "full"];', 'export const pageTarget', 'versionAtLeast(firmware, "0.2.62") ? grid.maxSlots'):
+        for marker in ('export const SIZES: Size[] = [...NAMED_SIZES];', 'export const pageTarget', 'versionAtLeast(firmware, "0.18.0")) return Math.min(FIRMWARE_MAX_TILES, grid.maxSlots)'):
             self.assertIn(marker, layout, marker)
         drawer = editor_sources.component('TileInspector')
-        for marker in ('tileSizeChoices(props.tile)', 't("editor.tile.goes_to.label")', 'retargetPageTile(tile, Number(v))'):
+        for marker in ("t('editor.tile.goes_to.label')", 'retargetPageTile(tile, Number(v))'):
             self.assertIn(marker, drawer, marker)
-        self.assertEqual((editor_sources.text('tile.size.full'), editor_sources.text('tile.goes_to.label')), ('Full page', 'Goes to page'))
+        # A tile's size, the whole page too, is set with its handles on the tile itself (app 0.4.32).
+        self.assertIn('resizeChoices(', editor_sources.source('store.ts'))
+        self.assertEqual(editor_sources.text('tile.goes_to.label'), 'Goes to page')
         self.assertIn(':class="{ wide, full, tall,', editor_sources.component('TileCard'))
         self.assertIn('"timer", "screen",', editor_sources.component('Library'))
         self.assertEqual(editor_sources.text('library.filters.screen'), 'Screen')

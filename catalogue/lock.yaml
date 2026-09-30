@@ -1,0 +1,9 @@
+# Lock. Home Assistant: homeassistant/components/lock.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: lock
+firmware: 0.5.0   # the first firmware that draws this type
+displays:
+  standard: {}
+  watch: {}
+guards: [confirm, lock_only]

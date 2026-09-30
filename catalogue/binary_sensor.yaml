@@ -1,0 +1,7 @@
+# Binary sensor. Home Assistant: homeassistant/components/binary_sensor.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: binary_sensor
+displays:
+  standard: {}
+  watch: {}

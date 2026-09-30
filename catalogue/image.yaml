@@ -1,0 +1,15 @@
+# Image. Home Assistant: homeassistant/components/image.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: image
+firmware: 0.2.57   # the first firmware that draws this type
+displays:
+  standard: {}
+  live:
+    screen: {pictures: true, firmware: 0.2.77}
+key: false
+# How a live picture sits on its tile: filling it or whole, with the name over it or nothing, and how often it is new.
+picture:
+  fit: [fill, contain]
+  overlay: [name, none]
+  refresh: [5, 10, 15, 30]

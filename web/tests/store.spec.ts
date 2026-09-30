@@ -173,6 +173,20 @@ describe("live values", () => {
       expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith("firmware-preview/import"))).toHaveLength(1);
     } else expect(stored.page_document).toBeUndefined();
   });
+  it("leaves out a stored preview screen it cannot read, says so, and loads the rest (app 0.4.32)", async () => {
+    const good = createVirtualScreen("Good preview", customPreview);
+    const stored = JSON.parse(localStorage.getItem("esp-screens.virtual-screens")!);
+    const broken = { ...structuredClone(stored[0]), id: "virtual.broken", name: "Broken preview" };
+    broken.page_document.layout.pages[0].tiles = [{ id: "a".repeat(16), content: { kind: "entity", entityId: "light.b" },
+      placement: { row: 0, column: 0, columns: 9, rows: 9 }, appearance: { label: "" }, interaction: {} }];
+    localStorage.setItem("esp-screens.virtual-screens", JSON.stringify([...stored, broken, { nonsense: true }]));
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ screens: [] }), { status: 200 })));
+    await refresh(false);
+    await new Promise((done) => setTimeout(done, 0));
+    expect(state.inventory.screens.map((screen) => screen.id)).toContain(good.id);
+    expect(state.inventory.screens.map((screen) => screen.id)).not.toContain("virtual.broken");
+    expect(state.toast?.message).toContain("Broken preview");
+  });
   it("keeps the virtual screen and catalogue through a light inventory poll", async () => {
     const virtual = createVirtualScreen("Panel preview", customPreview);
     const entities = state.inventory.entities;
@@ -601,7 +615,7 @@ describe("the mockup of a screen, whichever way it hangs", () => {
   });
   it("gives a page the screen's own proportions and its own cells", () => {
     shaped({ width: 480, height: 800, columns: 1, rows: 4, look: "standard" });
-    expect(deviceStyle.value).toEqual({
+    expect(deviceStyle.value).toMatchObject({
       "--screen-aspect": "480 / 800", "--screen-columns": "1", "--screen-rows": "4",
       // One column: a wide tile is that one cell, not two.
       "--screen-wide-span": "1", "--mockup-width": "300px",
@@ -613,6 +627,15 @@ describe("the mockup of a screen, whichever way it hangs", () => {
     // Glass wider than the cap is drawn shorter rather than wider, so a page still fits beside its neighbour.
     shaped({ width: 1920, height: 480, columns: 4, rows: 2, look: "standard" });
     expect(px(deviceStyle.value)).toBe(560);
+  });
+  it("draws a card's -/+ pill at the size the screen does, from the board's density, look and faces", () => {
+    // The Guition: 480 glass pixels drawn 300 wide, so 0.625 an editor pixel each. Its pill is px(46) + 2 = 48 high,
+    // its keys 48 - 2 x 4, and its number face 38 (runtime_tiles panel_metrics, stepper_keys; boards.json fonts).
+    shaped({ width: 480, height: 480, columns: 2, rows: 3, look: "standard", dpi: 170, fonts: { watch_value: 38, sublabel_big: 21, sublabel: 16 } } as any);
+    expect(deviceStyle.value).toMatchObject({ "--pill-h": "30.00px", "--pill-in": "2.50px", "--pill-key": "25.00px", "--face-watch": "23.75px", "--face-text": "13.13px" });
+    // The CYD's compact look: px(34) + 2 = 36 high at 143 dpi, keys 36 - 2 x 3, face 22; 320 glass pixels drawn 400 wide.
+    shaped({ width: 320, height: 240, columns: 2, rows: 3, look: "compact", dpi: 143, fonts: { watch_value: 22, sublabel_big: 14, sublabel: 11 } } as any);
+    expect(deviceStyle.value).toMatchObject({ "--pill-h": "45.00px", "--pill-key": "37.50px", "--face-watch": "27.50px" });
   });
   it("keeps a board's look when it is built standing up", () => {
     // The board says which look it is, and that is what counts. Without it the shorter side decides, because the

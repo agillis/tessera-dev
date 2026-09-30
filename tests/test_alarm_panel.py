@@ -3,7 +3,7 @@ dialog. tests/test_alarm_panel.cpp checks the logic and the layouts of component
 keep the firmware, the app and the editor in step with each other and with Home Assistant (its 2026.9 frontend and
 core), and hold the rules that keep a code private.
 """
-from firmware_sources import runtime_source
+from firmware_sources import firmware_domains, runtime_source
 import re
 import sys
 import unittest
@@ -103,7 +103,7 @@ class TheApp(unittest.TestCase):
     def test_an_alarm_panel_is_a_tile(self):
         self.assertIn('alarm_control_panel', core.DOMAINS)
         self.assertNotIn('alarm_control_panel', core.HEADER_ONLY_DOMAINS)
-        self.assertIn('"alarm_control_panel", "lock"})', MODEL)
+        self.assertIn('alarm_control_panel', firmware_domains())
         self.assertTrue(core.entity_id('alarm_control_panel.house'))
 
     def test_the_card_gets_its_attributes(self):

@@ -1,0 +1,10 @@
+# Vacuum. Home Assistant: homeassistant/components/vacuum.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: vacuum
+displays:
+  standard: {}
+  watch: {}
+controls:
+  buttons:
+    needs: {actions: [vacuum.start, vacuum.pause, vacuum.stop, vacuum.return_to_base]}

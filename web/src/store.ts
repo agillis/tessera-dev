@@ -1,10 +1,12 @@
 // One reactive state for the whole editor. The Python API (server.py) is unchanged: this file is the
 // former app.js state and its calls, with the DOM work moved into the components.
 import { computed, reactive, toRaw, watch } from "vue";
+import { isTallSize, sizeColumns, spanOf, spanOffered } from "./model/sizes";
 import { api, getJson, send, setCsrf } from "./api";
 import { andList, editorLanguage, languageMeta, loadLanguage, type NumberMarks, pickLanguage, STYLE_MARKS, t } from "./i18n";
 import { entriesOf, effectiveControls, isFull, isWide, newTile, pageOrder, pagePlaces, pageTarget, reorderTitles, retargetedPage, sizeOf, supportsFirmware as supportsVersion } from "./model/layout";
 import { agoText, barMetricsFor, clockText, dateText, itemKey, type ItemView, whenBarFontsLoad } from "./model/topbar";
+import { pillMetrics, uiScale } from "./model/ui-scale";
 import { createLayout, dimensions, type Size, versionAtLeast } from "./model/layout";
 import { validPreviewShape, type PreviewProfile } from "./model/preview";
 import renderer from "./wasm/renderer.json";
@@ -30,7 +32,7 @@ export type Inspector =
 export type PageDrag = { from: number; to: number; order: number[] };
 // `key`: the key place under a bedside clock the pointer is on (app 0.4.12), where a drop puts the tile.
 export type DragState = { active: boolean; moving: Tile | null; preview: { tile: Tile; slot: number }[] | null; page: PageDrag | null;
-  key?: { holder: string; key: number } | null };
+  key?: { holder: string; key: number } | null; refused?: number | null };
 // What Home Assistant reports for an entity right now: the state, its word and the attributes a card shows.
 export type Live = { state: string; word?: string | null; a: Record<string, any> };
 
@@ -68,6 +70,10 @@ export const state = reactive({
   insertKey: null as null | { holder: string; key: number },
   filter: "",
   search: "",
+  // The library drawer along the bottom (app 0.4.32): open or folded, remembered in this browser.
+  libraryOpen: (() => { try { return localStorage.getItem("esp-screens.library-open") !== "0"; } catch { return true; } })(),
+  // A choice the pointer rests on in the inspector, drawn on its tile before it is picked (app 0.4.32).
+  optionPreview: null as null | { tileId: string; key: string; value: unknown },
   capabilities: {} as Record<string, Capability | null>,
   entityActions: {} as Record<string, EntityAction[] | null | undefined>,
   // Per entity, the values its second line may say: Home Assistant's own named attributes (app 0.2.105).
@@ -102,15 +108,36 @@ export const state = reactive({
 const renderedLayout = computed<Layout | null>(() => state.document && state.documentGrid
   ? pages.projectLayout(state.document, state.documentGrid) : null);
 const VIRTUAL_SCREENS_KEY = "esp-screens.virtual-screens";
-function virtualScreens(): Screen[] {
+// What a preview screen's firmware says it takes, as a screen of that grid says it (the five names and its spans).
+function previewTileSizes(shape: { columns: number; rows: number }): string[] {
+  const sizes = ['single', 'wide', 'full', 'tall', 'square'];
+  for (let columns = 1; columns <= shape.columns; columns++)
+    for (let rows = 1; rows <= shape.rows; rows++) if (spanOffered(columns, rows, shape)) sizes.push(`${columns}x${rows}`);
+  return sizes;
+}
+// Preview screens live in this browser's storage, written by an older app too. Each one is checked on its own (app
+// 0.4.32): one that no longer reads, or whose pages this app refuses, is left out with a word about it, and never
+// keeps the editor or the other preview screens from loading.
+let previewsSkipped = "";
+function usablePreview(s: any): boolean {
   try {
-    const value = JSON.parse(localStorage.getItem(VIRTUAL_SCREENS_KEY) || "[]");
-    if (!Array.isArray(value)) return [];
-    return value.filter((s) => s?.virtual && typeof s.id === "string" && s.id.startsWith("virtual.")
-      && s.shape && validPreviewShape(s.shape) && Array.isArray(s.layout?.tiles))
-      .map((s) => ({ ...s, firmware: renderer.firmware, firmware_known: renderer.firmware,
-        tile_sizes: ['single', 'wide', 'full', 'tall', 'square'], page_capability: 'ready' }));
-  } catch { return []; }
+    if (!(s?.virtual && typeof s.id === "string" && s.id.startsWith("virtual.") && s.shape && validPreviewShape(s.shape) && Array.isArray(s.layout?.tiles))) return false;
+    const document = s.page_document;
+    if (document?.format === "pages-v2") pages.validatePages(document.layout, document.sourceGrid);
+    return true;
+  } catch { return false; }
+}
+function virtualScreens(): Screen[] {
+  let value: any[];
+  try {
+    const stored = JSON.parse(localStorage.getItem(VIRTUAL_SCREENS_KEY) || "[]");
+    value = Array.isArray(stored) ? stored : [];
+  } catch { value = []; }
+  const usable = value.filter(usablePreview);
+  const skipped = value.filter((s) => !usable.includes(s)).map((s) => (typeof s?.name === "string" && s.name) || "?").join(", ");
+  if (skipped && skipped !== previewsSkipped) { previewsSkipped = skipped; setTimeout(() => toast(t("editor.preview.skipped", { names: skipped })), 0); }
+  return usable.map((s) => ({ ...s, firmware: renderer.firmware, firmware_known: renderer.firmware,
+    tile_sizes: previewTileSizes(s.shape), page_capability: 'ready' }));
 }
 function persistVirtualScreens(screens = state.inventory.screens) {
   localStorage.setItem(VIRTUAL_SCREENS_KEY, JSON.stringify(screens.filter((s) => s.virtual)));
@@ -140,9 +167,9 @@ export function createVirtualScreen(name: string, profile: PreviewProfile) {
   const screen: Screen = {
     id, name: name.trim(), online: false, virtual: true, board, orientation,
     firmware: renderer.firmware, firmware_known: renderer.firmware, tile_limit: 64, full_page: true,
-    page_tiles_repeat: true, entity_tiles_repeat: true, in_sync: true, shape, layout: { title: name.trim(), tiles: [], pages: 1 },
+    page_tiles_repeat: true, entity_tiles_repeat: true, no_title: true, climate_range: true, in_sync: true, shape, layout: { title: name.trim(), tiles: [], pages: 1 },
     source_grid: sourceGrid, page_document: document, page_capability: 'ready',
-    tile_sizes: ['single', 'wide', 'full', 'tall', 'square'],
+    tile_sizes: previewTileSizes(shape),
   };
   persistVirtualScreens([...state.inventory.screens, screen]);
   state.inventory.screens.push(screen);
@@ -177,6 +204,11 @@ export const entityTilesRepeat = computed(() => {
   const repeat = currentScreen.value?.entity_tiles_repeat;
   return typeof repeat === "boolean" ? repeat : supports(0, 16, 0);
 });
+// A screen without a title, its top bar showing the home key alone (firmware 0.17.0).
+export const noTitle = computed(() => {
+  const allowed = currentScreen.value?.no_title;
+  return typeof allowed === "boolean" ? allowed : supports(0, 17, 0);
+});
 export const repeatable = (id: string) => pageTarget(id) > 0 ? pageTilesRepeat.value : entityTilesRepeat.value && !(id in pageRules.keyHolders);
 // Whether the screen's board draws pictures (camera tiles, an album cover): the add-on says so per screen from the
 // board's own camera sizes (app 0.2.94), and this page always comes with that add-on.
@@ -203,7 +235,19 @@ export const deviceStyle = computed(() => {
   // the mockup a pixel taller than the rest. Every board lying down lands on a whole number anyway.
   const width = shape.width >= shape.height ? Math.min(560, (MOCKUP_SIDE * shape.width) / shape.height) : MOCKUP_SIDE;
   const rounded = Math.round(width * 10) / 10;
+  // The glass in editor pixels, and the -/+ pill at the size the screen draws it (model/ui-scale.ts).
+  const glass = rounded / shape.width, pill = pillMetrics(shape);
+  const [watch, text] = [pill.faces[0] ?? 22, pill.faces[1] ?? pill.faces[0] ?? 14];
   return {
+    "--glass": String(glass),
+    "--pill-h": `${(pill.height * glass).toFixed(2)}px`,
+    "--pill-in": `${(pill.inset * glass).toFixed(2)}px`,
+    "--pill-key": `${(pill.key * glass).toFixed(2)}px`,
+    "--face-watch": `${(watch * glass).toFixed(2)}px`,
+    "--face-text": `${(text * glass).toFixed(2)}px`,
+    // A range's chip (runtime_tiles range_chip): its icon is a key's icon, beside the number with the glass's gap.
+    "--chip-icon": `${((("fonts" in shape ? shape.fonts?.icon_mini : undefined) ?? (uiScale(shape).large ? 26 : 18)) * glass).toFixed(2)}px`,
+    "--chip-pad": `${(uiScale(shape).px(6) * glass).toFixed(2)}px`,
     "--screen-aspect": `${shape.width} / ${shape.height}`,
     "--screen-columns": String(state.documentGrid?.columns ?? shape.columns),
     "--screen-rows": String(state.documentGrid?.rows ?? shape.rows),
@@ -229,12 +273,19 @@ export const roomyNames = computed(() => {
   const cell = (shape.width - 18 - (columns - 1) * 8) / columns - 2 * pad - 2;
   return cell >= Math.floor((shape.dpi * 30 + 12) / 25);
 });
-export const editorLayout = createLayout(() => state.documentGrid ?? screenShape.value);
+export const editorLayout = createLayout(() => state.documentGrid ?? screenShape.value, () => currentScreen.value?.page_limit);
 export const grid = editorLayout.grid;
 const { arrange, cellsOf, firstFree, fits, nearestFree, normalize, occupied, pageCount, pageOf, reorderPages, rowStart, startOf, strandedPages, tileLimit: limitFor } = editorLayout;
 export const currentTile = computed<Tile | undefined>(() => state.selectedTile?.id
   ? state.layout?.tiles.find((tile) => tile.id === state.selectedTile!.id) : undefined);
 export const isSelected = (tile: Tile) => Boolean(tile.id) && state.selectedTile?.id === tile.id;
+// The tile as the mockup draws it: with the choice the pointer rests on in the inspector, when that is this tile's.
+export function previewed(tile: Tile): Tile {
+  const hover = state.optionPreview;
+  // Only while that tile's own settings are open and nothing is being dragged: the drawn copy never reaches an edit.
+  if (!hover || !tile.id || hover.tileId !== tile.id || state.selectedTile?.id !== tile.id || state.drag.active) return tile;
+  return { ...tile, options: { ...(tile.options || {}), [hover.key]: hover.value } } as Tile;
+}
 const currentView = (tile: Tile, layout = state.layout) => tile.id ? layout?.tiles.find((item) => item.id === tile.id) : tile;
 export const pageReady = computed(() => currentScreen.value?.page_capability === "ready" ||
   (currentScreen.value?.page_capability === "offline" && currentScreen.value?.page_last_capability === "ready"));
@@ -524,7 +575,9 @@ function applyDocument(next: PageLayout, remember = true, nextGrid = state.docum
   if (state.editorMode === "advanced" || Object.keys(positions).length) initializeWorkspace();
   if (state.selectedPageId && !ids.has(state.selectedPageId)) state.selectedPageId = next.homePageId;
   if (state.focusedPageId && !ids.has(state.focusedPageId)) state.focusedPageId = null;
-  if (state.selectedTile?.id && !next.pages.some((page) => page.tiles.some((tile) => tile.id === state.selectedTile!.id))) closeInspector();
+  // A key under a bedside clock is a child of its clock: a change to it keeps it open like any tile.
+  if (state.selectedTile?.id && !next.pages.some((page) => page.tiles.some((tile) => tile.id === state.selectedTile!.id
+    || tile.children?.some((child) => child.id === state.selectedTile!.id)))) closeInspector();
   markDirty();
   loadTopbarPreview();
   return true;
@@ -635,7 +688,7 @@ export function commitArrangement(result: { tile: Tile; slot: number }[], field?
     // page, in the same undo operation as its navigation tile.
     const draft = pages.clone(state.document);
     const count = Math.max(draft.pages.length, ...result.filter(({ tile }) => !tile.id).map(({ tile }) => pageTarget(tile.entity)));
-    if (count > pages.pageLimit(state.documentGrid)) throw new Error(t("addon.errors.pages.pages_full"));
+    if (count > editorLayout.grid.pages) throw new Error(t("addon.errors.pages.pages_full"));
     while (draft.pages.length < count) draft.pages.push(pages.emptyPage(draft.pages.at(-1)!.topbar));
     const arranged = pages.arrangeTiles(draft, state.documentGrid, result);
     const existing = new Set(state.document.pages.map(page => page.id));
@@ -811,10 +864,19 @@ export function pagesShown() {
 export const tallerTilesEnabled = computed(() => state.inventory.editor_features?.tall_tiles === true);
 export function tileSizeChoices(tile: Tile): Size[] {
   const choices: Size[] = ['single', 'wide'];
+  const said = currentScreen.value?.tile_sizes || [];
+  // A forecast or the sun's path needs width: nothing one column wide and taller than a row.
+  const narrow = ['forecast', 'sunpath'].includes(String(tile.options?.display));
   if (tallerTilesEnabled.value) for (const size of ['tall', 'square'] as const) {
-    if (!currentScreen.value?.tile_sizes?.includes(size) || grid.rows < 2 || (size === 'square' && grid.columns < 2)) continue;
-    if (size === 'tall' && ['forecast', 'sunpath'].includes(String(tile.options?.display))) continue;
+    if (!said.includes(size) || grid.rows < 2 || (size === 'square' && grid.columns < 2)) continue;
+    if (size === 'tall' && narrow) continue;
     choices.push(size);
+  }
+  // Every other rectangle the screen said its grid takes (firmware 0.19.0, app 0.4.32): 3 x 2, 2 x 3 and the rest.
+  for (const size of said) {
+    const span = spanOf(size);
+    if (!span || !spanOffered(span.columns, span.rows, grid) || (span.rows > 1 && !tallerTilesEnabled.value) || (span.columns === 1 && narrow)) continue;
+    choices.push(size as Size);
   }
   if (!pageTarget(tile.entity)) choices.push('full');
   return choices;
@@ -822,12 +884,15 @@ export function tileSizeChoices(tile: Tile): Size[] {
 /** Edge resizing keeps the anchor and every neighbouring tile in place. */
 export function resizeChoices(tile: Tile, axis: 'columns' | 'rows'): Size[] {
   const current = currentView(tile);
-  if (!current || !state.layout || isFull(current) || (axis === 'rows' && !tallerTilesEnabled.value)) return [];
+  if (!current || !state.layout || (axis === 'rows' && !tallerTilesEnabled.value)) return [];
   const before = dimensions(sizeOf(current), grid), other = axis === 'columns' ? 'rows' : 'columns';
   const taken = occupied(entriesOf(state.layout).filter(entry => entry.tile.id !== current.id));
   const owned = state.document?.pages.flatMap(page => page.tiles).find(item => item.id === current.id);
   return tileSizeChoices(current).filter(size => {
-    if (!owned || size === 'full' || dimensions(size, grid)[other] !== before[other] || !fits(taken, current.slot, size)) return false;
+    // The handles are the only way to size a tile (app 0.4.32), the whole page too: it keeps its top left corner, so
+    // a tile there grows into the page and a page shrinks back into a tile.
+    const start = size === 'full' ? current.slot - (current.slot % grid.slots) : current.slot;
+    if (!owned || dimensions(size, grid)[other] !== before[other] || start !== current.slot || !fits(taken, current.slot, size)) return false;
     try { validateCardOptions(owned, current.entity, size); return true; }
     catch { return false; }
   });
@@ -853,20 +918,21 @@ export function setTileOption(tile: Tile, key: string, value: unknown, field?: s
   const layout = pages.clone(state.layout);
   tile = currentView(tile, layout) || tile;
   const domain = tile.entity.split(".")[0], caps = state.capabilities[tile.entity], wasSize = sizeOf(tile);
-  if (key === "size" && ["tall", "square"].includes(String(value)) && (!tallerTilesEnabled.value || !currentScreen.value?.tile_sizes?.includes(String(value)))) return;
-  if (key === "size" && value === "tall" && ["forecast", "sunpath"].includes(String(tile.options?.display))) return;
+  // Beyond single, wide and the whole page, a size is one the screen said it takes (tall and square 0.3.1, spans 0.19.0).
+  if (key === "size" && !["single", "wide", "full"].includes(String(value)) && ((isTallSize(value) && !tallerTilesEnabled.value) || !currentScreen.value?.tile_sizes?.includes(String(value)))) return;
+  if (key === "size" && isTallSize(value) && sizeColumns(value) === 1 && ["forecast", "sunpath"].includes(String(tile.options?.display))) return;
   // Perform action is a choice with a second step (app 0.4.0, GitHub #47): nothing is stored until an action is
   // chosen, which comes here as `action` and brings the tap choice with it.
   if (key === "tap" && value === "action" && !tile.options?.action) return;
   const previousControls = effectiveControls(tile, state.inventory);
   // Direct controls need the standard layout without a mini slider, and vice versa (tile-options.ts).
   tile.options = coupledOptions(tile.options, key, value, Boolean(state.inventory.controls?.[domain]));
-  if (key === 'size' && ['tall', 'square'].includes(String(value)) && dimensions(wasSize, grid).rows === 1 && !('controls' in tile.options))
+  if (key === 'size' && isTallSize(value) && dimensions(wasSize, grid).rows === 1 && !('controls' in tile.options))
     tile.options.controls = previousControls || 'none';
   if (key === "display" && ["forecast", "sunpath"].includes(value as string) && !isWide(tile)) tile.options.size = "wide";
   // A card that becomes wide gets the first direct control Home Assistant offers when the usual one isn't there.
   const catalogue = state.inventory.controls?.[domain];
-  if (key === "size" && ["wide", "square"].includes(String(value)) && caps && catalogue && !("controls" in tile.options) && !caps.controls.includes(catalogue.default))
+  if (key === "size" && value !== "full" && sizeColumns(value) > 1 && caps && catalogue && !("controls" in tile.options) && !caps.controls.includes(catalogue.default))
     tile.options.controls = catalogue.choices.find((c) => c.key !== "none" && caps.controls.includes(c.key))?.key || "none";
   // A card that grows to the whole page keeps its page: the other tiles there move to the first free
   // cells after it. With no room for them it takes the first empty page, or stays as it was.
@@ -893,7 +959,7 @@ export function setTileOption(tile: Tile, key: string, value: unknown, field?: s
     else { tile.options.size = wasSize; toast(t("editor.layout.no_room", { page: pageOf(tile.slot) + 1 })); return; }
   }
   // What the add-on would still change is never stored (its canonical form): a default, a stale action or picture setting.
-  tile.options = canonicalOptions(tile.entity, tile.options);
+  tile.options = canonicalOptions(tile.entity, tile.options, tile.in !== undefined);
   normalize(layout);
   commitArrangement(layout.tiles.map((item) => ({ tile: item, slot: item.slot })), field);
 }
@@ -1017,6 +1083,7 @@ export function openBarAdd() {
 export function closeInspector() {
   state.inspector = null;
   state.selectedTile = null;
+  state.optionPreview = null;
 }
 
 // ---- Save ----
@@ -1158,6 +1225,23 @@ export async function renameScreen(screen: Screen, name: string) {
   }
 }
 
+// A screen New screen wrote but that never got its firmware (GitHub #114, app 0.4.32): its profile and what it built go;
+// the app refuses one a paired screen builds from.
+export async function forgetPending(file: string, name: string) {
+  if (state.removing) return false;
+  state.removing = `pending:${file}`;
+  try {
+    await send(`firmware/profiles/${encodeURIComponent(file)}`, "DELETE");
+    state.inventory.pending = (state.inventory.pending || []).filter((p) => p.file !== file);
+    toast(t("editor.sidebar.remove.done", { name }));
+    return true;
+  } catch (e: any) {
+    toast(e.message);
+    return false;
+  } finally {
+    state.removing = null;
+  }
+}
 export async function removeScreen(screen: Screen) {
   if (state.removing) return false;
   if (screen.virtual) {
@@ -1225,7 +1309,9 @@ function adopt(record: PageDocument, message: string) {
 export const gridChanged = computed(() => !!state.documentGrid && !!currentScreen.value?.shape &&
   !pages.sameGrid(state.documentGrid, currentScreen.value.shape));
 function reviewGrid(record: PageDocument, target: PageGrid, copy: boolean, message = '') {
-  try { state.gridReview = { record: pages.clone(record), layout: pages.adaptGrid(record.layout, record.sourceGrid, target),
+  try {
+    if (record.layout.pages.length > editorLayout.grid.pages) throw new Error(t("addon.errors.pages.adapt_pages"));
+    state.gridReview = { record: pages.clone(record), layout: pages.adaptGrid(record.layout, record.sourceGrid, target),
     target: { columns: target.columns, rows: target.rows }, copy, message }; }
   catch (error: any) { toast(error.message); }
 }
@@ -1611,6 +1697,7 @@ export async function installClaudeSkill() {
 // the add-on tells which one it is.
 export const screenLanguage = computed(() => pickLanguage(state.inventory.language?.effective));
 watch(screenLanguage, (code) => loadLanguage(code), { immediate: true });
+watch(() => state.libraryOpen, (open) => { try { localStorage.setItem("esp-screens.library-open", open ? "1" : "0"); } catch {} });
 /** A text as the screens show it: in their language, not the editor's. */
 export const screenText = (key: string, named: Record<string, unknown> = {}) => t(key, named, { locale: screenLanguage.value });
 /** A language by its own name ("Nederlands"), as the add-on lists it. */

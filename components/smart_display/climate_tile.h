@@ -55,6 +55,20 @@ struct Layout {
   int room = 0;        // how many segments the bar holds
 };
 
+// How many modes a bar `reach` wide holds: a finger's width per segment inside the bar's inset, at most `modes`, and
+// none for fewer than two (a device with one mode has no bar: its circle is all it needs). The one rule for every
+// thermostat's mode bar, under its -/+ ("Temperature and mode") and on its own ("Mode", firmware 0.19.0).
+inline int bar_room(const Metrics &m, int reach, int modes) {
+  const int room = modes >= 2 ? std::min(modes, (reach - 2 * m.inset()) / m.touch) : 0;
+  return room >= 2 ? room : 0;
+}
+
+// The width of a bar holding `room` segments: the whole reach when it `stretches` (a card's width, under a big number
+// or on its own), or a finger's width per segment beside a stepper or a name.
+inline int bar_width(const Metrics &m, int reach, int room, bool stretches) {
+  return room >= 2 ? (stretches ? reach : std::min(reach, room * m.touch + 2 * m.inset())) : 0;
+}
+
 // The segments of a bar holding `count` of them, each the same width.
 inline std::array<Rect, SEGMENTS> segments(const Metrics &m, Rect bar, int count) {
   std::array<Rect, SEGMENTS> out{};
@@ -72,7 +86,7 @@ inline Layout layout(const Metrics &m, int width, int top, int bottom, int modes
   const int body = bottom - top, t = m.touch, g = m.gap, in = m.inset();
   if (body < t || width < 2 * t + g) return l;
   const int reach = std::min(width, m.max_width), x0 = (width - reach) / 2;
-  const int bar_room = modes >= 2 ? std::min(modes, (reach - 2 * in) / t) : 0;
+  const int bar_room = climate_tile::bar_room(m, reach, modes);
   // Big: the number zone above the bar. The largest face wins, with the "now" line if it fits and without it if
   // only then the face fits; a smaller face with its line comes after.
   const int zone = body - (bar_room >= 2 ? t + 2 * g : 0);
@@ -119,12 +133,12 @@ inline Layout layout(const Metrics &m, int width, int top, int bottom, int modes
   }
   const int need = 2 * key_in + 2 * in + m.face_w[face] + ui::px(m.large ? 12 : 6);
   if (need > reach) return l;
-  int room = modes >= 2 ? std::min(modes, (reach - need - g - 2 * in) / t) : 0;
+  int room = climate_tile::bar_room(m, reach - need - g, modes);
   // A narrow card (one column, two rows) with no room for the bar beside the stepper puts it under the stepper,
   // where the card has the height for a second finger's row.
-  const bool two_lines = modes >= 2 && room < 2 && body >= 2 * t + g && (reach - 2 * in) / t >= 2;
-  if (two_lines) room = std::min(modes, (reach - 2 * in) / t);
-  const int bar_w = room >= 2 ? (two_lines ? reach : room * t + 2 * in) : 0;
+  const bool two_lines = room < 2 && body >= 2 * t + g && climate_tile::bar_room(m, reach, modes) >= 2;
+  if (two_lines) room = climate_tile::bar_room(m, reach, modes);
+  const int bar_w = bar_width(m, reach, room, two_lines);
   const int step_w = two_lines ? reach : std::min(bar_w ? reach - bar_w - g : reach, std::max(need, m.stepper_max()));
   const int y = top + (body - (two_lines ? 2 * t + g : t)) / 2;
   l.form = Form::row;

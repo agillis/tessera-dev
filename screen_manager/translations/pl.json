@@ -110,7 +110,10 @@
       "home": "Dom",
       "no_network": "Brak sieci",
       "configuration_problem": "Błąd konfiguracji.\nZaktualizuj dodatek.",
-      "configuration_version": "Błąd konfiguracji.\nSprawdź wersje ekranu i dodatku."
+      "configuration_version": "Błąd konfiguracji.\nSprawdź wersje ekranu i dodatku.",
+      "wifi_problem": "Problem z połączeniem Wi-Fi",
+      "wifi_hotspot": "Połącz się z hotspotem {name}, aby to naprawić.\nHasło: {password}",
+      "wifi_usb": "Sprawdź nazwę i hasło Wi-Fi, a potem zainstaluj ten ekran ponownie przez USB."
     },
     "preparing": {
       "default": "Układanie kafelków",
@@ -594,6 +597,7 @@
         "column_range": "Wybierz kolumnę od 1 do {last}; left i right to pierwsza i ostatnia.",
         "full_page_alone": "Kafelek na całą stronę zajmuje całą stronę {page}; nic więcej się tam nie zmieści.",
         "does_not_fit": "To nie mieści się na stronie {page}; kafelek podwójnej szerokości zajmuje dwa miejsca.",
+        "size": "Ten ekran nie ma kafelka {size}. Dostępne: {sizes}.",
         "order_needed": "Podaj encje w kolejności, w jakiej mają być.",
         "order_not_on_screen": "Brak na tym ekranie: {entities}.",
         "order_not_on_page": "Brak na stronie {page}: {entities}. Najpierw je tam przenieś.",
@@ -716,7 +720,7 @@
         "ambiguous_tile": "Zdarzenie kafelka ma niejednoznaczne źródło; podaj jego stronę",
         "save_first": "Zapisz układ stron przed zapisaniem ustawień",
         "destination_exists": "Ekran docelowy ma już zapisany układ",
-        "update_tall": "Zaktualizuj ekran, aby używać wyższych kafelków",
+        "update_tall": "Zaktualizuj ekran, aby używać tych rozmiarów kafelków",
         "memory": "Ekran nie ma wystarczającej ilości wolnej pamięci dla tego układu. Użyj mniejszej liczby kafelków."
       },
       "feedback": {
@@ -1237,7 +1241,6 @@
       },
       "search": "Szukaj",
       "screens": "Ekrany",
-      "more": "Więcej",
       "refresh": "Odśwież",
       "update": {
         "button": "Aktualizuj",
@@ -1245,7 +1248,8 @@
         "available": "Aktualizacja {version}",
         "no_profile": "Nie znaleziono profilu ESPHome o tej nazwie urządzenia.",
         "whats_new": "Co nowego",
-        "full_log": "Pełny log"
+        "full_log": "Pełny log",
+        "short": "Aktualizacja"
       },
       "host": {
         "hint": "Adres IP, tylko ten jeden raz; nowy firmware sam go zgłasza.",
@@ -1259,6 +1263,8 @@
         "not_flashed": "Jeszcze nie w Home Assistant. Firmware już wgrany? Dodaj urządzenie ESPHome w sekcji Ustawienia → Urządzenia oraz usługi, potem kliknij „Konfiguruj” i zezwól na akcje Home Assistant. Jeszcze nie wgrany? Firmware i USB → {file}."
       },
       "copy_api_key": "Kopiuj klucz API",
+      "files": "Pobierz pliki ekranu",
+      "files_hint": "YAML ESPHome ekranu z jego kluczami, Override YAML i secrets.yaml z Wi-Fi, aby zbudować go w ESPHome na własnym komputerze.",
       "details": {
         "room": "Obszar",
         "firmware": "Firmware",
@@ -1432,10 +1438,7 @@
         "alarm_control_panel": "Alarm",
         "lock": "Zamki"
       },
-      "more": "Więcej ({n})",
-      "fewer": "Mniej",
       "room": "Obszar",
-      "all_rooms": "Wszystkie obszary",
       "hide_placed": "Ukryj dodane",
       "hide_placed_title": "Ukryj to, co już jest na tym ekranie",
       "again": "Już jest na tym ekranie; dodaj ponownie, aby mieć kolejny kafelek",
@@ -1443,7 +1446,10 @@
       "none_found": "Nie znaleziono encji. Spróbuj innej nazwy, obszaru lub filtra.",
       "full": "Ten ekran mieści 1 kafelek. | Ten ekran mieści {n} kafelki. | Ten ekran mieści {n} kafelków.",
       "full_update": "Ten ekran mieści 1 kafelek; zaktualizuj jego firmware, aby zmieścić 48. | Ten ekran mieści {n} kafelki; zaktualizuj jego firmware, aby zmieścić 48. | Ten ekran mieści {n} kafelków; zaktualizuj jego firmware, aby zmieścić 48.",
-      "hint": "Przeciągnij na stronę albo kliknij +, aby dodać w pierwszym wolnym miejscu. ⌘K przeszukuje wszystko."
+      "hint": "Przeciągnij na stronę albo kliknij +, aby dodać w pierwszym wolnym miejscu. ⌘K przeszukuje wszystko.",
+      "resize": "Przeciągnij, aby zmienić rozmiar biblioteki",
+      "filter_label": "Filtruj według typu",
+      "no_room": "Bez pomieszczenia"
     },
     "domains": {
       "light": "Światło",
@@ -1547,21 +1553,6 @@
           "none": "Nic"
         }
       },
-      "size": {
-        "label": "Rozmiar",
-        "single": "Normalny",
-        "wide": "Podwójna szerokość",
-        "full": "Cała strona",
-        "full_hint": "Cała strona: jeden duży przycisk w kolorze kafelka; suwak, przyciski lub wykres są na jego dole.",
-        "needs_firmware": "Kafelek na całą stronę wymaga wersji firmware 0.2.62: najpierw naciśnij „Aktualizuj” przy tym ekranie.",
-        "tall": "1 × 2",
-        "square": "2 × 2",
-        "rectangle_hint": "Szerokość × wysokość w komórkach. Używa obecnego wyglądu kafelka."
-      },
-      "page": {
-        "label": "Strona",
-        "new": "Nowa strona"
-      },
       "controls": {
         "label": "Bezpośrednie sterowanie na kafelku",
         "not_offered": "Home Assistant nie oferuje tego sterowania dla tej encji, więc na ekranie to miejsce pozostanie puste. Wybierz inne.",
@@ -1630,15 +1621,15 @@
         "rows": "Zmień wysokość (strzałki w górę/dół)"
       },
       "sections": {
-        "text": "Tekst",
         "look": "Wygląd",
-        "place": "Rozmiar i miejsce",
         "controls": "Sterowanie",
         "style": "Ikona i kolor"
       },
       "keys": {
         "hint": "Przeciągnij lampę, temperaturę lub zamek na okrągłe miejsca pod godziną albo dotknij miejsca i wybierz. To kafelki: dotknij jednego, aby go ustawić.",
-        "under": "Pod zegarem przy łóżku: kafelek w okrągłej formie. Dotknięcie działa jak na kafelku, a przytrzymanie otwiera jego kartę."
+        "under": "Pod zegarem przy łóżku: kafelek w okrągłej formie. Dotknięcie działa jak na kafelku, a przytrzymanie otwiera jego kartę.",
+        "name_shown": "Nazwa pod przyciskiem",
+        "name_shown_hint": "Wyłączone pokazuje sam okrąg."
       }
     },
     "tile_card": {
@@ -1695,6 +1686,7 @@
       "name_placeholder": "Na przykład: Salon",
       "screen_name": "Tytuł ekranu",
       "screen_name_hint": "Każda strona bez własnego tytułu pokazuje ten tytuł.",
+      "no_title_hint": "Zostaw puste, aby pokazać tylko logo.",
       "right": "Po prawej: godzina, sensory lub zegar",
       "item_label": "{name}, miejsce {slot}. Enter: konfiguruj, strzałki: przenieś",
       "remove_named": "Usuń {name} z górnego paska",
@@ -1902,7 +1894,6 @@
     },
     "installer": {
       "title": {
-        "setup": "Podłącz i zainstaluj.",
         "saved": "Profil zapisany.",
         "running": "Chwileczkę…",
         "ready": "Gotowe do pobrania.",
@@ -1910,7 +1901,6 @@
         "stopped": "Zatrzymano.",
         "failed": "Nie udało się."
       },
-      "intro": "Tessera tworzy własny profil ekranu z unikalnymi kluczami i kompiluje firmware. Podłącz ekran kablem USB do transmisji danych do komputera z Home Assistant albo do komputera, którego teraz używasz.",
       "board": "Jaki masz ekran?",
       "board_title": "{name} · {inch} cala",
       "status": {
@@ -1931,10 +1921,12 @@
         "calibration": "Kalibracja dotyku przy pierwszym uruchomieniu"
       },
       "choice": {
-        "DISPLAY_MODEL": "Kontroler wyświetlacza"
+        "DISPLAY_MODEL": "Kontroler wyświetlacza",
+        "GRID_ROWS": "Kafelki na stronie"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Większość tych płytek ma pierwszy. Wybierz drugi, gdy ekran pokazuje szum lub zniekształcony obraz."
+        "DISPLAY_MODEL": "Większość tych płytek ma pierwszy. Wybierz drugi, gdy ekran pokazuje szum lub zniekształcony obraz.",
+        "GRID_ROWS": "Cztery rzędy mieszczą osiem mniejszych kafelków na stronie, dla ekranu z wieloma przełącznikami. Trzy rzędy zostawiają kafelki większe i czytelniejsze."
       },
       "choice_usual": "większość",
       "orientation": "Jak będzie wisiał?",
@@ -1945,7 +1937,6 @@
       "name": "Nazwa",
       "name_placeholder": "Ekran w salonie",
       "device_name": "Nazwa urządzenia",
-      "customize": "dostosuj",
       "name_hint": "Każdy ekran dostaje własny profil z własnymi kluczami. Cztery ekrany? Przejdź przez to cztery razy, za każdym razem z inną nazwą.",
       "name_taken": "Inny ekran nazywa się już tak samo. Home Assistant ponumerowałby nazwy encji tego ekranu, a automatyzacje trafiałyby do niewłaściwego.",
       "device_name_hint": "Małe litery, cyfry i myślniki. Inna nazwa dla każdego ekranu.",
@@ -1957,12 +1948,13 @@
         "new": "Wypełnij raz: Tessera zapisze to w pliku secrets.yaml ESPHome, a kolejne ekrany użyją tego automatycznie.",
         "missing": "W Twoim pliku secrets.yaml ESPHome wciąż brakuje danych Wi-Fi. Tessera uzupełni tylko brakujące wiersze.",
         "ready": "Dane Wi-Fi pochodzą z Twojego pliku secrets.yaml ESPHome.",
-        "invalid": "Plik secrets.yaml w folderze ESPHome nie jest poprawnym YAML. Najpierw popraw plik; nie zostanie nadpisany."
+        "invalid": "Plik secrets.yaml w folderze ESPHome nie jest poprawnym YAML. Najpierw popraw plik; nie zostanie nadpisany.",
+        "other": "Inna sieć",
+        "other_note": "Każdy ekran jest budowany z tą siecią Wi-Fi; istniejące przejmą ją przy następnej aktualizacji."
       },
       "install_via": "Zainstaluj przez",
-      "later": "Później · tylko zapisz profil",
       "target": {
-        "usb": "Podłącz ekran kablem USB do transmisji danych do komputera z Home Assistant; lista odświeża się sama. Albo wybierz „Ten komputer”, aby zainstalować z tej przeglądarki.",
+        "usb": "Podłącz ekran kablem USB do transmisji danych do komputera z Home Assistant; pojawi się tu sam. Jest podłączony do komputera, przy którym teraz siedzisz? Wybierz „Z tego komputera”.",
         "download": "Pobierz firmware i wgraj go na ekran z własnego komputera, w Chrome lub Edge. Potem aktualizacje idą przez Wi-Fi.",
         "later": "Profil trafi do folderu ESPHome. Zainstalujesz go później w sekcji „Firmware i USB” albo w ESPHome Device Builder.",
         "several": "Podłączono więcej niż jedną płytkę: wybierz port tego ekranu.",
@@ -2014,12 +2006,75 @@
         "tiles": "{bold} Po powrocie do Tessera ekran pojawi się na liście po lewej w ciągu około trzydziestu sekund; do tego czasu jest tam opisany jako „jeszcze nie w Home Assistant”.",
         "tiles_bold": "Wybierz kafelki."
       },
-      "log": "Log ESPHome",
       "retry": "Ponów",
       "another": "Zainstaluj kolejny ekran",
       "start_over": "Zacznij od nowa",
       "done": "Gotowe",
-      "key_more": "Pokaż klucz API"
+      "key_more": "Pokaż klucz API",
+      "steps": {
+        "board": "Ekran",
+        "setup": "Ustawienia",
+        "install": "Instalacja"
+      },
+      "pick_title": "Jaki masz ekran?",
+      "pick_intro": "Wybierz płytkę. Szukaj po marce, rozmiarze lub nadruku.",
+      "search": "Szukaj po marce, rozmiarze lub modelu",
+      "sizes": {
+        "all": "Wszystkie",
+        "small": "Do 4 cali",
+        "medium": "4–6 cali",
+        "large": "7 cali i więcej"
+      },
+      "none_found": "Brak ekranu pasującego do „{query}”.",
+      "try_virtual": "Nie masz jeszcze ekranu? Wypróbuj ekran podglądu",
+      "setup_title": "Dopasuj go do siebie",
+      "install_title": "Jak chcesz zainstalować?",
+      "next": "Dalej",
+      "advanced": "Zaawansowane",
+      "ways": {
+        "ha_title": "USB w Home Assistant",
+        "ha_found": "Znaleziono: {port}",
+        "ha_waiting": "Podłącz ekran do komputera, na którym działa Home Assistant",
+        "browser_title": "Z tego komputera",
+        "browser_detail": "Chrome lub Edge, z ekranem podłączonym do USB tego komputera",
+        "download_title": "Pobierz plik",
+        "download_detail": "Wgraj go sam przez ESPHome Web",
+        "later_title": "Później",
+        "later_detail": "Zapisz tylko ustawienia"
+      },
+      "steps_done": {
+        "prepare": "Przygotowanie",
+        "build": "Budowanie firmware",
+        "write": "Zapisywanie na ekranie",
+        "restart": "Uruchamianie",
+        "done": "Gotowe",
+        "download": "Gotowe do pobrania"
+      },
+      "elapsed": "{time} trwa",
+      "show_log": "Pokaż szczegóły",
+      "hide_log": "Ukryj szczegóły",
+      "next_title": "Co dalej",
+      "model": "Jaki to model?",
+      "model_hint": "Jest nadrukowany z tyłu płytki. Wyglądają podobnie, ale każdy wymaga własnego firmware.",
+      "models": "{n} model | {n} modele | {n} modeli",
+      "arrive": {
+        "waiting": "Czekam, aż {name} pojawi się w Wi-Fi...",
+        "seen": "{name} jest w Wi-Fi. Sparuj go teraz w Home Assistant.",
+        "paired": "{name} jest sparowany z Home Assistant.",
+        "missing": "{name} nie ma jeszcze w Wi-Fi",
+        "hotspot": "Spójrz na ekran: pokazuje hotspot i jego hasło. Połącz się z nim telefonem i wybierz tam właściwą sieć Wi-Fi. Albo ustaw tu właściwą sieć i zainstaluj ponownie.",
+        "no_hotspot": "Prawdopodobnie nazwa lub hasło Wi-Fi są błędne. Ustaw tu właściwą sieć i zainstaluj ponownie, z ekranem wciąż podłączonym kablem.",
+        "change": "Zmień Wi-Fi i zainstaluj ponownie"
+      },
+      "choice_option": {
+        "GRID_ROWS": {
+          "3": "3 rzędy",
+          "4": "4 rzędy, mniejsze kafelki"
+        }
+      },
+      "choice_first": {
+        "GRID_ROWS": "zwykły rozmiar"
+      }
     },
     "alerts": {
       "eyebrow": "Alerty · ściąga",
@@ -2434,7 +2489,15 @@
       "saved": "Zapisano w tej przeglądarce",
       "hint": "Własny firmware ekranu, narysowany z układu, który edytujesz. Dotykaj, przytrzymuj i przesuwaj jak na ekranie. Nic nie jest zapisywane.",
       "control": "Dotknięcia sterują urządzeniami",
-      "control_hint": "Włączone: dotknięcie kafelka wykonuje jego akcję w Home Assistant, jak na ekranie. Wyłączone: podgląd pokazuje tylko, co robi dotknięcie."
+      "control_hint": "Włączone: dotknięcie kafelka wykonuje jego akcję w Home Assistant, jak na ekranie. Wyłączone: podgląd pokazuje tylko, co robi dotknięcie.",
+      "skipped": "Nie udało się wczytać ekranu podglądu {names}; został pominięty."
+    },
+    "inspector": {
+      "kind": {
+        "tile": "Kafelek",
+        "page": "Strona",
+        "bar": "Górny pasek"
+      }
     }
   }
 }

@@ -24,6 +24,9 @@ def _recover_tiles(raw, grid):
     adjusted = []
     for key in ('title', 'pages', 'page_titles', 'header', 'settings'):
         if key not in raw: continue
+        # No stored layout had an empty title before firmware 0.17.0 took one: it said "Home", and still does.
+        if key == 'title' and isinstance(raw[key], str) and not raw[key].strip():
+            adjusted.append(key); continue
         try:
             validate_layout({**base, key: raw[key]}, grid=grid)
         except (ValueError, TypeError, KeyError, OverflowError):

@@ -210,7 +210,7 @@ class TheReleasePlan(unittest.TestCase):
         text = affected_boards.plan(reach('packages/core.yaml', 'packages/boards/cyd-2432s028.yaml'))
         self.assertIn('Shared firmware: every board', text)
         self.assertIn(f'FIRMWARE_VERSION: "{affected_boards.dotted((CORE[0], CORE[1] + 1, 0))}"', text)
-        self.assertIn('tools/check.sh --firmware (every board', text)
+        self.assertIn('tools/check.sh --firmware --sample', text)
         self.assertIn(self.oldest('--firmware'), text)
 
     def test_an_app_release_builds_nothing_on_the_oldest_esphome(self):

@@ -1,0 +1,11 @@
+# Sun. Home Assistant: homeassistant/components/sun.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: sun
+firmware: 0.2.14   # the first firmware that draws this type
+displays:
+  standard: {}
+  watch: {}
+  # The sun's path over the day, on a card of two columns or more.
+  sunpath:
+    wide: true

@@ -1,0 +1,14 @@
+# Automation. Home Assistant: homeassistant/components/automation.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: automation
+firmware: 0.7.0   # the first firmware that draws this type
+displays:
+  standard: {}
+  watch: {}
+controls:
+  toggle:
+    needs: {actions: [automation.toggle]}
+  run:
+    needs: {actions: [automation.trigger]}
+taps: [run]

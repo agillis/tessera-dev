@@ -8,29 +8,37 @@
 // Grid-dependent operations belong to an explicit layout instance. Its shape is read
 // directly from the owning document, without a watcher or mutable module-global grid.
 import { t } from "../i18n";
+import { NAMED_SIZES, isSize, isWideSize, spanOf, type Size } from "./sizes";
+import { resolveControls } from "./catalogue";
 import type { Inventory, Layout, Tile, PageGrid } from "../types";
 
-// The firmware's own caps (components/smart_display/runtime_model.h): at most eight pages, and never more than 64
-// tiles on one screen (one dirty bit each), so a page of nine cells gives seven pages. The add-on counts the same way
-// (core.Grid) and tells the editor the tile limit per screen; the pages follow from the grid here.
+// The firmware's own caps (components/smart_display/runtime_model.h): eight pages whatever the grid, and never more than
+// 64 tiles on one screen (one dirty bit each), so a page need not be full (firmware 0.18.0+). Older firmware had as many
+// pages as 64 tiles fill (legacyPages). The add-on counts the same way (core.Grid) and tells the editor the tile and
+// page limit per screen (tile_limit, page_limit).
 export const FIRMWARE_MAX_PAGES = 8;
 export const FIRMWARE_MAX_TILES = 64;
 export const DEFAULT_GRID = { columns: 2, rows: 3 };
+/** The pages firmware before 0.18.0 takes on a grid: as many as 64 tiles fill, eight at most. */
+export const legacyPages = (grid: PageGrid) => Math.min(FIRMWARE_MAX_PAGES, Math.floor(FIRMWARE_MAX_TILES / (grid.columns * grid.rows)));
 export type Entry = { tile: Tile; slot: number };
-// Dimensions are resolved on the screen's grid; `true` still means wide.
-export type Size = "single" | "wide" | "tall" | "square" | "full";
-export const SIZES: Size[] = ["single", "wide", "tall", "square", "full"];
+// Dimensions are resolved on the screen's grid; `true` still means wide. A span ("3x2", app 0.4.32) is its own
+// rectangle (model/sizes.ts).
+export type { Size } from "./sizes";
+export const SIZES: Size[] = [...NAMED_SIZES];
 type SizeLike = Size | boolean;
 const asSize = (size: SizeLike): Size => (size === true ? "wide" : size === false ? "single" : size);
 
 // A navigation tile (screen.page_<n>, firmware 0.2.62+) and the page it opens; 0 for any other entity.
 export const pageTarget = (id: string) => (/^screen\.page_[1-8]$/.test(id) ? Number(id.slice(-1)) : 0);
-export const sizeOf = (tile: Tile): Size => (SIZES.includes(tile.options?.size as Size) ? (tile.options!.size as Size) : "single");
-export const isWide = (tile: Tile) => ["wide", "square", "full"].includes(sizeOf(tile));
+export const sizeOf = (tile: Tile): Size => (isSize(tile.options?.size) ? (tile.options!.size as Size) : "single");
+export const isWide = (tile: Tile) => isWideSize(sizeOf(tile));
 export const isFull = (tile: Tile) => sizeOf(tile) === "full";
 // Wide spans at most two columns; full spans the complete supplied grid.
 export function dimensions(size: SizeLike, shape: PageGrid = DEFAULT_GRID) {
   const value = asSize(size);
+  const span = spanOf(value);
+  if (span) return span;
   return value === "full" ? { columns: shape.columns, rows: shape.rows }
     : value === "square" ? { columns: 2, rows: 2 }
     : value === "tall" ? { columns: 1, rows: 2 }
@@ -74,12 +82,12 @@ export const keysOf = (layout: Layout | null | undefined, holder: Tile) =>
   (layout?.tiles || []).filter((tile) => tile.in === holder.entity).sort((a, b) => (a.key ?? 0) - (b.key ?? 0));
 
 /** A document-owned view of placement rules. Reading a new shape is synchronous. */
-export function createLayout(shape: () => PageGrid) {
+export function createLayout(shape: () => PageGrid, pageLimit: () => number | undefined = () => undefined) {
   const grid = {
     get columns() { return shape().columns; },
     get rows() { return shape().rows; },
     get slots() { return this.columns * this.rows; },
-    get pages() { return Math.min(FIRMWARE_MAX_PAGES, Math.floor(FIRMWARE_MAX_TILES / this.slots)); },
+    get pages() { return Math.min(FIRMWARE_MAX_PAGES, pageLimit() ?? FIRMWARE_MAX_PAGES); },
     get maxSlots() { return this.pages * this.slots; },
   };
   const tileDimensions = (size: SizeLike) => dimensions(size, grid);
@@ -224,7 +232,8 @@ export function createLayout(shape: () => PageGrid) {
 
   function tileLimit(firmware: string | undefined | null) {
     if (parseVersion(firmware).length !== 3) return 10;
-    return versionAtLeast(firmware, "0.2.62") ? grid.maxSlots : versionAtLeast(firmware, "0.2.7") ? 20 : 10;
+    if (versionAtLeast(firmware, "0.18.0")) return Math.min(FIRMWARE_MAX_TILES, grid.maxSlots);
+    return versionAtLeast(firmware, "0.2.62") ? legacyPages(grid) * grid.slots : versionAtLeast(firmware, "0.2.7") ? 20 : 10;
   }
   return { grid, dimensions: tileDimensions, pageStart, rowStart, pageOf, spanOf, cellsOf, startOf, packSlots, hasGaps, normalize, occupied, fits, firstFree, nearestFree, arrange, reorderPages, pageCount, strandedPages, tileLimit };
 }
@@ -246,11 +255,10 @@ export const newTile = (id: string): Tile => ({ entity: id, name: "", slot: -1, 
 
 // Same rule as the add-on: only a wide or full card in the standard layout shows direct controls;
 // without a choice the domain's first control set applies to a wide card, none to a full one.
-export function effectiveControls(tile: Tile, inventory: Inventory): string | null {
-  const domain = tile.entity.split(".")[0], catalogue = inventory.controls?.[domain], o = tile.options || {};
-  if (!catalogue || !["wide", "tall", "square", "full"].includes(o.size as string) || !["standard", "cover"].includes((o.display || "standard") as string) || o.inline === "slider") return null;
-  const choice = o.controls ?? (["tall", "full"].includes(o.size as string) ? "none" : catalogue.default);
-  return choice === "none" ? null : choice;
+/** The control set a card draws (model/catalogue.ts resolveControls, as the add-on sends it): the chosen one or its
+ * type's default, and on a card one row high what fits there. `inventory` stays for the callers; the catalogue decides. */
+export function effectiveControls(tile: Tile, _inventory?: Inventory): string | null {
+  return resolveControls(tile);
 }
 export function controlsLabel(tile: Tile, inventory: Inventory) {
   const key = effectiveControls(tile, inventory);

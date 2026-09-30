@@ -1,0 +1,14 @@
+# Light. Home Assistant: homeassistant/components/light.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: light
+displays:
+  standard: {}
+  watch: {}
+controls:
+  toggle:
+    needs: {actions: [light.toggle]}
+  brightness:
+    needs: {actions: [{action: light.turn_on, field: brightness_pct}]}
+inline:
+  needs: {actions: [{action: light.turn_on, field: brightness_pct}]}

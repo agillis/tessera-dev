@@ -1,69 +1,240 @@
-## 0.4.31 (firmware 0.19.0)
+## 1.0.0 (firmware 0.20.0)
 
-- **Tessera Dev is its own project, in its own repository.** It lives at github.com/agillis/tessera-dev instead of a
-  fork of the project it came from, and the screens build their firmware from there. Add the new repository in Home
-  Assistant (Add-on store, the three dots, Repositories) and install Tessera Dev Screen Manager from it; the old
-  repository can then be removed. A screen already installed has to be built again once, from New screen or
-  Firmware & USB, to move onto this repository's packages.
-- Nothing else changed: no screen behaves differently and no setting moved. Every board gets a new firmware number
-  because the packages it builds from live somewhere else now, and a screen is only offered a rebuild by its number.
-- The line to the project it came from is kept, under `upstream/`: its releases can still be taken over and work done
-  here can still be sent back to it. `LICENSE` keeps its copyright and `NOTICE` records where this project comes from.
-- Tested: tools/check.sh, every board built on ESPHome 2026.9.0, and a screen's own YAML built from this repository
-  over GitHub as the add-on writes it, which is the path a real installation takes. Not tried on a screen by hand yet.
+The first release of Tessera Dev as a project of its own, from its own repository
+(github.com/agillis/tessera-dev), with the code of Tessera 0.4.32 in it. Add the repository in Home Assistant
+(Add-on store, the three dots, Repositories) and install Tessera Dev Screen Manager from it. A screen already
+installed has to be built again once, from New screen or Firmware & USB, to move onto this repository's packages.
+
+Its own version line starts here, so it no longer collides with the numbers of the project it came from.
+
+What this project adds to Tessera 0.4.32:
+
+- **Stop a build.** Firmware & USB has a Stop button beside Check and Build, and New screen one under the screen it is
+  building. It ends the ESPHome command itself, so a build started by mistake no longer holds the machine for twenty
+  minutes. What was compiled already stays, so starting again carries on from there. A stopped build says it was
+  stopped rather than that it failed: nothing was written to a screen, the profile is kept, and Retry builds it again.
+- **The top bar can go.** A screen setting, **Top bar**, on the screen itself, in Home Assistant
+  (`switch.<screen>_top_bar`) and in Screen settings. Off, the bar along the top goes with the page title, the home
+  key and the clock, and the tiles take its room: 41 to 58 pixels depending on the board, about 18 % of the glass on a
+  CYD. Holding that bar is what opens the settings page, so with it gone the page is reached from a `screen.settings`
+  tile, from Home Assistant or from the editor. A layout with a page outside the swipe keeps its bar while the page
+  buttons are off, because Back lives there and leaving that page would otherwise be impossible.
+- **Show home button survives a restart.** It was the one setting the screen never wrote down, so it was back on at
+  the next start. Every setting beside the frozen block now has a record of its own, and a check holds them all.
+- **Nothing is shared with anyone's website.** The card that asked whether a board works posted the answer to the
+  upstream project's site. That site is not this project's to write to, so the card never asks and nothing leaves.
+- The repository a screen builds from is named in one place, so the entry files, the add-on and the release checks
+  cannot disagree about it.
+- Tested: tools/check.sh, all sixteen boards built on ESPHome 2026.9.0, and a screen's own YAML built from this
+  repository over GitHub as the add-on writes it, which is the path a real installation takes. The CYD takes
+  1,662,768 B of its 1,835,008 B update slot, 90.6 %, which is less than it took before: Tessera 0.4.32's fixed font
+  set more than paid for everything this project adds. The Hosyond 4-inch is the fullest at 93.6 %. Nothing has been
+  tried on a screen by hand.
+
+## 0.4.32 (firmware 0.19.0)
+
+The editor, calmer and quicker to use, and a screen that says what is wrong when it cannot reach its Wi-Fi.
+
+- **A screen without its Wi-Fi says so on its glass** (firmware 0.19.0). Once its fallback hotspot is up, the loading
+  screen reads "Wi-Fi connection problem" with the hotspot's name and password to join from a phone and pick the right
+  network. A board without a hotspot (the CYD and the other boards with 4 MB of flash) says it after a minute, with the
+  way back: check the Wi-Fi name and password and install the screen again over USB. When the Wi-Fi is back, so are
+  the pages.
+- **New screen follows the screen onto your Wi-Fi.** After the firmware is on it, the page waits for Home Assistant to
+  find the screen on the network and says when it did. After three minutes without it, it says the Wi-Fi is the likely
+  cause and what fixes it, with the right network and the installation again in one form.
+- **Another network**: when Wi-Fi is already set up, New screen can still take another name and password. They go into
+  ESPHome's secrets.yaml, so screens you already have take them at their next update.
+- A long device name no longer makes a hotspot name ESPHome refuses (over 32 characters).
+- **A screen that never got its firmware can be removed** (GitHub #114): when New screen's build was cancelled or failed, the
+  screen waiting in the list has Remove, which takes its profile and what it built out of the ESPHome folder.
+
+- **The library is a drawer along the bottom.** Folded it is one line with the search. Start typing anywhere on the
+  page and it glides open on what you typed; the arrow keys walk the results, Enter adds the one in focus, Escape
+  clears the search and then folds the drawer. Drag its top edge to make it taller; the editor remembers both.
+- **Entities stand under their room**, with the screen's own cards last. The kinds and the rooms are one column on the
+  left, each with how many it holds. A search ranks what it finds, names that start with your words first.
+- **Shorter names**: an entity no longer repeats its device's name. "Bedroom screen Night mode" reads "Night mode", with
+  "Bedroom screen" under it, as on the device's card in Home Assistant.
+- **The settings of what you select have a column of their own on the right**, gliding in and out. They never cover
+  the pages or the library.
+- **A choice shows on the tile before you pick it.** Rest the pointer on a display, a second line, a control, an icon or
+  a colour and the tile in the page draws it.
+- **Each setting is one row**: what it is on the left, the current choice on the right. A label with more to say is
+  underlined with dots; point at it to read it. What holding the tile does stands under the tap choice.
+- **A tile's settings no longer ask which page it is on**: drag it there, as you would anyway.
+- **The tile's name is edited in the title** of its settings. Read current data and Remove moved into the ··· menu,
+  and Delete or Backspace removes the selected tile (Undo brings it back).
+- **You see at once what is open**: the head of the settings is black for a tile, blue for a page and white for the top
+  bar, with its word over the title, and the ring around it in the pages follows.
+- **A tile is sized with its handles, to any rectangle** (firmware 0.19.0). Drag its right or bottom edge: besides
+  the sizes there were, it takes 3 x 2, 2 x 3 and every other rectangle smaller than the page, and the whole page
+  too. The size choice left the tile's settings. A screen says which rectangles its grid takes, so an older screen
+  keeps the five sizes it knows until it is updated.
+- **A calmer sidebar.** Each screen is one line, its name in full. The update's button is a small icon on its row
+  (its version in the tooltip), and a screen that is away says Offline there. The details fold out from the chevron:
+  the room, firmware and board, what's new as a few headlines, then Rename, Download screen files and Remove as the
+  rows of a menu. New screen is the + beside Screens; Refresh comes beside it under the pointer. Search is a row like
+  the others.
+- **New screen is a setup assistant in three steps.** Screen: every board drawn as it hangs and to scale against the
+  others, found by brand, size or what is printed on it, or narrowed by size. Set up: the name appears on the drawing
+  of your screen as you type it, beside which way it hangs and the board's own choices; the device name and what the
+  board can do are under Advanced. Install: USB on Home Assistant (a port it found has a green light), this
+  computer, a file, or later. A preview screen is one link on the first step.
+- **The installation shows how far it is.** Getting ready, building the firmware, putting it on the screen and
+  starting up, each with its percentage from ESPHome's own count, one bar for all of it and the time so far, while
+  the drawing of the screen fills in tile by tile. Show details opens ESPHome's log in a terminal with a copy button.
+  When it is done, what comes next; when it fails, the step it stopped in in red and Retry.
+- Escape closes only the innermost thing open: a list of choices closes and the settings under it stay.
+- A preview screen saved in the browser by an older app, that this one cannot read, is left out with a word about it,
+  and no longer keeps the editor or the other preview screens from loading.
+- Calmer greys, thinner lines and smaller corners throughout.
+- **An automation or assistant can ask for any size too**: `esp_screens_add_tile` takes `size: 1x3` and the like. A
+  rectangle a name already says becomes that name (`2x3` on a screen two by three is the whole page), and a size the
+  screen does not take is refused with the sizes it does take, where it used to say the page was full.
+- A screen that is not ready for a tile size now says "Update the screen to use these tile sizes", not "taller tiles".
+- New screen's hint under USB on Home Assistant points to "From this computer", as the card is now called.
+- The drawing of the new screen ends a long name with dots, as the screen does, instead of cutting it off.
+- The screen's log says when it shows the Wi-Fi message and when the pages come back (firmware 0.19.0).
+- **A thermostat that keeps the room between two temperatures works** (firmware 0.19.0), such as one in Heat/Cool. Its
+  tile no longer shows the raw `heat_cool`: as on Home Assistant's own tile it says its state and the room's
+  temperature, "Heat/Cool · 22°". Between its - and + stands the end they move: its temperature, as large as a single
+  temperature stands there, with a flame for the heating's end or a snowflake for the cooling's before it where there
+  is room, or on its own in that end's colour. A tap on it switches ends, and both ends go to Home Assistant together.
+  The number is sized by the widest temperature the thermostat can reach, so it keeps its size from one tap to the
+  next. Its card shows
+  both ends side by side, as Home Assistant's thermostat card does: tap one and - and + move it. A thermostat with a
+  single temperature is unchanged; one that has both follows Home Assistant and uses the single one when it reports
+  it. A screen that is not updated yet leaves the - and + off such a thermostat, instead of sending a single
+  temperature it cannot take.
+- A thermostat's temperatures read as Home Assistant writes them: 22° and 21.5°, no longer 22.0°. One that names no
+  step moves as Home Assistant's own controls move it, a whole degree in Fahrenheit and half a degree otherwise.
+- A thermostat in a mode without a temperature to reach, such as dry or fan only, says that mode and the room's
+  temperature instead of the raw state.
+- **The editor draws a tile's controls at the screen's own size**: the - and + with the number or the chip between
+  them, measured by the board's own fonts, and a wide tile's keys as the screen draws them for that entity, only the
+  modes a thermostat has and only the keys a vacuum or a blind can use, in place of a fixed row of three.
+- A click on a page between its tiles, or on the line above it with its name ("Page 3"), opens the page's settings.
+- **A thermostat's modes are one bar** (firmware 0.19.0): "Mode" on its own is the same bar as under the - and + of
+  "Temperature and mode", on every size. It holds as many modes as the card's width fits, heat and cool first and the
+  mode it is in always among them, and "…" opens the card for the rest. Off is the tile's circle, as on Home
+  Assistant's own tile. It used to show two modes and "…" whatever the room.
+- The editor draws the mode bar and a range's temperature at the screen's own sizes, worked out from the board's
+  spacing, so it shows as many modes as the screen does.
+- The editor's toolbar stays where it is while you scroll along the pages, and dragging the edge of the library no
+  longer selects text on the page.
+- Tested: tools/check.sh (with the new layout audit and the tile catalogue's checks), the firmware of the CYD, the 4-inch
+  Guition and the 7-inch Waveshare with ESPHome 2026.9.0 and 2026.6.2, and of the 10.1-inch Guition with 2026.9.0 and
+  2026.8.0, the oldest it takes (CYD 90.6 %, 7.5 KB more than 0.4.31). The update as it reaches people, on a Guition
+  and a CYD with a Home Assistant of their own: app 0.4.31 with firmware 0.18 and eight pages of thermostats and tiles
+  with their options, then this app (both layouts unchanged to the byte, both screens in sync, the firmware update
+  offered, the same 77 entities in Home Assistant, the editor without an error), then this firmware (the same layouts
+  back, the new sizes offered, every setting kept). Earlier the same route over the air, spans saved from the editor's
+  handles and through the tile events, 40 saves in a row, saves to both screens at once, and the app, both screens and
+  Home Assistant restarted during a delivery, each ending with the last layout on the glass. A wrong Wi-Fi password on
+  both: the CYD says so after a minute, the Guition when its hotspot opens, neither restarts.
+  Thermostats on the Guition's glass (a range-only one, one with both, one with a single temperature) and a range set
+  through the firmware preview's card: the high end up two and the low end down one reached Home Assistant as both ends.
+  Both mode controls and the range's temperature laid out on every board and size by the layout audit, and rendered on
+  the Guition's and the CYD's glass through the firmware preview beside the editor's mockup, which matched.
+- For developers: **what a tile of each entity type can do is written once**, in `catalogue/`, one file per type,
+  and the add-on, the editor and the firmware read it (docs/CATALOGUE.md). What Home Assistant's devices support, the
+  feature flags and which action needs which flag, is read from Home Assistant's own source code
+  (`tools/read_ha_source.py`), never copied by hand. A type exists only where it has a file, and a new one says from
+  which firmware a screen draws it. Every tile app 0.4.31 could save, about 16,000 of them, is checked against what
+  that release stored and sent, so an update keeps every layout as it was.
+- For developers: tests/test_layout_audit.py lays out every kind of card at every size on every board's glass, lying
+  down and standing up, with the firmware's own code (the WebAssembly preview) and checks the geometry without a
+  picture: nothing leaves its card, no text runs over another or is cut without dots or a marquee, texts keep a margin
+  from the edge, and full pages of cards never overlap. About 3,100 layouts in under a minute, part of tools/check.sh.
+
+## 0.4.31 (firmware 0.18.1 for guition)
+
+- **Four rows on the 4-inch Guition, as a choice.** New screen asks how many tiles go on a page: two columns of three,
+  as before, or of four with smaller tiles, for a screen with many switches. Every card works in every size on four
+  rows too. The choice is one line in the screen's own YAML (`GRID_ROWS: "4"`), and a screen already built with three
+  rows gets four by adding that line and installing it again: its saved layout moves on to four rows by itself.
+- An offline screen built with four rows keeps its own grid in the editor; the app reads it from the screen's YAML.
+- Only the Guition gets new firmware (0.18.1), which is the same as before for a screen with three rows. Other screens
+  get nothing new.
+- Tested: tools/check.sh with new tests (the choice in New screen, the line in the screen's YAML, the eight cards the
+  board takes on four rows, the grid of an offline screen), the Guition built with three and with four rows on ESPHome
+  2026.9.0 and 2026.6.2, and rendered with four rows. Not yet seen on the glass of a Guition with four rows.
 
 ## 0.4.30 (firmware 0.18.0)
 
-- **Tessera Dev is a project of its own.** The screens now build their firmware from this repository instead of the
-  upstream project's, so firmware work here reaches the glass once it is pushed. Before this, a screen installed from
-  Tessera Dev ran upstream's firmware: the Top bar setting of 0.4.29 had no entity on the screen, so its row never
-  appeared, and every screen showed an update it could never finish. Anything already installed has to be built again
-  once, from New screen or Firmware & USB, to move onto this repository's packages.
-- The add-on shares nothing with the upstream project's website any more. Its feedback card asked whether a board
-  works and posted the answer there; that website is not this fork's to write to and this fork has none, so the card
-  never asks and nothing leaves the app.
-- The repository a screen builds from is now named in one place, so the entry files, the add-on and the release checks
-  cannot disagree about it.
-- Tested: tools/check.sh, and every board built on ESPHome 2026.9.0 from this repository's own packages. Not tried on
-  a screen by hand yet.
+- **Every screen has eight pages, and a page need not be full.** A screen holds 64 tiles over up to eight pages, on
+  every board. Before, a bigger grid had fewer pages: as many as 64 tiles fill, so three on the 10.1-inch Guition and
+  seven on the Waveshare 4.3-inch. A page with a few tiles is fine now. A screen on older firmware keeps its old limit
+  until it is updated, and the editor offers it no more pages than it takes.
+- **The 10.1-inch Guition is five by five**, lying down and standing up (all three: JC8012P4A1, V2 and V3). Before it
+  was five by four lying down and four by five standing up.
+- **A saved layout moves on to a bigger grid by itself.** When a screen reports more rows or columns than its layout
+  was made for, ESP Screen Manager moves the layout to the new grid: every tile keeps its page, its row and its
+  column, and the new cells stay empty. Before, the screen waited for someone to review the change in the editor. A
+  grid that gets smaller still asks for that review.
+- Tested: tools/check.sh with new tests (the page limit per firmware in the add-on, the editor and the firmware, a grid
+  that grows, delivery to firmware that does not take the pages yet), the firmware of every board on ESPHome 2026.9.0
+  and 2026.6.2, and the 10.1-inch Guition rendered lying down and standing up. Not yet seen on the glass of a
+  10.1-inch screen.
 
 ## 0.4.29 (firmware 0.17.0)
 
-- **The top bar can go.** A new screen setting, **Top bar**, under Settings on the screen itself, in Home Assistant
-  (`switch.<screen>_top_bar`) and in Screen settings here. Off, the bar along the top goes with the page title, the
-  home key and the clock, and the tiles take its room: about 18 % of the glass on a CYD, where a tile grows from 157
-  to 188 pixels of height, and 41 to 58 pixels on every other board. Two things to know before you switch it off.
-  Holding that bar is what opens the settings page on the screen, so with it gone the page is reached from a
-  `screen.settings` tile, from Home Assistant or from here. And a page outside the swipe offers Back in that bar
-  while the page buttons are off, so a layout with such a page keeps its bar: leaving that page would be impossible
-  otherwise. The room the bar leaves is the same on every page, as the page buttons' room already is, so walking
-  through the pages never moves a tile.
-- **The home key stays off once you switch it off.** Show home button was the one setting the screen never wrote
-  down, so it was back on at the next restart. It has a record of its own now, like every other setting beside the
-  frozen block, and a check that says so holds for all of them.
-- Tested: tools/check.sh, and every board built on ESPHome 2026.9.0. The CYD takes 1,674,416 B of its 1,835,008 B
-  update slot, 91.2 %, which is 1,136 bytes more than the same checkout without these two changes; the Hosyond
-  4-inch is the next fullest at 93.3 %, and no other board passes 32 %. Not tried on a screen by hand yet.
+A new board, experimental: the Guition JC8012P4A1 V2 (GitHub #92).
 
-## 0.4.28 (firmware 0.16.0)
+- **Guition JC8012P4A1 V2** in New screen, as **Guition · 10.1 inch** (JC8012P4A1 V2): the 10.1-inch Guition with the
+  first build's early ESP32-P4 and the newer LCD of the V3 (a label saying V2, a case number of 2628 or higher). On the
+  first build's firmware this LCD showed a washed-out picture with a coloured line across it, and the V3's firmware does
+  not start on this chip. The V2 runs the V3's LCD table and touch driver on the first build's chip, with ESPHome's own
+  display driver. docs/JC8012P4A1.md says how to tell the three builds apart and what to report.
+- Nothing changes for a screen you have: no firmware update.
+- Tested: the board builds with ESPHome 2026.9 (2,672,528 B, 32.9 % of its 8 MB slot) and with 2026.8.0, the oldest it
+  asks for, and its render check passes lying down and standing up. Not yet seen on the glass of a V2.
 
-- **Stop a build from New screen too.** The wizard's build, which is the long one on a new screen, now has the same
-  Stop button next to its progress. A stopped build says it was stopped instead of that it went wrong: Retry builds
-  the profile that was already written again, carrying on from what ESPHome had compiled, and the log stays shut
-  because there is nothing in it to read.
-- Tested: tools/check.sh. In the wizard a running installation is stopped, and the card then shows the stopped words
-  and mark, offers Retry, and keeps the log closed.
+## 0.4.28 (firmware 0.17.0)
 
-## 0.4.27 (firmware 0.16.0)
+A new board, experimental: the Sunton ESP32-8048S070 (GitHub #94).
 
-- **Stop a build.** Firmware & USB now has a Stop button next to Check and Build, which appears while a build or an
-  installation is running. It ends the ESPHome command itself, not only the line the page shows, so a build started by
-  mistake or on the wrong profile no longer holds the machine for twenty minutes. What ESPHome compiled already stays,
-  so starting again carries on from there instead of building everything anew. A stopped build puts nothing on a
-  screen; a stopped installation leaves the screen on the firmware it had, and installing again over USB puts it right.
-- Tested: tools/check.sh. A build and an installation of the stand-in ESPHome are stopped in flight and the process
-  itself is gone afterwards, a job stopped in the moment before its first step is over as well, and stopping when
-  nothing runs says so instead of quietly doing nothing.
+- **Sunton 8048S070** in New screen, as **Sunton · 7 inch** (ESP32-8048S070): 800 x 480, four by four tiles lying down
+  and two by seven standing up, at the tile size of the 7-inch Waveshare. Its backlight dims, so brightness, standby and
+  night mode are all there. docs/SUNTON8048S070.md has the details and what to report.
+- Nothing changes for a screen you have: no firmware update.
+- Tested: the board builds with ESPHome 2026.9 (2,138,128 B, 26.3 % of its 8 MB slot) and with 2026.6.2, and its render
+  check passes lying down and standing up. Not yet seen on the glass of this board by the project: the panel is
+  ESPHome's own ESP32-8048S070 model, the touch bus and backlight pin follow a configuration a board owner ran.
+
+## 0.4.27 (firmware 0.17.0)
+
+- **A lamp, a switch, a script or a scene two cells high is one big key.** On a tile of 2 x 2 or 1 x 2 cells the card
+  shows a large circle, the name and the state, like the tile over a whole page, and the whole card is what you tap. A
+  tile with a control on it (a dimmer, the volume, a vacuum's keys) keeps its controls as before.
+- **The flip clock fills a wide card.** On a card as wide as the page and two rows high, or a whole page, the two blocks
+  share the width and the day and AM or PM stand on one line under them: a bedside clock of your own, with tiles under it.
+- **The bedside clock** (GitHub #93):
+  - AM or PM stands under the end of the time. Beside it, a time from 10:00 to 12:59 ran off the glass.
+  - The keys under the clock open their own settings and drag to another place or to an empty cell. A click on a key or
+    an empty place opened the clock instead, and dragging a key dragged the whole clock.
+  - **Name under the key** can be turned off per key; the circle then stands alone.
+- **A screen can do without a title.** Leave the screen title empty and the top bar shows only the logo. Pages with a
+  title of their own still show it.
+- **Download screen files.** A screen's details in the sidebar download its ESPHome YAML, its Override YAML and a
+  `secrets.yaml` with only the secrets they use, to build the screen with ESPHome on your own computer.
+- A tile's new background shows on the screen straight away. A change of background alone waited for the entity's next
+  state, so an idle timer, or any tile whose state stood still, kept its old colour.
+- Dragging a tile that fills a page shows where it can go: a page that has tiles says it has no room, and a drop tells
+  you so, instead of nothing happening.
+- **One fixed set of font sizes.** Every board renders the same short list of text, digit and icon steps, and a new card
+  takes the largest step that fits instead of bringing a size of its own. The flip clock and the bedside clock share the
+  large digits, so the bedside digits are a little smaller on the 4-inch Guition (164 to 153 px) and the CYD (81 to 73
+  px); larger screens keep theirs. A tile name with room on the CYD is no longer bold. The CYD firmware is 19.5 KB
+  smaller (90.1 % of its slot).
+- The editor's mockup draws all of this as the screen does, a script tile says "Never run" and "Running" in the screen's
+  language instead of a text key, and a change to a key under the bedside clock keeps its panel open.
+- Tested: tools/check.sh with new tests (the font set, the big key, the flip and bedside layouts, key names in the add-on
+  and the editor, the empty title, the screen files, the paint repaint, dragging a key). Every design rendered from the
+  firmware's own code on eight boards before it was built; on a Guition 4848S040 and a CYD ESP32-2432S028R with firmware
+  0.17.0 and a Home Assistant OS bench: a timer's new background, the empty title, the flip clock and the big key on the
+  glass, and the screen files built with ESPHome on a Mac.
 
 ## 0.4.26 (firmware 0.16.0)
 

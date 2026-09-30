@@ -110,7 +110,10 @@
       "home": "Zuhause",
       "no_network": "Kein Netzwerk",
       "configuration_problem": "Konfigurationsproblem.\nAdd-on aktualisieren.",
-      "configuration_version": "Konfigurationsproblem.\nBildschirm- und Add-on-Versionen prüfen."
+      "configuration_version": "Konfigurationsproblem.\nBildschirm- und Add-on-Versionen prüfen.",
+      "wifi_problem": "WLAN-Verbindungsproblem",
+      "wifi_hotspot": "Verbinde dich mit dem Hotspot {name}, um das zu beheben.\nPasswort: {password}",
+      "wifi_usb": "Prüfe WLAN-Name und Passwort und installiere diesen Bildschirm erneut über USB."
     },
     "preparing": {
       "default": "Kacheln werden sortiert",
@@ -594,6 +597,7 @@
         "column_range": "Wähle eine Spalte zwischen 1 und {last}; left und right sind die erste und die letzte.",
         "full_page_alone": "Eine ganzseitige Kachel belegt die ganze Seite {page}; dort passt nichts anderes hin.",
         "does_not_fit": "Das passt nicht auf Seite {page}; eine doppelt breite Kachel belegt zwei Plätze.",
+        "size": "Dieser Bildschirm hat keine Kachel in {size}. Möglich sind: {sizes}.",
         "order_needed": "Gib die Entitäten in der gewünschten Reihenfolge an.",
         "order_not_on_screen": "Nicht auf diesem Bildschirm: {entities}.",
         "order_not_on_page": "Nicht auf Seite {page}: {entities}. Verschiebe sie zuerst dorthin.",
@@ -716,7 +720,7 @@
         "ambiguous_tile": "Der Kachelbefehl hat mehrere mögliche Quellen; gib die Seite an",
         "save_first": "Speichere zuerst das Seitenlayout und danach die Einstellungen",
         "destination_exists": "Der Zielbildschirm hat bereits ein gespeichertes Layout",
-        "update_tall": "Aktualisiere den Bildschirm, um höhere Kacheln zu verwenden",
+        "update_tall": "Aktualisiere den Bildschirm, um diese Kachelgrößen zu verwenden",
         "memory": "Der Bildschirm hat nicht genug freien Speicher für dieses Layout. Verwende weniger Kacheln."
       },
       "feedback": {
@@ -1237,7 +1241,6 @@
       },
       "search": "Suchen",
       "screens": "Bildschirme",
-      "more": "Mehr",
       "refresh": "Neu laden",
       "update": {
         "button": "Aktualisieren",
@@ -1245,7 +1248,8 @@
         "available": "Update {version}",
         "no_profile": "Kein ESPHome-Profil mit diesem Gerätenamen gefunden.",
         "whats_new": "Was ist neu",
-        "full_log": "Ganzes Protokoll"
+        "full_log": "Ganzes Protokoll",
+        "short": "Update"
       },
       "host": {
         "hint": "Gib einmal die IP-Adresse ein; neue Firmware meldet sie selbst.",
@@ -1259,6 +1263,8 @@
         "not_flashed": "Noch nicht in Home Assistant. Schon geflasht? Füge das ESPHome-Gerät unter Einstellungen → Geräte & Dienste hinzu und erlaube dann unter „Konfigurieren“ die Home Assistant-Aktionen. Noch nicht geflasht? Firmware & USB → {file}."
       },
       "copy_api_key": "API-Schlüssel kopieren",
+      "files": "Bildschirmdateien herunterladen",
+      "files_hint": "Die ESPHome-YAML des Bildschirms mit seinen Schlüsseln, die Override-YAML und eine secrets.yaml mit dem WLAN, um ihn mit ESPHome auf dem eigenen Computer zu bauen.",
       "details": {
         "room": "Bereich",
         "firmware": "Firmware",
@@ -1432,10 +1438,7 @@
         "alarm_control_panel": "Alarm",
         "lock": "Schlösser"
       },
-      "more": "Mehr ({n})",
-      "fewer": "Weniger",
       "room": "Bereich",
-      "all_rooms": "Alle Bereiche",
       "hide_placed": "Platzierte ausblenden",
       "hide_placed_title": "Ausblenden, was schon auf diesem Bildschirm ist",
       "again": "Schon auf diesem Bildschirm; nochmal hinzufügen für eine weitere Kachel",
@@ -1443,7 +1446,10 @@
       "none_found": "Keine Entitäten gefunden. Versuche einen anderen Namen, Bereich oder Filter.",
       "full": "Dieser Bildschirm fasst 1 Kachel. | Dieser Bildschirm fasst {n} Kacheln.",
       "full_update": "Dieser Bildschirm fasst 1 Kachel; mit einem Firmware-Update sind es 48. | Dieser Bildschirm fasst {n} Kacheln; mit einem Firmware-Update sind es 48.",
-      "hint": "Ziehe eine Entität auf eine Seite oder tippe auf +, um sie auf den ersten freien Platz zu setzen. ⌘K durchsucht alles."
+      "hint": "Ziehe eine Entität auf eine Seite oder tippe auf +, um sie auf den ersten freien Platz zu setzen. ⌘K durchsucht alles.",
+      "resize": "Ziehen, um die Bibliothek zu vergrößern oder zu verkleinern",
+      "filter_label": "Nach Art filtern",
+      "no_room": "Ohne Raum"
     },
     "domains": {
       "light": "Leuchte",
@@ -1547,21 +1553,6 @@
           "none": "Nichts"
         }
       },
-      "size": {
-        "label": "Größe",
-        "single": "Normal",
-        "wide": "Doppelt breit",
-        "full": "Ganze Seite",
-        "full_hint": "Ganze Seite: eine große Taste in der eigenen Farbe der Kachel; am unteren Rand sitzen ein Schieberegler, Bedienelemente oder ein Diagramm.",
-        "needs_firmware": "Eine ganzseitige Kachel braucht Firmware 0.2.62: Drücke zuerst beim Bildschirm auf „Aktualisieren“.",
-        "tall": "1 × 2",
-        "square": "2 × 2",
-        "rectangle_hint": "Breite × Höhe in Rasterzellen. Verwendet das bestehende Kacheldesign."
-      },
-      "page": {
-        "label": "Seite",
-        "new": "Neue Seite"
-      },
       "controls": {
         "label": "Direkte Steuerung auf der Kachel",
         "not_offered": "Home Assistant bietet diese Steuerung für diese Entität nicht an, daher bleibt sie auf dem Bildschirm leer. Wähle eine andere.",
@@ -1630,15 +1621,15 @@
         "rows": "Höhe ändern (Pfeiltasten auf/ab)"
       },
       "sections": {
-        "text": "Text",
         "look": "Aussehen",
-        "place": "Größe und Platz",
         "controls": "Bedienung",
         "style": "Symbol und Farbe"
       },
       "keys": {
         "hint": "Ziehe eine Lampe, eine Temperatur oder ein Schloss auf die runden Plätze unter der Uhrzeit, oder tippe auf einen Platz und wähle eine aus. Es sind Kacheln: Tippe eine an, um sie einzurichten.",
-        "under": "Unter der Nachttischuhr: eine Kachel in ihrer runden Form. Ein Tippen tut, was es auf einer Kachel tut, und Halten öffnet ihre Karte."
+        "under": "Unter der Nachttischuhr: eine Kachel in ihrer runden Form. Ein Tippen tut, was es auf einer Kachel tut, und Halten öffnet ihre Karte.",
+        "name_shown": "Name unter der Taste",
+        "name_shown_hint": "Aus zeigt nur den Kreis."
       }
     },
     "tile_card": {
@@ -1695,6 +1686,7 @@
       "name_placeholder": "Zum Beispiel: Wohnzimmer",
       "screen_name": "Titel des Bildschirms",
       "screen_name_hint": "Jede Seite ohne eigenen Titel zeigt diesen.",
+      "no_title_hint": "Leer lassen, um nur das Logo zu zeigen.",
       "right": "Rechts: Uhrzeit, Sensoren oder eine Uhr",
       "item_label": "{name}, Platz {slot}. Enter: einstellen, Pfeile: verschieben",
       "remove_named": "{name} aus der Kopfleiste entfernen",
@@ -1902,7 +1894,6 @@
     },
     "installer": {
       "title": {
-        "setup": "Verbinden und installieren.",
         "saved": "Profil gespeichert.",
         "running": "Einen Moment…",
         "ready": "Bereit zum Herunterladen.",
@@ -1910,7 +1901,6 @@
         "stopped": "Angehalten.",
         "failed": "Das hat nicht geklappt."
       },
-      "intro": "Tessera legt das eigene Profil des Bildschirms mit eindeutigen Schlüsseln an und erstellt die Firmware. Schließe den Bildschirm mit einem USB-Datenkabel an den Rechner an, auf dem Home Assistant läuft, oder an den Computer, an dem du gerade sitzt.",
       "board": "Welchen Bildschirm hast du?",
       "board_title": "{name} · {inch} Zoll",
       "status": {
@@ -1931,10 +1921,12 @@
         "calibration": "Touch-Kalibrierung beim ersten Start"
       },
       "choice": {
-        "DISPLAY_MODEL": "Display-Controller"
+        "DISPLAY_MODEL": "Display-Controller",
+        "GRID_ROWS": "Kacheln pro Seite"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Die meisten dieser Boards haben den ersten. Nimm den anderen, wenn der Bildschirm Rauschen oder ein verzerrtes Bild zeigt."
+        "DISPLAY_MODEL": "Die meisten dieser Boards haben den ersten. Nimm den anderen, wenn der Bildschirm Rauschen oder ein verzerrtes Bild zeigt.",
+        "GRID_ROWS": "Vier Reihen bringen acht kleinere Kacheln auf eine Seite, für einen Bildschirm mit vielen Schaltern. Drei Reihen halten die Kacheln größer und besser lesbar."
       },
       "choice_usual": "die meisten",
       "orientation": "Wie soll er hängen?",
@@ -1945,7 +1937,6 @@
       "name": "Name",
       "name_placeholder": "Bildschirm Wohnzimmer",
       "device_name": "Gerätename",
-      "customize": "anpassen",
       "name_hint": "Jeder Bildschirm bekommt ein eigenes Profil mit eigenen Schlüsseln. Vier Bildschirme? Dann das Ganze viermal, mit je einem anderen Namen.",
       "name_taken": "Ein anderer Bildschirm heißt bereits so. Home Assistant würde die Entitätsnamen dieses Bildschirms nummerieren, Automationen würden dann den falschen ansprechen.",
       "device_name_hint": "Kleinbuchstaben, Ziffern und Bindestriche. Für jeden Bildschirm ein anderer Name.",
@@ -1957,12 +1948,13 @@
         "new": "Einmal ausfüllen: Tessera speichert das in der secrets.yaml von ESPHome, weitere Bildschirme nutzen es automatisch.",
         "missing": "In deiner secrets.yaml von ESPHome fehlen noch Wi-Fi-Angaben. Tessera ergänzt nur die fehlenden Zeilen.",
         "ready": "Die Wi-Fi-Daten kommen aus deiner secrets.yaml von ESPHome.",
-        "invalid": "Die secrets.yaml im ESPHome-Ordner ist kein gültiges YAML. Korrigiere zuerst die Datei; sie wird nicht überschrieben."
+        "invalid": "Die secrets.yaml im ESPHome-Ordner ist kein gültiges YAML. Korrigiere zuerst die Datei; sie wird nicht überschrieben.",
+        "other": "Anderes Netzwerk",
+        "other_note": "Jeder Bildschirm wird mit diesem WLAN gebaut; vorhandene Bildschirme übernehmen es beim nächsten Update."
       },
       "install_via": "Installieren über",
-      "later": "Später · nur Profil speichern",
       "target": {
-        "usb": "Schließe den Bildschirm mit einem USB-Datenkabel an den Home Assistant-Rechner an; die Liste aktualisiert sich von selbst. Oder wähle „Dieser Computer“, um aus diesem Browser zu installieren.",
+        "usb": "Schließe den Bildschirm mit einem USB-Datenkabel an den Home Assistant-Rechner an; er erscheint hier von selbst. Hängt er an dem Computer, an dem du gerade sitzt? Wähle „Über diesen Computer“.",
         "download": "Lade die Firmware herunter und spiele sie in Chrome oder Edge von deinem eigenen Computer aus auf den Bildschirm. Danach laufen Updates über Wi-Fi.",
         "later": "Das Profil kommt in den ESPHome-Ordner. Installieren kannst du später über Firmware & USB oder im ESPHome Device Builder.",
         "several": "Mehr als ein Board angeschlossen: Wähle den Port dieses Bildschirms.",
@@ -2014,12 +2006,75 @@
         "tiles": "{bold} Zurück in Tessera erscheint der Bildschirm innerhalb von etwa dreißig Sekunden links in der Liste; bis dahin steht er dort als „noch nicht in Home Assistant“.",
         "tiles_bold": "Wähle deine Kacheln."
       },
-      "log": "ESPHome-Protokoll",
       "retry": "Erneut versuchen",
       "another": "Weiteren Bildschirm installieren",
       "start_over": "Neu beginnen",
       "done": "Fertig",
-      "key_more": "API-Schlüssel anzeigen"
+      "key_more": "API-Schlüssel anzeigen",
+      "steps": {
+        "board": "Bildschirm",
+        "setup": "Einrichten",
+        "install": "Installieren"
+      },
+      "pick_title": "Welchen Bildschirm hast du?",
+      "pick_intro": "Wähle dein Board. Suche nach Marke, Größe oder Aufdruck.",
+      "search": "Nach Marke, Größe oder Modell suchen",
+      "sizes": {
+        "all": "Alle",
+        "small": "Bis 4 Zoll",
+        "medium": "4 bis 6 Zoll",
+        "large": "Ab 7 Zoll"
+      },
+      "none_found": "Kein Bildschirm passt zu „{query}“.",
+      "try_virtual": "Noch kein Bildschirm? Probiere einen Vorschau-Bildschirm",
+      "setup_title": "Mach ihn zu deinem",
+      "install_title": "Wie möchtest du installieren?",
+      "next": "Weiter",
+      "advanced": "Erweitert",
+      "ways": {
+        "ha_title": "USB an Home Assistant",
+        "ha_found": "Gefunden: {port}",
+        "ha_waiting": "Schließe den Bildschirm an den Rechner an, auf dem Home Assistant läuft",
+        "browser_title": "Über diesen Computer",
+        "browser_detail": "Chrome oder Edge, mit dem Bildschirm am USB dieses Computers",
+        "download_title": "Datei herunterladen",
+        "download_detail": "Selbst mit ESPHome Web aufspielen",
+        "later_title": "Später",
+        "later_detail": "Nur die Einstellungen speichern"
+      },
+      "steps_done": {
+        "prepare": "Vorbereiten",
+        "build": "Firmware bauen",
+        "write": "Auf den Bildschirm schreiben",
+        "restart": "Starten",
+        "done": "Fertig",
+        "download": "Bereit zum Herunterladen"
+      },
+      "elapsed": "seit {time}",
+      "show_log": "Details zeigen",
+      "hide_log": "Details ausblenden",
+      "next_title": "Wie geht es weiter",
+      "model": "Welches Modell ist es?",
+      "model_hint": "Steht auf der Rückseite der Platine. Sie sehen gleich aus, brauchen aber jeweils eigene Firmware.",
+      "models": "{n} Modell | {n} Modelle",
+      "arrive": {
+        "waiting": "Warte, bis {name} im WLAN erscheint...",
+        "seen": "{name} ist im WLAN. Kopple ihn jetzt in Home Assistant.",
+        "paired": "{name} ist mit Home Assistant gekoppelt.",
+        "missing": "{name} ist noch nicht im WLAN",
+        "hotspot": "Schau auf den Bildschirm: Er nennt einen Hotspot mit Passwort. Verbinde dein Handy damit und wähle dort das richtige WLAN. Oder trage hier das richtige WLAN ein und installiere erneut.",
+        "no_hotspot": "Wahrscheinlich stimmen WLAN-Name oder Passwort nicht. Trage hier das richtige WLAN ein und installiere erneut, mit dem Bildschirm noch am Kabel.",
+        "change": "WLAN ändern und neu installieren"
+      },
+      "choice_option": {
+        "GRID_ROWS": {
+          "3": "3 Reihen",
+          "4": "4 Reihen, kleinere Kacheln"
+        }
+      },
+      "choice_first": {
+        "GRID_ROWS": "die übliche Größe"
+      }
     },
     "alerts": {
       "eyebrow": "Meldungen · Spickzettel",
@@ -2434,7 +2489,15 @@
       "saved": "In diesem Browser gespeichert",
       "hint": "Die Firmware des Bildschirms selbst, gezeichnet aus dem Layout, das du bearbeitest. Tippe, halte und wische wie auf dem Bildschirm. Es wird nichts gespeichert.",
       "control": "Tippen steuert Geräte",
-      "control_hint": "Ein: Ein Tippen auf eine Kachel führt ihre Aktion in Home Assistant aus, wie auf dem Bildschirm. Aus: Die Vorschau zeigt nur, was ein Tippen bewirkt."
+      "control_hint": "Ein: Ein Tippen auf eine Kachel führt ihre Aktion in Home Assistant aus, wie auf dem Bildschirm. Aus: Die Vorschau zeigt nur, was ein Tippen bewirkt.",
+      "skipped": "Vorschau-Bildschirm {names} ließ sich nicht laden und wurde ausgelassen."
+    },
+    "inspector": {
+      "kind": {
+        "tile": "Kachel",
+        "page": "Seite",
+        "bar": "Kopfleiste"
+      }
     }
   }
 }

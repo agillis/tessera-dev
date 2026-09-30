@@ -44,6 +44,37 @@ class WifiReuse(unittest.TestCase):
             self.assertEqual(f.wifi_status()['state'], 'ready')
             self.assertTrue((Path(tmp) / 'screen.yaml').exists())
 
+    def test_another_network_replaces_both_lines_and_keeps_the_rest(self):
+        # New screen -> Another network (app 0.4.32): a screen that did not come online gets the right Wi-Fi.
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Firmware(tmp, tmp)
+            path = Path(tmp) / 'secrets.yaml'
+            path.write_text('# keep comments\nwifi_ssid: old-net\nwifi_password: old-pass\nother: keep\n')
+            f.change_wifi({'wifi_ssid': 'new: net', 'wifi_password': 'p "w"'})
+            text = path.read_text()
+            self.assertTrue(text.startswith('# keep comments\n'))
+            self.assertEqual(yaml.safe_load(text), {'wifi_ssid': 'new: net', 'wifi_password': 'p "w"', 'other': 'keep'})
+            self.assertNotIn('new: net', json.dumps(f.status()))
+            with self.assertRaises(ValueError):
+                f.change_wifi({'wifi_ssid': ' ', 'wifi_password': 'x'})
+            # No file yet: it is made, readable by the add-on alone.
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Firmware(tmp, tmp)
+            f.change_wifi({'wifi_ssid': 'net', 'wifi_password': 'pw'})
+            self.assertEqual(yaml.safe_load((Path(tmp) / 'secrets.yaml').read_text()), {'wifi_ssid': 'net', 'wifi_password': 'pw'})
+            self.assertEqual(f.wifi_status()['state'], 'ready')
+
+    def test_a_long_device_name_keeps_the_hotspot_name_within_32_characters(self):
+        # ESPHome refuses a network name over 32 characters; " Setup" needs six of them (app 0.4.32).
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Firmware(tmp, tmp)
+            (Path(tmp) / 'secrets.yaml').write_text('wifi_ssid: net\nwifi_password: pw\n')
+            name = 'a' + 'b' * 29
+            f.create({'board': 'guition', 'name': name, 'friendly_name': 'Long'})
+            ssid = yaml.safe_load(f.profile(f'{name}.yaml').read_text().split('captive_portal:')[0].split('wifi:')[1].replace('!secret ', ''))['ap']['ssid']
+            self.assertLessEqual(len(ssid), 32)
+            self.assertTrue(ssid.endswith(' Setup'))
+
     def test_invalid_secrets_are_never_rewritten(self):
         with tempfile.TemporaryDirectory() as tmp:
             f = Firmware(tmp, tmp)
@@ -54,6 +85,9 @@ class WifiReuse(unittest.TestCase):
                           'wifi_ssid': 'net', 'wifi_password': 'pw'})
             self.assertEqual(path.read_text(), 'wifi_ssid: [invalid')
             self.assertFalse((Path(tmp) / 'screen.yaml').exists())
+            with self.assertRaises(ValueError):
+                f.change_wifi({'wifi_ssid': 'net', 'wifi_password': 'pw'})
+            self.assertEqual(path.read_text(), 'wifi_ssid: [invalid')
 
     def test_install_checks_port_and_busy_slot_before_writing(self):
         with tempfile.TemporaryDirectory() as tmp:

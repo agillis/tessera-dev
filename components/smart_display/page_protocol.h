@@ -23,7 +23,22 @@ struct TileSize {
 // Square requires two actual columns. Advertisement and input use this table.
 inline constexpr std::array<TileSize, 5> TILE_SIZES{{
     {"single", 1, 1}, {"wide", 1, 1}, {"full", 1, 1}, {"tall", 1, 2}, {"square", 2, 2}}};
+// A span (firmware 0.19.0): "CxR", a tile of C columns and R rows, set with the tile's handles in the editor. The five
+// names keep the sizes they always were; a span is every other rectangle smaller than the grid (the whole grid is
+// "full"), so 3 x 2 on a grid of three columns and 2 x 3 on one of four rows.
+inline bool span_of(const std::string &name, unsigned &columns, unsigned &rows) {
+  if (name.size() != 3 || name[1] != 'x' || name[0] < '1' || name[0] > '9' || name[2] < '1' || name[2] > '9') return false;
+  columns = static_cast<unsigned>(name[0] - '0');
+  rows = static_cast<unsigned>(name[2] - '0');
+  return true;
+}
+inline bool span_offered(unsigned columns, unsigned rows, unsigned grid_columns, unsigned grid_rows) {
+  if (columns > grid_columns || rows > grid_rows || (columns == grid_columns && rows == grid_rows)) return false;
+  return columns > 2 || rows > 2;  // Up to 2 x 2 the names say it.
+}
 inline bool accepts_size(const std::string &name, unsigned columns, unsigned rows) {
+  unsigned span_columns = 0, span_rows = 0;
+  if (span_of(name, span_columns, span_rows)) return span_offered(span_columns, span_rows, columns, rows);
   if (name.empty()) return TILE_SIZES[0].fits(columns, rows);  // Default is single.
   for (const auto &size : TILE_SIZES)
     if (name == size.name && size.fits(columns, rows)) return true;

@@ -7,7 +7,7 @@ import { computed, nextTick, onBeforeUnmount } from "vue";
 import { vDrag } from "../drag";
 import { t } from "../i18n";
 import { sizeOf } from "../model/layout";
-import { deviceStyle, homeKeyShown, isCompact, movePage, navigationSettings, openBar, pageAt, pageReady, pageTitleShown, roomyNames, screenText, setHomePage, state, topbarItems } from "../store";
+import { deviceStyle, homeKeyShown, isCompact, movePage, navigationSettings, openBar, openPage, pageAt, pageReady, pageTitleShown, previewed, roomyNames, screenText, setHomePage, state, topbarItems } from "../store";
 import type { Tile } from "../types";
 import TileCard from "./TileCard.vue";
 import TopbarSvg from "./TopbarSvg.vue";
@@ -19,6 +19,14 @@ import { navigationHeader, type NavigationIntent } from '../model/pages';
 const props = defineProps<{ page: number; entries: { tile: Tile; slot: number }[]; pages: number; moving: Tile | null; map?: boolean; preview?: boolean; canGoBack?: boolean }>();
 const emit = defineEmits<{ navigate: [intent: NavigationIntent] }>();
 const owned = computed(() => pageAt(props.page));
+// A click on the page itself opens its settings: its head ("Page 3"), the room around the tiles and its dots. A tile, an
+// empty cell, the screen's top bar and the menus keep their own click (app 0.4.32).
+function pageClick(event: MouseEvent) {
+  if (props.preview || !owned.value) return;
+  const target = event.target as HTMLElement;
+  if (target.closest(".tile, .cell, .bar-wrap, .home-chip, a, input, [role='menu'], [role='menuitem'], button:not(.grab)")) return;
+  openPage(owned.value.id);
+}
 const isHome = computed(() => owned.value?.id === state.document?.homePageId);
 const backInHeader = computed(() => !navigationSettings().pageButtons && Boolean(owned.value?.navigation.excludeFromPagination));
 // The screen's Top bar setting (firmware 0.17.0+): off, the mockup loses its bar too, and the cells grow into the
@@ -71,7 +79,7 @@ async function onKey(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="page" :class="{ carried }" :style="deviceStyle" :data-page-id="owned?.id">
+  <div class="page" :class="{ carried, refused: state.drag.refused === page, chosen: !preview && !!owned && state.selectedPageId === owned.id && state.inspector?.kind === 'page' }" :style="deviceStyle" :data-page-id="owned?.id" @click="pageClick">
     <div v-if="!preview" class="page-head" :class="{ selected: state.selectedPageId === owned?.id && state.inspector?.kind === 'page' }">
       <button v-if="movable" type="button" class="grab" :data-page="page" v-drag="{ kind: 'page', page }"
         :title="t('editor.page.move_title')" :aria-label="t('editor.page.move_aria', { page: page + 1 })" @keydown="onKey">
@@ -96,7 +104,7 @@ async function onKey(e: KeyboardEvent) {
       </div>
       <div class="tiles">
         <template v-for="slot in cells" :key="slot">
-          <TileCard v-if="bySlot.get(slot)" :tile="bySlot.get(slot)!.tile" :slot="slot" :placeholder="bySlot.get(slot)!.tile === moving" :preview="preview" @navigate="emit('navigate', { kind: 'tile', tileId: $event })" />
+          <TileCard v-if="bySlot.get(slot)" :tile="preview ? bySlot.get(slot)!.tile : previewed(bySlot.get(slot)!.tile)" :slot="slot" :placeholder="bySlot.get(slot)!.tile === moving" :preview="preview" @navigate="emit('navigate', { kind: 'tile', tileId: $event })" />
           <span v-else-if="preview" class="cell preview-empty" :style="cellStyle(slot)"></span>
           <button v-else type="button" class="cell" :style="cellStyle(slot)" :class="{ 'insert-here': state.insertAt === slot }" :data-slot="slot"
             :title="t('editor.page.cell.title')"

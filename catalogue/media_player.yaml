@@ -1,0 +1,18 @@
+# Media player. Home Assistant: homeassistant/components/media_player.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: media_player
+controls:
+  volume:
+    needs: {actions: [media_player.volume_set, media_player.volume_mute]}
+  playback:
+    needs: {actions: [media_player.media_play_pause, media_player.media_play, media_player.media_pause, media_player.media_next_track, media_player.media_previous_track]}
+inline:
+  needs: {actions: [media_player.volume_set]}
+displays:
+  standard: {}
+  watch: {}
+  # The album cover in the icon's place, on a board that draws pictures (firmware 0.2.78), not on a whole page.
+  cover:
+    screen: {pictures: true, firmware: 0.2.78}
+    sizes: {full: false}

@@ -1,0 +1,8 @@
+# Alarm panel. Home Assistant: homeassistant/components/alarm_control_panel.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: alarm_control_panel
+firmware: 0.3.3   # the first firmware that draws this type
+displays:
+  standard: {}
+  watch: {}

@@ -1,0 +1,14 @@
+# Number helper. Home Assistant: homeassistant/components/input_number.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: input_number
+displays:
+  standard: {}
+  watch: {}
+controls:
+  stepper:
+    needs: {actions: [input_number.set_value]}
+  slider:
+    needs: {actions: [input_number.set_value]}
+inline:
+  needs: {actions: [input_number.set_value]}

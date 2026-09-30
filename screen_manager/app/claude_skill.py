@@ -49,7 +49,7 @@ def _grids():
     return '; '.join(f'{columns} × {rows} on {_and(boards)}' for (columns, rows), boards in grids.items())
 
 NAMES = list(dict.fromkeys(SHAPES[board].get('catalog', {}).get('name', board) for board in BOARD_KEYS))
-DESCRIPTION = (f'ESP Screens ({_and(NAMES)} screens run from Home Assistant): put, move or order tiles on a '
+DESCRIPTION = (f'ESP Screens ({_and(NAMES)} screens in Home Assistant): put, move or order tiles on a '
                'screen, show an alert or open a page on it, and wake, sleep or keep a screen awake.')
 TYPES = {'string': 'text', 'int': 'number', 'bool': 'on/off'}
 
@@ -58,9 +58,9 @@ def skill_dir(config=None):
     return Path(config or os.environ.get('HA_CONFIG', '/homeassistant')) / '.claude' / 'skills' / NAME
 
 def _limit(name, kind):
-    """The bytes a text field holds on each look, with the boards that have it ("CYD 48 · Guition and Waveshare 64 bytes")."""
+    """The bytes a text field holds on each look, with the boards that have it ("CYD and Hosyond 48 · Guition, Waveshare and Sunton 64 bytes")."""
     boards = limit_boards()
-    parts = [f"{' and '.join(boards[look])} {values[name]}" for look, values in ALERT_LIMITS.items() if name in values and boards.get(look)]
+    parts = [f"{_and(boards[look])} {values[name]}" for look, values in ALERT_LIMITS.items() if name in values and boards.get(look)]
     if parts:
         return ' · '.join(parts) + ' bytes'
     return f'0 to {ALERT_MAX_TIMEOUT} s' if kind == 'int' else ''
@@ -125,7 +125,7 @@ actions:
 | `row`, `column` | An exact spot on that page: the row counted from 1, and the column as a number counted from 1 or as `left` or `right` (the first and the last column; `middle` on a screen with three). |
 | `slot` | An exact spot as the screen's sensor counts it, from 0 up to its pages times its cells minus one: instead of `page`, `row` and `column`. |
 | `from_page`, `from_slot` | Only for `esp_screens_move_tile`: which copy of an entity that is on several tiles to move (see below). |
-| `size` | `single`, `wide` or `full` (the whole page; firmware {FULL_PAGE_VERSION} or newer). |
+| `size` | `single`, `wide`, `tall` (two rows), `square` (two by two) or `full` (the whole page). On firmware 0.19.0 or newer also any other rectangle the grid holds, as columns x rows, such as `1x3` or `3x2`. |
 | `controls` | What you can operate on the tile itself (see below). |
 | `display` | How the tile draws itself (see below). On a screen that draws pictures (every board but {_and(f'the {_board(b)}' for b in BOARD_KEYS if 'camera' not in SHAPES[b])}) a camera or image tile takes `live` (firmware {LIVE_VERSION} or newer): its live picture, over the whole tile from firmware 0.3.7 (in the icon's place before), with `refresh` 5, 10, 15 or 30 (seconds), `fit` `contain` for the whole picture and `overlay` `none` for no name on it; a media player tile takes `cover` (firmware {COVER_TILE_VERSION} or newer): the album cover of what plays in the icon's place. |
 | `icon`, `color` | An icon from the list further down, and one of the pastel colors. |

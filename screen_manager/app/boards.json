@@ -25,7 +25,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 143,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 18,
+   "sublabel": 11,
+   "sublabel_big": 14,
+   "watch_value": 22
+  },
   "height": 240,
   "hotspot": false,
   "look": "compact",
@@ -46,6 +52,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 6,
+   "margin": 9,
+   "tile_pad": 8
+  },
   "width": 320
  },
  "checkout/cyd9342.yaml": {
@@ -69,7 +80,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 143,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 18,
+   "sublabel": 11,
+   "sublabel_big": 14,
+   "watch_value": 22
+  },
   "height": 240,
   "hotspot": false,
   "look": "compact",
@@ -90,6 +107,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 6,
+   "margin": 9,
+   "tile_pad": 8
+  },
   "width": 320
  },
  "checkout/guition.yaml": {
@@ -111,7 +133,12 @@
   "can_standby": true,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "GRID_ROWS": [
+     "3",
+     "4"
+    ]
+   },
    "inch": 4.0,
    "model": "ESP32-S3-4848S040",
    "name": "Guition",
@@ -123,7 +150,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -164,6 +197,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "checkout/hosyond40.yaml": {
@@ -187,7 +225,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 146,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 18,
+   "sublabel": 11,
+   "sublabel_big": 14,
+   "watch_value": 22
+  },
   "height": 320,
   "hotspot": false,
   "look": "compact",
@@ -208,6 +252,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 6,
+   "margin": 9,
+   "tile_pad": 8
+  },
   "width": 480
  },
  "checkout/jc1060p470.yaml": {
@@ -241,7 +290,13 @@
   "columns": 4,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 600,
   "hotspot": true,
   "look": "standard",
@@ -282,6 +337,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 1024
  },
  "checkout/jc1060p470v2.yaml": {
@@ -315,7 +375,13 @@
   "columns": 4,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 600,
   "hotspot": true,
   "look": "standard",
@@ -356,6 +422,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 1024
  },
  "checkout/jc3248w535.yaml": {
@@ -389,7 +460,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 165,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 25,
+   "sublabel": 16,
+   "sublabel_big": 20,
+   "watch_value": 37
+  },
   "height": 320,
   "hotspot": true,
   "look": "standard",
@@ -430,6 +507,11 @@
    }
   },
   "rows": 2,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "checkout/jc8012p4a1.yaml": {
@@ -463,7 +545,13 @@
   "columns": 5,
   "dimmable": true,
   "dpi": 149,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 23,
+   "sublabel": 14,
+   "sublabel_big": 18,
+   "watch_value": 33
+  },
   "height": 800,
   "hotspot": true,
   "look": "standard",
@@ -482,7 +570,7 @@
     "columns": 5,
     "height": 800,
     "rotation": 90,
-    "rows": 4,
+    "rows": 5,
     "width": 1280
    },
    "portrait": {
@@ -496,14 +584,104 @@
       193
      ]
     },
-    "columns": 4,
+    "columns": 5,
     "height": 1280,
     "rotation": 180,
     "rows": 5,
     "width": 800
    }
   },
-  "rows": 4,
+  "rows": 5,
+  "spacing": {
+   "gap": 11,
+   "margin": 14,
+   "tile_pad": 11
+  },
+  "width": 1280
+ },
+ "checkout/jc8012p4a1v2.yaml": {
+  "alert": {
+   "line": 21,
+   "title_line": 28
+  },
+  "board": "jc8012p4a1v2",
+  "camera": {
+   "full": [
+    1280,
+    800
+   ],
+   "thumb": [
+    343,
+    193
+   ]
+  },
+  "can_standby": true,
+  "catalog": {
+   "calibrate": false,
+   "choices": {},
+   "inch": 10.1,
+   "model": "JC8012P4A1 V2",
+   "name": "Guition",
+   "order": 15,
+   "status": "experimental",
+   "touch": "GSL3680"
+  },
+  "chip": "ESP32-P4",
+  "columns": 5,
+  "dimmable": true,
+  "dpi": 149,
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 23,
+   "sublabel": 14,
+   "sublabel_big": 18,
+   "watch_value": 33
+  },
+  "height": 800,
+  "hotspot": true,
+  "look": "standard",
+  "orientations": {
+   "landscape": {
+    "camera": {
+     "full": [
+      1280,
+      800
+     ],
+     "thumb": [
+      343,
+      193
+     ]
+    },
+    "columns": 5,
+    "height": 800,
+    "rotation": 90,
+    "rows": 5,
+    "width": 1280
+   },
+   "portrait": {
+    "camera": {
+     "full": [
+      800,
+      1280
+     ],
+     "thumb": [
+      343,
+      193
+     ]
+    },
+    "columns": 5,
+    "height": 1280,
+    "rotation": 180,
+    "rows": 5,
+    "width": 800
+   }
+  },
+  "rows": 5,
+  "spacing": {
+   "gap": 11,
+   "margin": 14,
+   "tile_pad": 11
+  },
   "width": 1280
  },
  "checkout/jc8012p4a1v3.yaml": {
@@ -537,7 +715,13 @@
   "columns": 5,
   "dimmable": true,
   "dpi": 149,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 23,
+   "sublabel": 14,
+   "sublabel_big": 18,
+   "watch_value": 33
+  },
   "height": 800,
   "hotspot": true,
   "look": "standard",
@@ -556,7 +740,7 @@
     "columns": 5,
     "height": 800,
     "rotation": 90,
-    "rows": 4,
+    "rows": 5,
     "width": 1280
    },
    "portrait": {
@@ -570,15 +754,105 @@
       193
      ]
     },
-    "columns": 4,
+    "columns": 5,
     "height": 1280,
     "rotation": 180,
     "rows": 5,
     "width": 800
    }
   },
-  "rows": 4,
+  "rows": 5,
+  "spacing": {
+   "gap": 11,
+   "margin": 14,
+   "tile_pad": 11
+  },
   "width": 1280
+ },
+ "checkout/sunton8048s070.yaml": {
+  "alert": {
+   "line": 19,
+   "title_line": 25
+  },
+  "board": "sunton8048s070",
+  "camera": {
+   "full": [
+    800,
+    480
+   ],
+   "thumb": [
+    304,
+    171
+   ]
+  },
+  "can_standby": true,
+  "catalog": {
+   "calibrate": false,
+   "choices": {},
+   "inch": 7.0,
+   "model": "ESP32-8048S070",
+   "name": "Sunton",
+   "order": 14,
+   "status": "experimental",
+   "touch": "GT911"
+  },
+  "chip": "ESP32-S3",
+  "columns": 4,
+  "dimmable": true,
+  "dpi": 133,
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 20,
+   "sublabel": 13,
+   "sublabel_big": 16,
+   "watch_value": 30
+  },
+  "height": 480,
+  "hotspot": true,
+  "look": "standard",
+  "orientations": {
+   "landscape": {
+    "camera": {
+     "full": [
+      800,
+      480
+     ],
+     "thumb": [
+      304,
+      171
+     ]
+    },
+    "columns": 4,
+    "height": 480,
+    "rotation": 0,
+    "rows": 4,
+    "width": 800
+   },
+   "portrait": {
+    "camera": {
+     "full": [
+      480,
+      800
+     ],
+     "thumb": [
+      304,
+      171
+     ]
+    },
+    "columns": 2,
+    "height": 800,
+    "rotation": 90,
+    "rows": 7,
+    "width": 480
+   }
+  },
+  "rows": 4,
+  "spacing": {
+   "gap": 9,
+   "margin": 13,
+   "tile_pad": 9
+  },
+  "width": 800
  },
  "checkout/waveshare35.yaml": {
   "alert": {
@@ -601,7 +875,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 165,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 25,
+   "sublabel": 16,
+   "sublabel_big": 20,
+   "watch_value": 37
+  },
   "height": 320,
   "hotspot": true,
   "look": "standard",
@@ -622,6 +902,11 @@
    }
   },
   "rows": 2,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "checkout/waveshare43.yaml": {
@@ -655,7 +940,13 @@
   "columns": 3,
   "dimmable": false,
   "dpi": 217,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 33,
+   "sublabel": 20,
+   "sublabel_big": 27,
+   "watch_value": 49
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -696,6 +987,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 15
+  },
   "width": 800
  },
  "checkout/waveshare4b.yaml": {
@@ -729,7 +1025,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -770,6 +1072,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "checkout/waveshare7.yaml": {
@@ -803,7 +1110,13 @@
   "columns": 4,
   "dimmable": false,
   "dpi": 133,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 20,
+   "sublabel": 13,
+   "sublabel_big": 16,
+   "watch_value": 30
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -844,6 +1157,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 9,
+   "margin": 13,
+   "tile_pad": 9
+  },
   "width": 800
  },
  "checkout/waveshare7b.yaml": {
@@ -877,7 +1195,13 @@
   "columns": 4,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 600,
   "hotspot": true,
   "look": "standard",
@@ -918,6 +1242,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 1024
  },
  "cyd": {
@@ -946,7 +1275,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 143,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 18,
+   "sublabel": 11,
+   "sublabel_big": 14,
+   "watch_value": 22
+  },
   "height": 240,
   "hotspot": false,
   "look": "compact",
@@ -967,6 +1302,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 6,
+   "margin": 9,
+   "tile_pad": 8
+  },
   "width": 320
  },
  "cyd9342": {
@@ -990,7 +1330,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 143,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 18,
+   "sublabel": 11,
+   "sublabel_big": 14,
+   "watch_value": 22
+  },
   "height": 240,
   "hotspot": false,
   "look": "compact",
@@ -1011,6 +1357,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 6,
+   "margin": 9,
+   "tile_pad": 8
+  },
   "width": 320
  },
  "guition": {
@@ -1032,7 +1383,12 @@
   "can_standby": true,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "GRID_ROWS": [
+     "3",
+     "4"
+    ]
+   },
    "inch": 4.0,
    "model": "ESP32-S3-4848S040",
    "name": "Guition",
@@ -1044,7 +1400,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -1085,6 +1447,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "hosyond40": {
@@ -1108,7 +1475,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 146,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 18,
+   "sublabel": 11,
+   "sublabel_big": 14,
+   "watch_value": 22
+  },
   "height": 320,
   "hotspot": false,
   "look": "compact",
@@ -1129,6 +1502,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 6,
+   "margin": 9,
+   "tile_pad": 8
+  },
   "width": 480
  },
  "jc1060p470": {
@@ -1162,7 +1540,13 @@
   "columns": 4,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 600,
   "hotspot": true,
   "look": "standard",
@@ -1203,6 +1587,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 1024
  },
  "jc1060p470v2": {
@@ -1236,7 +1625,13 @@
   "columns": 4,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 600,
   "hotspot": true,
   "look": "standard",
@@ -1277,6 +1672,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 1024
  },
  "jc3248w535": {
@@ -1310,7 +1710,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 165,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 25,
+   "sublabel": 16,
+   "sublabel_big": 20,
+   "watch_value": 37
+  },
   "height": 320,
   "hotspot": true,
   "look": "standard",
@@ -1351,6 +1757,11 @@
    }
   },
   "rows": 2,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "jc8012p4a1": {
@@ -1384,7 +1795,13 @@
   "columns": 5,
   "dimmable": true,
   "dpi": 149,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 23,
+   "sublabel": 14,
+   "sublabel_big": 18,
+   "watch_value": 33
+  },
   "height": 800,
   "hotspot": true,
   "look": "standard",
@@ -1403,7 +1820,7 @@
     "columns": 5,
     "height": 800,
     "rotation": 90,
-    "rows": 4,
+    "rows": 5,
     "width": 1280
    },
    "portrait": {
@@ -1417,14 +1834,104 @@
       193
      ]
     },
-    "columns": 4,
+    "columns": 5,
     "height": 1280,
     "rotation": 180,
     "rows": 5,
     "width": 800
    }
   },
-  "rows": 4,
+  "rows": 5,
+  "spacing": {
+   "gap": 11,
+   "margin": 14,
+   "tile_pad": 11
+  },
+  "width": 1280
+ },
+ "jc8012p4a1v2": {
+  "alert": {
+   "line": 21,
+   "title_line": 28
+  },
+  "board": "jc8012p4a1v2",
+  "camera": {
+   "full": [
+    1280,
+    800
+   ],
+   "thumb": [
+    343,
+    193
+   ]
+  },
+  "can_standby": true,
+  "catalog": {
+   "calibrate": false,
+   "choices": {},
+   "inch": 10.1,
+   "model": "JC8012P4A1 V2",
+   "name": "Guition",
+   "order": 15,
+   "status": "experimental",
+   "touch": "GSL3680"
+  },
+  "chip": "ESP32-P4",
+  "columns": 5,
+  "dimmable": true,
+  "dpi": 149,
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 23,
+   "sublabel": 14,
+   "sublabel_big": 18,
+   "watch_value": 33
+  },
+  "height": 800,
+  "hotspot": true,
+  "look": "standard",
+  "orientations": {
+   "landscape": {
+    "camera": {
+     "full": [
+      1280,
+      800
+     ],
+     "thumb": [
+      343,
+      193
+     ]
+    },
+    "columns": 5,
+    "height": 800,
+    "rotation": 90,
+    "rows": 5,
+    "width": 1280
+   },
+   "portrait": {
+    "camera": {
+     "full": [
+      800,
+      1280
+     ],
+     "thumb": [
+      343,
+      193
+     ]
+    },
+    "columns": 5,
+    "height": 1280,
+    "rotation": 180,
+    "rows": 5,
+    "width": 800
+   }
+  },
+  "rows": 5,
+  "spacing": {
+   "gap": 11,
+   "margin": 14,
+   "tile_pad": 11
+  },
   "width": 1280
  },
  "jc8012p4a1v3": {
@@ -1458,7 +1965,13 @@
   "columns": 5,
   "dimmable": true,
   "dpi": 149,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 23,
+   "sublabel": 14,
+   "sublabel_big": 18,
+   "watch_value": 33
+  },
   "height": 800,
   "hotspot": true,
   "look": "standard",
@@ -1477,7 +1990,7 @@
     "columns": 5,
     "height": 800,
     "rotation": 90,
-    "rows": 4,
+    "rows": 5,
     "width": 1280
    },
    "portrait": {
@@ -1491,14 +2004,19 @@
       193
      ]
     },
-    "columns": 4,
+    "columns": 5,
     "height": 1280,
     "rotation": 180,
     "rows": 5,
     "width": 800
    }
   },
-  "rows": 4,
+  "rows": 5,
+  "spacing": {
+   "gap": 11,
+   "margin": 14,
+   "tile_pad": 11
+  },
   "width": 1280
  },
  "packages/cyd.yaml": {
@@ -1527,7 +2045,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 143,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 18,
+   "sublabel": 11,
+   "sublabel_big": 14,
+   "watch_value": 22
+  },
   "height": 240,
   "hotspot": false,
   "look": "compact",
@@ -1548,6 +2072,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 6,
+   "margin": 9,
+   "tile_pad": 8
+  },
   "width": 320
  },
  "packages/cyd9342.yaml": {
@@ -1571,7 +2100,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 143,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 18,
+   "sublabel": 11,
+   "sublabel_big": 14,
+   "watch_value": 22
+  },
   "height": 240,
   "hotspot": false,
   "look": "compact",
@@ -1592,6 +2127,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 6,
+   "margin": 9,
+   "tile_pad": 8
+  },
   "width": 320
  },
  "packages/guition.yaml": {
@@ -1613,7 +2153,12 @@
   "can_standby": true,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "GRID_ROWS": [
+     "3",
+     "4"
+    ]
+   },
    "inch": 4.0,
    "model": "ESP32-S3-4848S040",
    "name": "Guition",
@@ -1625,7 +2170,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -1666,6 +2217,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "packages/hosyond40.yaml": {
@@ -1689,7 +2245,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 146,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 18,
+   "sublabel": 11,
+   "sublabel_big": 14,
+   "watch_value": 22
+  },
   "height": 320,
   "hotspot": false,
   "look": "compact",
@@ -1710,6 +2272,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 6,
+   "margin": 9,
+   "tile_pad": 8
+  },
   "width": 480
  },
  "packages/jc1060p470.yaml": {
@@ -1743,7 +2310,13 @@
   "columns": 4,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 600,
   "hotspot": true,
   "look": "standard",
@@ -1784,6 +2357,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 1024
  },
  "packages/jc1060p470v2.yaml": {
@@ -1817,7 +2395,13 @@
   "columns": 4,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 600,
   "hotspot": true,
   "look": "standard",
@@ -1858,6 +2442,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 1024
  },
  "packages/jc3248w535.yaml": {
@@ -1891,7 +2480,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 165,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 25,
+   "sublabel": 16,
+   "sublabel_big": 20,
+   "watch_value": 37
+  },
   "height": 320,
   "hotspot": true,
   "look": "standard",
@@ -1932,6 +2527,11 @@
    }
   },
   "rows": 2,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "packages/jc8012p4a1.yaml": {
@@ -1965,7 +2565,13 @@
   "columns": 5,
   "dimmable": true,
   "dpi": 149,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 23,
+   "sublabel": 14,
+   "sublabel_big": 18,
+   "watch_value": 33
+  },
   "height": 800,
   "hotspot": true,
   "look": "standard",
@@ -1984,7 +2590,7 @@
     "columns": 5,
     "height": 800,
     "rotation": 90,
-    "rows": 4,
+    "rows": 5,
     "width": 1280
    },
    "portrait": {
@@ -1998,14 +2604,104 @@
       193
      ]
     },
-    "columns": 4,
+    "columns": 5,
     "height": 1280,
     "rotation": 180,
     "rows": 5,
     "width": 800
    }
   },
-  "rows": 4,
+  "rows": 5,
+  "spacing": {
+   "gap": 11,
+   "margin": 14,
+   "tile_pad": 11
+  },
+  "width": 1280
+ },
+ "packages/jc8012p4a1v2.yaml": {
+  "alert": {
+   "line": 21,
+   "title_line": 28
+  },
+  "board": "jc8012p4a1v2",
+  "camera": {
+   "full": [
+    1280,
+    800
+   ],
+   "thumb": [
+    343,
+    193
+   ]
+  },
+  "can_standby": true,
+  "catalog": {
+   "calibrate": false,
+   "choices": {},
+   "inch": 10.1,
+   "model": "JC8012P4A1 V2",
+   "name": "Guition",
+   "order": 15,
+   "status": "experimental",
+   "touch": "GSL3680"
+  },
+  "chip": "ESP32-P4",
+  "columns": 5,
+  "dimmable": true,
+  "dpi": 149,
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 23,
+   "sublabel": 14,
+   "sublabel_big": 18,
+   "watch_value": 33
+  },
+  "height": 800,
+  "hotspot": true,
+  "look": "standard",
+  "orientations": {
+   "landscape": {
+    "camera": {
+     "full": [
+      1280,
+      800
+     ],
+     "thumb": [
+      343,
+      193
+     ]
+    },
+    "columns": 5,
+    "height": 800,
+    "rotation": 90,
+    "rows": 5,
+    "width": 1280
+   },
+   "portrait": {
+    "camera": {
+     "full": [
+      800,
+      1280
+     ],
+     "thumb": [
+      343,
+      193
+     ]
+    },
+    "columns": 5,
+    "height": 1280,
+    "rotation": 180,
+    "rows": 5,
+    "width": 800
+   }
+  },
+  "rows": 5,
+  "spacing": {
+   "gap": 11,
+   "margin": 14,
+   "tile_pad": 11
+  },
   "width": 1280
  },
  "packages/jc8012p4a1v3.yaml": {
@@ -2039,7 +2735,13 @@
   "columns": 5,
   "dimmable": true,
   "dpi": 149,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 23,
+   "sublabel": 14,
+   "sublabel_big": 18,
+   "watch_value": 33
+  },
   "height": 800,
   "hotspot": true,
   "look": "standard",
@@ -2058,7 +2760,7 @@
     "columns": 5,
     "height": 800,
     "rotation": 90,
-    "rows": 4,
+    "rows": 5,
     "width": 1280
    },
    "portrait": {
@@ -2072,15 +2774,105 @@
       193
      ]
     },
-    "columns": 4,
+    "columns": 5,
     "height": 1280,
     "rotation": 180,
     "rows": 5,
     "width": 800
    }
   },
-  "rows": 4,
+  "rows": 5,
+  "spacing": {
+   "gap": 11,
+   "margin": 14,
+   "tile_pad": 11
+  },
   "width": 1280
+ },
+ "packages/sunton8048s070.yaml": {
+  "alert": {
+   "line": 19,
+   "title_line": 25
+  },
+  "board": "sunton8048s070",
+  "camera": {
+   "full": [
+    800,
+    480
+   ],
+   "thumb": [
+    304,
+    171
+   ]
+  },
+  "can_standby": true,
+  "catalog": {
+   "calibrate": false,
+   "choices": {},
+   "inch": 7.0,
+   "model": "ESP32-8048S070",
+   "name": "Sunton",
+   "order": 14,
+   "status": "experimental",
+   "touch": "GT911"
+  },
+  "chip": "ESP32-S3",
+  "columns": 4,
+  "dimmable": true,
+  "dpi": 133,
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 20,
+   "sublabel": 13,
+   "sublabel_big": 16,
+   "watch_value": 30
+  },
+  "height": 480,
+  "hotspot": true,
+  "look": "standard",
+  "orientations": {
+   "landscape": {
+    "camera": {
+     "full": [
+      800,
+      480
+     ],
+     "thumb": [
+      304,
+      171
+     ]
+    },
+    "columns": 4,
+    "height": 480,
+    "rotation": 0,
+    "rows": 4,
+    "width": 800
+   },
+   "portrait": {
+    "camera": {
+     "full": [
+      480,
+      800
+     ],
+     "thumb": [
+      304,
+      171
+     ]
+    },
+    "columns": 2,
+    "height": 800,
+    "rotation": 90,
+    "rows": 7,
+    "width": 480
+   }
+  },
+  "rows": 4,
+  "spacing": {
+   "gap": 9,
+   "margin": 13,
+   "tile_pad": 9
+  },
+  "width": 800
  },
  "packages/waveshare35.yaml": {
   "alert": {
@@ -2103,7 +2895,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 165,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 25,
+   "sublabel": 16,
+   "sublabel_big": 20,
+   "watch_value": 37
+  },
   "height": 320,
   "hotspot": true,
   "look": "standard",
@@ -2124,6 +2922,11 @@
    }
   },
   "rows": 2,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "packages/waveshare43.yaml": {
@@ -2157,7 +2960,13 @@
   "columns": 3,
   "dimmable": false,
   "dpi": 217,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 33,
+   "sublabel": 20,
+   "sublabel_big": 27,
+   "watch_value": 49
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -2198,6 +3007,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 15
+  },
   "width": 800
  },
  "packages/waveshare4b.yaml": {
@@ -2231,7 +3045,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -2272,6 +3092,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "packages/waveshare7.yaml": {
@@ -2305,7 +3130,13 @@
   "columns": 4,
   "dimmable": false,
   "dpi": 133,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 20,
+   "sublabel": 13,
+   "sublabel_big": 16,
+   "watch_value": 30
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -2346,6 +3177,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 9,
+   "margin": 13,
+   "tile_pad": 9
+  },
   "width": 800
  },
  "packages/waveshare7b.yaml": {
@@ -2379,7 +3215,13 @@
   "columns": 4,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 600,
   "hotspot": true,
   "look": "standard",
@@ -2420,7 +3262,97 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 1024
+ },
+ "sunton8048s070": {
+  "alert": {
+   "line": 19,
+   "title_line": 25
+  },
+  "board": "sunton8048s070",
+  "camera": {
+   "full": [
+    800,
+    480
+   ],
+   "thumb": [
+    304,
+    171
+   ]
+  },
+  "can_standby": true,
+  "catalog": {
+   "calibrate": false,
+   "choices": {},
+   "inch": 7.0,
+   "model": "ESP32-8048S070",
+   "name": "Sunton",
+   "order": 14,
+   "status": "experimental",
+   "touch": "GT911"
+  },
+  "chip": "ESP32-S3",
+  "columns": 4,
+  "dimmable": true,
+  "dpi": 133,
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 20,
+   "sublabel": 13,
+   "sublabel_big": 16,
+   "watch_value": 30
+  },
+  "height": 480,
+  "hotspot": true,
+  "look": "standard",
+  "orientations": {
+   "landscape": {
+    "camera": {
+     "full": [
+      800,
+      480
+     ],
+     "thumb": [
+      304,
+      171
+     ]
+    },
+    "columns": 4,
+    "height": 480,
+    "rotation": 0,
+    "rows": 4,
+    "width": 800
+   },
+   "portrait": {
+    "camera": {
+     "full": [
+      480,
+      800
+     ],
+     "thumb": [
+      304,
+      171
+     ]
+    },
+    "columns": 2,
+    "height": 800,
+    "rotation": 90,
+    "rows": 7,
+    "width": 480
+   }
+  },
+  "rows": 4,
+  "spacing": {
+   "gap": 9,
+   "margin": 13,
+   "tile_pad": 9
+  },
+  "width": 800
  },
  "waveshare35": {
   "alert": {
@@ -2443,7 +3375,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 165,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 25,
+   "sublabel": 16,
+   "sublabel_big": 20,
+   "watch_value": 37
+  },
   "height": 320,
   "hotspot": true,
   "look": "standard",
@@ -2464,6 +3402,11 @@
    }
   },
   "rows": 2,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "waveshare43": {
@@ -2497,7 +3440,13 @@
   "columns": 3,
   "dimmable": false,
   "dpi": 217,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 33,
+   "sublabel": 20,
+   "sublabel_big": 27,
+   "watch_value": 49
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -2538,6 +3487,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 15
+  },
   "width": 800
  },
  "waveshare4b": {
@@ -2571,7 +3525,13 @@
   "columns": 2,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -2612,6 +3572,11 @@
    }
   },
   "rows": 3,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 480
  },
  "waveshare7": {
@@ -2645,7 +3610,13 @@
   "columns": 4,
   "dimmable": false,
   "dpi": 133,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 20,
+   "sublabel": 13,
+   "sublabel_big": 16,
+   "watch_value": 30
+  },
   "height": 480,
   "hotspot": true,
   "look": "standard",
@@ -2686,6 +3657,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 9,
+   "margin": 13,
+   "tile_pad": 9
+  },
   "width": 800
  },
  "waveshare7b": {
@@ -2719,7 +3695,13 @@
   "columns": 4,
   "dimmable": true,
   "dpi": 170,
-  "firmware": "0.19.0",
+  "firmware": "0.20.0",
+  "fonts": {
+   "icon_mini": 26,
+   "sublabel": 16,
+   "sublabel_big": 21,
+   "watch_value": 38
+  },
   "height": 600,
   "hotspot": true,
   "look": "standard",
@@ -2760,6 +3742,11 @@
    }
   },
   "rows": 4,
+  "spacing": {
+   "gap": 12,
+   "margin": 16,
+   "tile_pad": 12
+  },
   "width": 1024
  }
 }

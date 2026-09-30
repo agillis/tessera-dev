@@ -110,7 +110,10 @@
       "home": "Thuis",
       "no_network": "Geen netwerk",
       "configuration_problem": "Configuratieprobleem.\nWerk de add-on bij.",
-      "configuration_version": "Configuratieprobleem.\nControleer de versies van scherm en add-on."
+      "configuration_version": "Configuratieprobleem.\nControleer de versies van scherm en add-on.",
+      "wifi_problem": "Wifi-verbindingsprobleem",
+      "wifi_hotspot": "Verbind met hotspot {name} om dit op te lossen.\nWachtwoord: {password}",
+      "wifi_usb": "Controleer de wifi-naam en het wachtwoord en installeer dit scherm opnieuw via USB."
     },
     "preparing": {
       "default": "Je tegels schikken",
@@ -594,6 +597,7 @@
         "column_range": "Kies een kolom tussen 1 en {last}; “left” en “right” zijn de eerste en de laatste.",
         "full_page_alone": "Een paginavullende tegel neemt heel pagina {page} in; daar past verder niets.",
         "does_not_fit": "Dat past niet op pagina {page}; een dubbelbrede tegel neemt twee plekken in.",
+        "size": "Dit scherm heeft geen tegel van {size}. Wel: {sizes}.",
         "order_needed": "Geef de entiteiten in de volgorde waarin je ze wilt.",
         "order_not_on_screen": "Niet op dit scherm: {entities}.",
         "order_not_on_page": "Niet op pagina {page}: {entities}. Verplaats die er eerst heen.",
@@ -716,7 +720,7 @@
         "ambiguous_tile": "De tegelopdracht heeft meerdere mogelijke bronnen; geef de pagina op",
         "save_first": "Sla eerst de pagina-indeling op voordat je de instellingen opslaat",
         "destination_exists": "Het doelscherm heeft al een opgeslagen indeling",
-        "update_tall": "Werk het scherm bij om hogere tegels te gebruiken",
+        "update_tall": "Werk het scherm bij om deze tegelmaten te gebruiken",
         "memory": "Het scherm heeft onvoldoende vrij geheugen voor deze indeling. Gebruik minder tegels."
       },
       "feedback": {
@@ -1237,7 +1241,6 @@
       },
       "search": "Zoeken",
       "screens": "Schermen",
-      "more": "Meer",
       "refresh": "Vernieuwen",
       "update": {
         "button": "Bijwerken",
@@ -1245,7 +1248,8 @@
         "available": "Update {version}",
         "no_profile": "Geen ESPHome-profiel met deze apparaatnaam gevonden.",
         "whats_new": "Wat is er nieuw",
-        "full_log": "Volledig log"
+        "full_log": "Volledig log",
+        "short": "Update"
       },
       "host": {
         "hint": "Eenmalig het IP-adres; nieuwe firmware meldt het zelf.",
@@ -1259,6 +1263,8 @@
         "not_flashed": "Nog niet in Home Assistant. Al geflasht? Voeg het ESPHome-apparaat toe onder Instellingen → Apparaten & diensten en sta daarna bij Configureren de Home Assistant-acties toe. Nog niet geflasht? Firmware & USB → {file}."
       },
       "copy_api_key": "API-sleutel kopiëren",
+      "files": "Schermbestanden downloaden",
+      "files_hint": "De ESPHome-YAML van het scherm met zijn sleutels, de Override YAML en een secrets.yaml met de wifi, om het scherm zelf met ESPHome op je computer te bouwen.",
       "details": {
         "room": "Ruimte",
         "firmware": "Firmware",
@@ -1432,10 +1438,7 @@
         "alarm_control_panel": "Alarm",
         "lock": "Sloten"
       },
-      "more": "Meer ({n})",
-      "fewer": "Minder",
       "room": "Ruimte",
-      "all_rooms": "Alle ruimtes",
       "hide_placed": "Geplaatste verbergen",
       "hide_placed_title": "Verberg wat al op dit scherm staat",
       "again": "Staat al op dit scherm; voeg het nog eens toe voor een extra tegel",
@@ -1443,7 +1446,10 @@
       "none_found": "Geen entiteiten gevonden. Probeer een andere naam, ruimte of filter.",
       "full": "Op dit scherm past 1 tegel. | Op dit scherm passen {n} tegels.",
       "full_update": "Op dit scherm past 1 tegel; werk de firmware bij voor 48. | Op dit scherm passen {n} tegels; werk de firmware bij voor 48.",
-      "hint": "Sleep naar een pagina, of tik op + voor de eerste vrije plek. ⌘K doorzoekt alles."
+      "hint": "Sleep naar een pagina, of tik op + voor de eerste vrije plek. ⌘K doorzoekt alles.",
+      "resize": "Sleep om de bibliotheek groter of kleiner te maken",
+      "filter_label": "Filter op soort",
+      "no_room": "Zonder ruimte"
     },
     "domains": {
       "light": "Licht",
@@ -1547,21 +1553,6 @@
           "none": "Niets"
         }
       },
-      "size": {
-        "label": "Grootte",
-        "single": "Normaal",
-        "wide": "Dubbelbreed",
-        "full": "Hele pagina",
-        "full_hint": "Hele pagina: één grote knop in de eigen kleur van de tile; onderaan staat een slider, bediening of grafiek.",
-        "needs_firmware": "Een paginavullende tegel heeft firmware 0.2.62 nodig: druk eerst bij het scherm op Bijwerken.",
-        "tall": "1 × 2",
-        "square": "2 × 2",
-        "rectangle_hint": "Breedte × hoogte in rastercellen. Gebruikt het bestaande tegelontwerp."
-      },
-      "page": {
-        "label": "Pagina",
-        "new": "Nieuwe pagina"
-      },
       "controls": {
         "label": "Directe bediening op de tegel",
         "not_offered": "Home Assistant biedt deze bediening niet voor deze entiteit, dus die blijft leeg op het scherm. Kies een andere.",
@@ -1630,15 +1621,15 @@
         "rows": "Hoogte aanpassen (pijltjes omhoog/omlaag)"
       },
       "sections": {
-        "text": "Tekst",
         "look": "Uiterlijk",
-        "place": "Grootte en plek",
         "controls": "Bediening",
         "style": "Icoon en kleur"
       },
       "keys": {
         "hint": "Sleep een lamp, een temperatuur of een slot naar de ronde plekken onder de tijd, of tik een plek aan en kies er een. Het zijn tegels: tik er een aan om hem in te stellen.",
-        "under": "Onder de nachtkastjesklok: een tegel in zijn ronde vorm. Een tik doet wat hij op een tegel doet, en vasthouden opent zijn kaart."
+        "under": "Onder de nachtkastjesklok: een tegel in zijn ronde vorm. Een tik doet wat hij op een tegel doet, en vasthouden opent zijn kaart.",
+        "name_shown": "Naam onder de knop",
+        "name_shown_hint": "Uit toont alleen het rondje."
       }
     },
     "tile_card": {
@@ -1695,6 +1686,7 @@
       "name_placeholder": "Bijvoorbeeld: Woonkamer",
       "screen_name": "Titel van het scherm",
       "screen_name_hint": "Elke pagina zonder eigen titel zegt dit.",
+      "no_title_hint": "Laat leeg om alleen het logo te tonen.",
       "right": "Rechts: tijd, sensoren of een klok",
       "item_label": "{name}, plek {slot}. Enter: instellen, pijltjes: verplaatsen",
       "remove_named": "{name} uit de bovenbalk halen",
@@ -1902,7 +1894,6 @@
     },
     "installer": {
       "title": {
-        "setup": "Aansluiten en installeren.",
         "saved": "Profiel bewaard.",
         "running": "Even geduld…",
         "ready": "Klaar om te downloaden.",
@@ -1910,7 +1901,6 @@
         "stopped": "Gestopt.",
         "failed": "Dat lukte niet."
       },
-      "intro": "Tessera maakt een eigen profiel voor het scherm, met unieke sleutels, en bouwt de firmware. Sluit het scherm met een USB-datakabel aan op de machine waarop Home Assistant draait, of op de computer waar je nu achter zit.",
       "board": "Welk scherm heb je?",
       "board_title": "{name} · {inch} inch",
       "status": {
@@ -1931,10 +1921,12 @@
         "calibration": "Touch-kalibratie bij de eerste start"
       },
       "choice": {
-        "DISPLAY_MODEL": "Displaycontroller"
+        "DISPLAY_MODEL": "Displaycontroller",
+        "GRID_ROWS": "Tegels op een pagina"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "De meeste van deze borden hebben de eerste. Kies de andere als het scherm ruis of een verminkt beeld laat zien."
+        "DISPLAY_MODEL": "De meeste van deze borden hebben de eerste. Kies de andere als het scherm ruis of een verminkt beeld laat zien.",
+        "GRID_ROWS": "Vier rijen passen acht kleinere tegels op een pagina, voor een scherm met veel schakelaars. Drie rijen houden de tegels groter en beter leesbaar."
       },
       "choice_usual": "de meeste",
       "orientation": "Hoe komt hij te hangen?",
@@ -1945,7 +1937,6 @@
       "name": "Naam",
       "name_placeholder": "Scherm woonkamer",
       "device_name": "Apparaatnaam",
-      "customize": "aanpassen",
       "name_hint": "Elk scherm krijgt een eigen profiel met eigen sleutels. Vier schermen? Doorloop dit vier keer met een andere naam.",
       "name_taken": "Een ander scherm heet al zo. Home Assistant zou de entiteitsnamen van dit scherm nummeren, waardoor automatiseringen het verkeerde scherm aanspreken.",
       "device_name_hint": "Kleine letters, cijfers en streepjes. Elk scherm een andere naam.",
@@ -1957,12 +1948,13 @@
         "new": "Eén keer invullen: Tessera bewaart dit in ESPHome secrets.yaml, volgende schermen gebruiken het automatisch.",
         "missing": "Je ESPHome secrets.yaml mist nog Wi-Fi-gegevens. Tessera vult alleen de ontbrekende regels aan.",
         "ready": "Wi-Fi komt uit je ESPHome secrets.yaml.",
-        "invalid": "secrets.yaml in de ESPHome-map is geen geldige YAML. Herstel het bestand eerst; het wordt niet overschreven."
+        "invalid": "secrets.yaml in de ESPHome-map is geen geldige YAML. Herstel het bestand eerst; het wordt niet overschreven.",
+        "other": "Ander netwerk",
+        "other_note": "Elk scherm bouwt met deze wifi, dus schermen die je al hebt nemen hem over bij hun volgende update."
       },
       "install_via": "Installeren via",
-      "later": "Later · alleen het profiel bewaren",
       "target": {
-        "usb": "Sluit het scherm met een USB-datakabel aan op de Home Assistant-machine; de lijst ververst vanzelf. Zit het aan de computer waar je nu achter zit? Kies Installeren vanuit deze browser.",
+        "usb": "Sluit het scherm met een USB-datakabel aan op de Home Assistant-machine; het verschijnt hier vanzelf. Zit het aan de computer waar je nu achter zit? Kies Via deze computer.",
         "download": "Download de firmware en zet die vanaf je eigen computer op het scherm, in Chrome of Edge. Daarna gaan updates via Wi-Fi.",
         "later": "Het profiel komt in de ESPHome-map. Installeren kan later via Firmware & USB, of vanuit ESPHome Device Builder.",
         "several": "Meer dan één bord aangesloten: kies de poort van dit scherm.",
@@ -2014,12 +2006,75 @@
         "tiles": "{bold} Terug in Tessera verschijnt het scherm binnen een halve minuut in de lijst links; tot die tijd staat het daar als “nog niet in Home Assistant”.",
         "tiles_bold": "Kies je tegels."
       },
-      "log": "Log van ESPHome",
       "retry": "Opnieuw proberen",
       "another": "Nog een scherm installeren",
       "start_over": "Opnieuw beginnen",
       "done": "Klaar",
-      "key_more": "Toon de API-sleutel"
+      "key_more": "Toon de API-sleutel",
+      "steps": {
+        "board": "Scherm",
+        "setup": "Instellen",
+        "install": "Installeren"
+      },
+      "pick_title": "Welk scherm heb je?",
+      "pick_intro": "Kies je bord. Zoek op merk, maat of wat erop staat.",
+      "search": "Zoek op merk, maat of model",
+      "sizes": {
+        "all": "Alle",
+        "small": "Tot 4 inch",
+        "medium": "4 tot 6 inch",
+        "large": "7 inch en groter"
+      },
+      "none_found": "Geen scherm gevonden voor “{query}”.",
+      "try_virtual": "Nog geen scherm? Probeer een voorbeeldscherm",
+      "setup_title": "Maak hem van jou",
+      "install_title": "Hoe wil je installeren?",
+      "next": "Verder",
+      "advanced": "Geavanceerd",
+      "ways": {
+        "ha_title": "USB aan Home Assistant",
+        "ha_found": "Gevonden: {port}",
+        "ha_waiting": "Sluit het scherm aan op de computer waar Home Assistant op draait",
+        "browser_title": "Via deze computer",
+        "browser_detail": "Chrome of Edge, met het scherm aan de USB van deze computer",
+        "download_title": "Bestand downloaden",
+        "download_detail": "Zet het er zelf op met ESPHome Web",
+        "later_title": "Later",
+        "later_detail": "Alleen de instellingen bewaren"
+      },
+      "steps_done": {
+        "prepare": "Voorbereiden",
+        "build": "Firmware bouwen",
+        "write": "Op het scherm zetten",
+        "restart": "Opstarten",
+        "done": "Klaar",
+        "download": "Klaar om te downloaden"
+      },
+      "elapsed": "{time} bezig",
+      "show_log": "Details tonen",
+      "hide_log": "Details verbergen",
+      "next_title": "Wat nu",
+      "model": "Welk model is het?",
+      "model_hint": "Staat op de achterkant van het bord. Ze lijken op elkaar, maar elk heeft zijn eigen firmware nodig.",
+      "models": "{n} model | {n} modellen",
+      "arrive": {
+        "waiting": "Wachten tot {name} op je wifi verschijnt...",
+        "seen": "{name} is op je wifi. Koppel hem nu in Home Assistant.",
+        "paired": "{name} is gekoppeld met Home Assistant.",
+        "missing": "{name} is nog niet op je wifi",
+        "hotspot": "Kijk op het scherm: het noemt een hotspot met wachtwoord. Verbind je telefoon ermee en kies daar het juiste wifi-netwerk. Of zet hier de juiste wifi en installeer opnieuw.",
+        "no_hotspot": "Waarschijnlijk klopt de wifi-naam of het wachtwoord niet. Zet hier de juiste wifi en installeer opnieuw, met het scherm nog aan de kabel.",
+        "change": "Wifi wijzigen en opnieuw installeren"
+      },
+      "choice_option": {
+        "GRID_ROWS": {
+          "3": "3 rijen",
+          "4": "4 rijen, kleinere tegels"
+        }
+      },
+      "choice_first": {
+        "GRID_ROWS": "het gewone formaat"
+      }
     },
     "alerts": {
       "eyebrow": "Alerts · cheatsheet",
@@ -2434,7 +2489,15 @@
       "saved": "Opgeslagen in deze browser",
       "hint": "De eigen firmware van het scherm, getekend uit de indeling die je bewerkt. Tik, houd vast en veeg zoals op het scherm. Er wordt niets opgeslagen.",
       "control": "Tikken bedienen apparaten",
-      "control_hint": "Aan: een tik op een tegel voert zijn actie uit in Home Assistant, net als op het scherm. Uit: het voorbeeld laat alleen zien wat een tik doet."
+      "control_hint": "Aan: een tik op een tegel voert zijn actie uit in Home Assistant, net als op het scherm. Uit: het voorbeeld laat alleen zien wat een tik doet.",
+      "skipped": "Voorbeeldscherm {names} kon niet worden geladen en is overgeslagen."
+    },
+    "inspector": {
+      "kind": {
+        "tile": "Tegel",
+        "page": "Pagina",
+        "bar": "Bovenbalk"
+      }
     }
   }
 }

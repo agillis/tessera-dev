@@ -9,7 +9,7 @@
 # To change a size on every board that has this look, change the number here. docs/PROFILES.md says how the
 # files of a screen fit together.
 packages:
-  bedside: !include shared/bedside.yaml
+  digits: !include shared/digits.yaml
 
 substitutions:
   LOOK: "standard"
@@ -47,13 +47,12 @@ substitutions:
   ALERT_SUBTITLE_MAX: "240"   # bytes; wraps over the rows the card has
 
   # Font sizes (points = pixels); never below 8
-  FONT_TIME_SIZE: ${ [8, (27 * LOOK_SCALE | float) | round | int] | max }         # the clock in the top bar
   FONT_HEADLINE_SIZE: ${ [8, (27 * LOOK_SCALE | float) | round | int] | max }     # card titles
   FONT_WATCH_VALUE_SIZE: ${ [8, (38 * LOOK_SCALE | float) | round | int] | max }
   FONT_CLOCK_DIGITS_SIZE: ${ [8, (48 * LOOK_SCALE | float) | round | int] | max }
   FONT_SETPOINT_SIZE: ${ [8, (64 * LOOK_SCALE | float) | round | int] | max }     # the climate card's setpoint
 
-  # Whether a bedside clock's keys have their names under them (looks/shared/bedside.yaml works out its digits).
+  # Whether a bedside clock's keys have their names under them (looks/shared/digits.yaml works out its digits).
   BEDSIDE_WITH_NAMES: "1"   # the names under the keys
   FONT_LABEL_SIZE: ${ [8, (18 * LOOK_SCALE | float) | round | int] | max }        # tile titles
   WIDE_NAME_FONT: "label"             # the standard look keeps one name size (runtime_tiles::name_font)

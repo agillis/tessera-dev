@@ -1,0 +1,12 @@
+# Weather. Home Assistant: homeassistant/components/weather.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: weather
+displays:
+  standard: {}
+  watch: {}
+  # The days ahead, on a card of two columns or more. Features are checked where Home Assistant reports them: an
+  # entity that reports none yet (unavailable) keeps it.
+  forecast:
+    needs: {features: [FORECAST_DAILY]}
+    wide: true

@@ -14,6 +14,14 @@ int main() {
     assert(!accepts_size("unknown", columns, rows));
   }
   assert(!accepts_size("square", 1, 4) && !accepts_size("square", 2, 1));
+  // Spans (firmware 0.19.0): every rectangle smaller than the grid that no name already is.
+  assert(accepts_size("3x2", 3, 3) && accepts_size("2x3", 2, 4) && accepts_size("5x4", 5, 5));
+  assert(!accepts_size("2x3", 2, 3));   // the whole grid is "full"
+  assert(!accepts_size("3x2", 2, 4));   // wider than the grid
+  assert(!accepts_size("2x2", 3, 3) && !accepts_size("1x2", 3, 3) && !accepts_size("2x1", 3, 3));  // the names say these
+  assert(!accepts_size("0x3", 4, 4) && !accepts_size("3x", 4, 4) && !accepts_size("33x", 4, 4));
+  unsigned columns = 0, rows = 0;
+  assert(span_of("4x3", columns, rows) && columns == 4 && rows == 3);
   assert(accepts_size("square", 2, 3) && accepts_size("tall", 1, 4));
   assert(!accepts_size("tall", 3, 1) && accepts_size("wide", 1, 4));
   uint64_t id = 0;

@@ -4,7 +4,8 @@ import { Tooltip } from 'floating-vue';
 import 'floating-vue/dist/style.css';
 import { glyph } from '../model/topbar';
 
-defineProps<{ text: string }>();
+// With a `label` the words themselves are the trigger, underlined with dots, instead of an (i) beside them (app 0.4.32).
+defineProps<{ text: string; label?: string }>();
 const hovered = ref(false), focused = ref(false), pinned = ref(false), dismissed = ref(false);
 const shown = computed(() => !dismissed.value && (hovered.value || focused.value || pinned.value));
 function close() { dismissed.value = true; pinned.value = false; }
@@ -19,9 +20,9 @@ const placementOptions: Record<string, unknown> = { container: false };
   <Tooltip class="help-tip" :shown="shown" :triggers="[]" :hide-triggers="[]" :popper-triggers="[]" :auto-hide="true"
     :delay="{ show: 150, hide: 150 }" :distance="8" placement="top" strategy="fixed" v-bind="placementOptions"
     @hide="close">
-    <button type="button" class="help-trigger mdi" :aria-label="text"
+    <button type="button" class="help-trigger" :class="label ? 'help-label' : 'mdi'" :aria-label="label ? `${label}: ${text}` : text"
       @mouseenter="enter" @mouseleave="hovered = false" @focus="focus" @blur="focused = false; pinned = false"
-      @click.stop="tap" @keydown.esc.stop.prevent="close" :data-glyph="glyph('F02FD')"></button>
+      @click.stop="tap" @keydown.esc.stop.prevent="close" :data-glyph="label ? undefined : glyph('F02FD')">{{ label }}</button>
     <template #popper><span class="help-content" role="tooltip" @mouseenter="enter" @mouseleave="hovered = false">{{ text }}</span></template>
   </Tooltip>
 </template>
@@ -31,6 +32,10 @@ const placementOptions: Record<string, unknown> = { container: false };
 .help-trigger { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; color: var(--muted); background: transparent; font-size: 18px; cursor: help; }
 /* The icon comes from CSS, so a label with a tip beside it still reads as just its words. */
 .help-trigger::before { content: attr(data-glyph); }
+.help-trigger.help-label { display: inline; width: auto; height: auto; border-radius: 2px; font: inherit; color: inherit; text-align: left;
+  text-decoration: underline dotted color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: 3px; }
+.help-trigger.help-label::before { content: none; }
+.help-trigger.help-label:hover, .help-trigger.help-label:focus-visible { background: transparent; color: var(--ink); text-decoration-color: currentColor; }
 .help-trigger:hover, .help-trigger:focus-visible { color: var(--accent); background: var(--seg); }
 .help-content { display: block; max-width: min(300px, calc(100vw - 48px)); line-height: 1.5; font-size: 13px; white-space: normal; text-transform: none; letter-spacing: normal; font-weight: 400; }
 .v-popper--theme-tooltip .v-popper__inner { padding: 10px 12px; border-radius: 8px; }

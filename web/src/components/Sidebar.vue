@@ -4,7 +4,7 @@ import { t } from "../i18n";
 import { boardTitle } from "../model/boards";
 import { glyph } from "../model/topbar";
 import {
-  copyText, go, goHome, languageOnly, needsAttention, newLanguageText, openIntegrations, refresh, removeScreen, renameScreen, route, screenLight, screenSubline,
+  copyText, forgetPending, go, goHome, languageOnly, newLanguageText, openIntegrations, refresh, removeScreen, renameScreen, route, screenSubline,
   select, startUpdate, state, updateProgress, updateState, whatsNew,
 } from "../store";
 import type { Screen } from "../types";
@@ -32,9 +32,22 @@ async function saveName(screen: Screen) {
 // when it is chosen; a healthy one keeps them folded behind the chevron at its right. The chevron's choice holds
 // while the screen stays chosen.
 const folded = ref<{ id: string; open: boolean } | null>(null);
-const light = screenLight, subline = screenSubline;
+const subline = screenSubline;
+// The row says one thing at most, on its right (app 0.4.32): the update's button, its progress, or why it is quiet.
+const status = (screen: Screen) => {
+  const kind = updateState(screen)?.kind;
+  if (screen.virtual) return "virtual";
+  if (!screen.online) return "down";
+  if (kind === "running" || kind === "queued") return "running";
+  if (kind === "available" && screen.update?.profile) return "update";
+  if (kind === "failed") return "failed";
+  return kind === "blocked" || kind === "available" ? "waiting" : "";
+};
 const isSelected = (screen: Screen) => screen.id === state.selected && route.value === "";
-const isOpen = (screen: Screen) => folded.value?.id === screen.id ? folded.value.open : isSelected(screen) && needsAttention(screen);
+// Only a screen with something to explain opens by itself (app 0.4.32): an update that failed or waits for a build.
+// An update ready to go has its button on the row; a screen that is away says so there.
+const explains = (screen: Screen) => ["failed", "blocked"].includes(updateState(screen)?.kind || "");
+const isOpen = (screen: Screen) => folded.value?.id === screen.id ? folded.value.open : isSelected(screen) && explains(screen);
 const chevronShown = (screen: Screen) => isSelected(screen) || isOpen(screen);
 function choose(screen: Screen) {
   if (!isSelected(screen)) folded.value = null;
@@ -52,7 +65,11 @@ const known = (screen: Screen) => (screen.board && screen.shape?.catalog?.name ?
 const boardIcon = (screen: Screen) => glyph(standing(screen) ? "F011C" : known(screen) ? "F0ECE" : "F0A07");
 const boardName = (screen: Screen) => { const board = known(screen); return board ? boardTitle(board) : ""; };
 // What the update brings: the new language first, when the version changes as well, then the firmware's notes.
-const notes = (screen: Screen) => [...(screen.update?.language && !languageOnly(screen) ? [newLanguageText()] : []), ...whatsNew(screen)];
+// In the sidebar each note is its first sentence, and what was tested stays in the changelog (app 0.4.32): a column this
+// narrow can hold a few headlines, not the release notes.
+const headline = (line: string) => line.match(/^.*?[.!?](?=\s|$)/)?.[0] || line;
+const notes = (screen: Screen) => [...(screen.update?.language && !languageOnly(screen) ? [newLanguageText()] : []),
+  ...whatsNew(screen).filter((line) => !/^(Tested|Getest)\b/i.test(line)).map(headline)];
 function update(screen: Screen) {
   const u = screen.update || {};
   if (u.host && u.profile) startUpdate(screen);
@@ -85,26 +102,30 @@ const pendingText = (p: { installed?: boolean; downloaded?: boolean; file: strin
       {{ !state.reachable ? t("editor.sidebar.connection.unreachable") : t("editor.sidebar.connection.reconnecting") }}
     </span>
     <button type="button" class="search-btn" id="open-palette" @click="state.palette = true"><Icon name="magnify" />{{ t("editor.sidebar.search") }}<kbd>⌘K</kbd></button>
-    <div class="label">{{ t("editor.sidebar.screens") }}</div>
+    <div class="label label-row">
+      <span>{{ t("editor.sidebar.screens") }}</span>
+      <button id="refresh" type="button" class="icon-btn" :aria-label="t('editor.sidebar.refresh')" :title="t('editor.sidebar.refresh')" @click="refresh()"><Icon name="refresh" /></button>
+      <button id="new-screen" type="button" class="icon-btn" :aria-current="route === '#new-screen' ? 'true' : 'false'" :aria-label="t('editor.nav.new_screen')" :title="t('editor.nav.new_screen')" @click="go('#new-screen')"><Icon name="plus" /></button>
+    </div>
     <div id="screens">
-      <div v-for="screen in state.inventory.screens" :key="screen.id" class="screen-item" :class="{ selected: isSelected(screen), open: isOpen(screen), 'has-chevron': chevronShown(screen) }">
-        <button type="button" class="nav-item" :aria-current="isSelected(screen) ? 'true' : 'false'" @click="choose(screen)">
-          <span class="board-icon">
-            <span class="mdi">{{ boardIcon(screen) }}</span>
-            <span class="led" :class="light(screen)" role="img" :aria-label="screen.virtual ? t('editor.preview.virtual') : screen.online ? t('editor.common.online') : t('editor.common.offline')"></span>
-          </span>
-          <span class="txt">
-            <span class="name">{{ screen.name }}</span>
-            <small v-if="subline(screen)" class="sub" :class="subline(screen)!.kind">{{ subline(screen)!.text }}</small>
-          </span>
+      <div v-for="screen in state.inventory.screens" :key="screen.id" class="screen-item" :class="[{ selected: isSelected(screen), open: isOpen(screen) }, status(screen)]">
+        <button type="button" class="nav-item" :aria-current="isSelected(screen) ? 'true' : 'false'" :title="subline(screen)?.text" @click="choose(screen)">
+          <span class="board-icon mdi" aria-hidden="true">{{ boardIcon(screen) }}</span>
+          <span class="name">{{ screen.name }}</span>
           <span v-if="screen.id === state.selected && state.dirty" class="unsaved" role="img" :aria-label="t('editor.common.unsaved')" :title="t('editor.common.unsaved')"></span>
-          <span v-else-if="updateState(screen)?.kind === 'running'" class="spin small"></span>
+          <span v-if="status(screen) === 'running'" class="spin small" role="img" :aria-label="subline(screen)?.text"></span>
+          <Icon v-else-if="status(screen) === 'failed'" name="alert-circle-outline" class="sub-icon failed" />
+          <small v-else-if="['down', 'virtual', 'waiting'].includes(status(screen))" class="sub" :class="subline(screen)?.kind">{{ status(screen) === 'waiting' ? t("editor.sidebar.update.short") : subline(screen)?.text }}</small>
         </button>
-        <button v-if="chevronShown(screen)" type="button" class="details-toggle" :aria-expanded="isOpen(screen) ? 'true' : 'false'"
-          :aria-label="t(isOpen(screen) ? 'editor.sidebar.details.hide' : 'editor.sidebar.details.show', { name: screen.name })"
-          :title="t(isOpen(screen) ? 'editor.sidebar.details.hide' : 'editor.sidebar.details.show', { name: screen.name })" @click="toggleDetails(screen)">
-          <Icon name="chevron-down" />
-        </button>
+        <span class="row-end">
+          <!-- The one button an update needs, always in the list: an icon, so the name keeps its room; its words in the tooltip. -->
+          <button v-if="status(screen) === 'update'" type="button" class="update-pill" :title="`${t('editor.sidebar.update.button')} · ${subline(screen)?.text}`" :aria-label="`${t('editor.sidebar.update.button')}: ${screen.name}`" @click="update(screen)"><Icon name="update" /></button>
+          <button type="button" class="details-toggle" :aria-expanded="isOpen(screen) ? 'true' : 'false'"
+            :aria-label="t(isOpen(screen) ? 'editor.sidebar.details.hide' : 'editor.sidebar.details.show', { name: screen.name })"
+            :title="t(isOpen(screen) ? 'editor.sidebar.details.hide' : 'editor.sidebar.details.show', { name: screen.name })" @click="toggleDetails(screen)">
+            <Icon name="chevron-down" />
+          </button>
+        </span>
         <div v-if="isOpen(screen) && removeFor === screen.id" class="screen-details asking">
           <div class="screen-remove">
             <strong>{{ t("editor.sidebar.remove.title", { name: screen.name }) }}</strong>
@@ -139,13 +160,11 @@ const pendingText = (p: { installed?: boolean; downloaded?: boolean; file: strin
                   <button type="button" class="icon-btn" :aria-label="t('editor.common.cancel')" @click="hostFor = null">✕</button>
                 </form>
               </template>
-              <div v-else class="screen-actions">
-                <button type="button" class="btn mini primary" :disabled="!screen.update?.profile" :title="screen.update?.profile ? '' : t('editor.sidebar.update.no_profile')" @click="update(screen)">{{ t("editor.sidebar.update.button") }}</button>
-                <details v-if="notes(screen).length" class="whatsnew">
-                  <summary>{{ t("editor.sidebar.update.whats_new") }}</summary>
-                  <ul><li v-for="line in notes(screen).slice(0, 8)" :key="line">{{ line }}</li></ul>
-                </details>
-              </div>
+              <small v-else-if="!screen.update?.profile" class="warn">{{ t("editor.sidebar.update.no_profile") }}</small>
+              <details v-if="notes(screen).length" class="whatsnew">
+                <summary class="act"><Icon name="information-outline" />{{ t("editor.sidebar.update.whats_new") }}</summary>
+                <ul><li v-for="line in notes(screen).slice(0, 5)" :key="line">{{ line }}</li></ul>
+              </details>
             </template>
             <template v-else-if="updateState(screen)!.kind === 'running' && updateProgress(screen)">
               <div class="progress" role="progressbar" :aria-valuenow="updateProgress(screen)!.percent" aria-valuemin="0" aria-valuemax="100"><i :style="{ width: updateProgress(screen)!.percent + '%' }"></i></div>
@@ -155,7 +174,6 @@ const pendingText = (p: { installed?: boolean; downloaded?: boolean; file: strin
             </template>
             <small v-else-if="updateState(screen)!.kind !== 'running'" :class="{ failed: updateState(screen)!.kind === 'failed' }">{{ updateState(screen)!.text }}</small>
           </div>
-          <button v-if="screen.api_key" type="button" class="btn link mini copy-key" @click="copyText(screen.api_key!)">{{ t("editor.sidebar.copy_api_key") }}</button>
           <form v-if="renameFor === screen.id" class="rename-screen" @submit.prevent="saveName(screen)">
             <input v-model="newName" :placeholder="screen.ha_name" maxlength="40" :aria-label="t('editor.sidebar.rename.label')" autofocus @keydown.esc="renameFor = null" />
             <div class="screen-actions">
@@ -163,8 +181,15 @@ const pendingText = (p: { installed?: boolean; downloaded?: boolean; file: strin
               <button type="button" class="btn link mini" @click="renameFor = null">{{ t("editor.common.cancel") }}</button>
             </div>
           </form>
-          <button v-else type="button" class="btn link mini rename-screen" @click="startRename(screen)">{{ t("editor.sidebar.rename.button") }}</button>
-          <button type="button" class="btn link mini danger remove-screen" @click="removeFor = screen.id">{{ t("editor.sidebar.remove.button") }}</button>
+          <!-- What can be done with the screen, as the rows of a menu: quiet until pointed at, the one that removes in red. -->
+          <div class="screen-actions-list">
+            <button v-if="renameFor !== screen.id" type="button" class="act rename-screen" @click="startRename(screen)"><Icon name="pencil-outline" />{{ t("editor.sidebar.rename.button") }}</button>
+            <!-- The screen's YAML, Override YAML and the secrets they use, to build it with ESPHome on your own computer. -->
+            <a v-if="screen.update?.profile" class="act screen-files" :href="`api/firmware/profiles/${encodeURIComponent(screen.update.profile)}/files`" download
+              :title="t('editor.sidebar.files_hint')"><Icon name="tray-arrow-down" />{{ t("editor.sidebar.files") }}</a>
+            <button v-if="screen.api_key" type="button" class="act copy-key" @click="copyText(screen.api_key!)"><Icon name="content-copy" />{{ t("editor.sidebar.copy_api_key") }}</button>
+            <button type="button" class="act danger remove-screen" @click="removeFor = screen.id"><Icon name="delete-outline" />{{ t("editor.sidebar.remove.button") }}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -172,26 +197,33 @@ const pendingText = (p: { installed?: boolean; downloaded?: boolean; file: strin
       <div v-for="p in state.inventory.pending || []" :key="p.file" class="pending">
         <strong>{{ p.friendly }}</strong>
         <small>{{ pendingText(p) }}</small>
-        <div class="pending-actions">
+        <div v-if="removeFor === `pending:${p.file}`" class="screen-remove">
+          <strong>{{ t("editor.sidebar.remove.title", { name: p.friendly }) }}</strong>
+          <ul><li>{{ t("editor.sidebar.remove.profile", { file: p.file }) }}</li></ul>
+          <div class="pending-actions">
+            <button type="button" class="btn mini danger forget-pending" :disabled="Boolean(state.removing)" @click="forgetPending(p.file, p.friendly).then((done) => { if (done) removeFor = null; })">
+              <span v-if="state.removing === `pending:${p.file}`" class="spin small"></span>{{ t("editor.sidebar.remove.confirm") }}
+            </button>
+            <button type="button" class="btn link mini" :disabled="Boolean(state.removing)" @click="removeFor = null">{{ t("editor.common.cancel") }}</button>
+          </div>
+        </div>
+        <div v-else class="pending-actions">
           <button type="button" class="btn mini quiet" @click="openIntegrations">{{ t("editor.common.open_integrations") }}</button>
+          <button type="button" class="btn link mini danger remove-pending" @click="removeFor = `pending:${p.file}`">{{ t("editor.sidebar.remove.button") }}</button>
         </div>
         <details v-if="p.api_key" class="key-more">
           <summary>{{ t("editor.installer.key_more") }}</summary>
           <button type="button" class="btn link mini copy-key" @click="copyText(p.api_key!)">{{ t("editor.sidebar.copy_api_key") }}</button>
         </details>
+        <a class="btn link mini screen-files" :href="`api/firmware/profiles/${encodeURIComponent(p.file)}/files`" download :title="t('editor.sidebar.files_hint')">{{ t("editor.sidebar.files") }}</a>
       </div>
     </div>
-    <button id="new-screen" type="button" class="nav-item ghost" :aria-current="route === '#new-screen' ? 'true' : 'false'" @click="go('#new-screen')">
-      <Icon name="plus" class="plus" /><span class="txt">{{ t("editor.nav.new_screen") }}</span>
-    </button>
     <div class="spacer"></div>
     <div class="more">
-      <div class="label">{{ t("editor.sidebar.more") }}</div>
       <!-- The firmware tool (build, USB, OTA, download) is for repairs, not for adding a screen, so it lives in Settings,
            the command palette and a screen's menu rather than here, where it read as the way in (app 0.3.27). -->
       <button id="open-alerts" type="button" class="nav-item" :aria-current="route === '#alerts' ? 'true' : 'false'" @click="go('#alerts')"><span class="mdi">{{ glyph("F0594") }}</span><span class="txt">{{ t("editor.nav.alerts") }}</span></button>
       <button id="open-settings" type="button" class="nav-item" :aria-current="route === '#settings' ? 'true' : 'false'" @click="go('#settings')"><span class="mdi">{{ glyph("F0493") }}</span><span class="txt">{{ t("editor.nav.settings") }}</span></button>
-      <button id="refresh" type="button" class="nav-item ghost" @click="refresh()"><Icon name="refresh" class="plus" /><span class="txt">{{ t("editor.sidebar.refresh") }}</span></button>
     </div>
   </aside>
 </template>

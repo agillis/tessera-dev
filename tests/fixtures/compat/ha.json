@@ -1,0 +1,8632 @@
+{
+ "note": "Home Assistant demo entities (a bench with demo:), for the compatibility corpus. No personal setup.",
+ "services": {
+  "ai_task": {
+   "generate_data": {
+    "fields": {
+     "attachments": {
+      "required": false,
+      "selector": {
+       "media": {
+        "accept": [
+         "*"
+        ],
+        "multiple": true
+       }
+      }
+     },
+     "entity_id": {
+      "required": false,
+      "selector": {
+       "entity": {
+        "filter": [
+         {
+          "domain": [
+           "ai_task"
+          ],
+          "supported_features": [
+           1
+          ]
+         }
+        ],
+        "multiple": false,
+        "reorder": false
+       }
+      }
+     },
+     "instructions": {
+      "example": "Generate a funny notification that the garage door was left open",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": true,
+        "multiple": false
+       }
+      }
+     },
+     "structure": {
+      "example": "{ \"name\": { \"selector\": { \"text\": }, \"description\": \"Name of the user\", \"required\": \"True\" } } }, \"age\": { \"selector\": { \"number\": }, \"description\": \"Age of the user\" } }",
+      "required": false,
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "task_name": {
+      "example": "home summary",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    }
+   },
+   "generate_image": {
+    "fields": {
+     "attachments": {
+      "required": false,
+      "selector": {
+       "media": {
+        "accept": [
+         "*"
+        ],
+        "multiple": true
+       }
+      }
+     },
+     "entity_id": {
+      "required": true,
+      "selector": {
+       "entity": {
+        "filter": [
+         {
+          "domain": [
+           "ai_task"
+          ],
+          "supported_features": [
+           4
+          ]
+         }
+        ],
+        "multiple": false,
+        "reorder": false
+       }
+      }
+     },
+     "instructions": {
+      "example": "Generate a high quality square image of a dog on transparent background",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": true,
+        "multiple": false
+       }
+      }
+     },
+     "task_name": {
+      "example": "picture of a dog",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    }
+   }
+  },
+  "alarm_control_panel": {
+   "alarm_arm_away": {
+    "fields": {
+     "code": {
+      "example": "1234",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "alarm_control_panel"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "alarm_arm_custom_bypass": {
+    "fields": {
+     "code": {
+      "example": "1234",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "alarm_control_panel"
+       ],
+       "supported_features": [
+        16
+       ]
+      }
+     ]
+    }
+   },
+   "alarm_arm_home": {
+    "fields": {
+     "code": {
+      "example": "1234",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "alarm_control_panel"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "alarm_arm_night": {
+    "fields": {
+     "code": {
+      "example": "1234",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "alarm_control_panel"
+       ],
+       "supported_features": [
+        4
+       ]
+      }
+     ]
+    }
+   },
+   "alarm_arm_vacation": {
+    "fields": {
+     "code": {
+      "example": "1234",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "alarm_control_panel"
+       ],
+       "supported_features": [
+        32
+       ]
+      }
+     ]
+    }
+   },
+   "alarm_disarm": {
+    "fields": {
+     "code": {
+      "example": "1234",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "alarm_control_panel"
+       ]
+      }
+     ]
+    }
+   },
+   "alarm_trigger": {
+    "fields": {
+     "code": {
+      "example": "1234",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "alarm_control_panel"
+       ],
+       "supported_features": [
+        8
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "assist_satellite": {
+   "announce": {
+    "fields": {
+     "media_id": {
+      "required": false,
+      "selector": {
+       "media": {
+        "accept": [
+         "audio/*"
+        ],
+        "multiple": false
+       }
+      }
+     },
+     "message": {
+      "default": "",
+      "example": "Time to wake up!",
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "preannounce": {
+      "default": true,
+      "required": false,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "preannounce_media_id": {
+      "required": false,
+      "selector": {
+       "media": {
+        "accept": [
+         "audio/*"
+        ],
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "assist_satellite"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "ask_question": {
+    "fields": {
+     "answers": {
+      "required": false,
+      "selector": {
+       "object": {
+        "description_field": "id",
+        "fields": {
+         "id": {
+          "required": true,
+          "selector": {
+           "text": {
+            "multiline": false,
+            "multiple": false
+           }
+          }
+         },
+         "sentences": {
+          "required": true,
+          "selector": {
+           "text": {
+            "multiline": false,
+            "multiple": true
+           }
+          }
+         }
+        },
+        "label_field": "sentences",
+        "multiple": true,
+        "translation_key": "answers"
+       }
+      }
+     },
+     "entity_id": {
+      "required": true,
+      "selector": {
+       "entity": {
+        "filter": [
+         {
+          "domain": [
+           "assist_satellite"
+          ],
+          "supported_features": [
+           2
+          ]
+         }
+        ],
+        "multiple": false,
+        "reorder": false
+       }
+      }
+     },
+     "preannounce": {
+      "default": true,
+      "required": false,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "preannounce_media_id": {
+      "required": false,
+      "selector": {
+       "media": {
+        "accept": [
+         "audio/*"
+        ],
+        "multiple": false
+       }
+      }
+     },
+     "question": {
+      "default": "",
+      "example": "What kind of music would you like to play?",
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "question_media_id": {
+      "required": false,
+      "selector": {
+       "media": {
+        "accept": [
+         "audio/*"
+        ],
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    }
+   },
+   "start_conversation": {
+    "fields": {
+     "extra_system_prompt": {
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "preannounce": {
+      "default": true,
+      "required": false,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "preannounce_media_id": {
+      "required": false,
+      "selector": {
+       "media": {
+        "accept": [
+         "audio/*"
+        ],
+        "multiple": false
+       }
+      }
+     },
+     "start_media_id": {
+      "required": false,
+      "selector": {
+       "media": {
+        "accept": [
+         "audio/*"
+        ],
+        "multiple": false
+       }
+      }
+     },
+     "start_message": {
+      "default": "",
+      "example": "You left the lights on in the living room. Turn them off?",
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "assist_satellite"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "automation": {
+   "reload": {
+    "fields": {}
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "automation"
+       ]
+      }
+     ]
+    }
+   },
+   "trigger": {
+    "fields": {
+     "skip_condition": {
+      "default": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "automation"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {
+     "stop_actions": {
+      "default": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "automation"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "automation"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "backup": {
+   "create_automatic": {
+    "fields": {}
+   }
+  },
+  "button": {
+   "press": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "button"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "calendar": {
+   "create_event": {
+    "fields": {
+     "description": {
+      "example": "Meeting to provide technical review for 'Phoenix' design.",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "end_date": {
+      "example": "2022-03-23",
+      "selector": {
+       "date": {}
+      }
+     },
+     "end_date_time": {
+      "example": "2022-03-22 22:00:00",
+      "selector": {
+       "datetime": {}
+      }
+     },
+     "in": {
+      "example": "{\"days\": 2} or {\"weeks\": 2}"
+     },
+     "location": {
+      "example": "Conference Room - F123, Bldg. 002",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "start_date": {
+      "example": "2022-03-22",
+      "selector": {
+       "date": {}
+      }
+     },
+     "start_date_time": {
+      "example": "2022-03-22 20:00:00",
+      "selector": {
+       "datetime": {}
+      }
+     },
+     "summary": {
+      "example": "Department Party",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "calendar"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "get_events": {
+    "fields": {
+     "duration": {
+      "selector": {
+       "duration": {
+        "enable_second": true
+       }
+      }
+     },
+     "end_date_time": {
+      "example": "2022-03-22 22:00:00",
+      "selector": {
+       "datetime": {}
+      }
+     },
+     "start_date_time": {
+      "example": "2022-03-22 20:00:00",
+      "selector": {
+       "datetime": {}
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "calendar"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "camera": {
+   "disable_motion_detection": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "camera"
+       ]
+      }
+     ]
+    }
+   },
+   "enable_motion_detection": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "camera"
+       ]
+      }
+     ]
+    }
+   },
+   "play_stream": {
+    "fields": {
+     "format": {
+      "default": "hls",
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "hls"
+        ],
+        "sort": false
+       }
+      }
+     },
+     "media_player": {
+      "required": true,
+      "selector": {
+       "entity": {
+        "domain": [
+         "media_player"
+        ],
+        "multiple": false,
+        "reorder": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "camera"
+       ]
+      }
+     ]
+    }
+   },
+   "record": {
+    "fields": {
+     "duration": {
+      "default": 30,
+      "selector": {
+       "number": {
+        "max": 3600.0,
+        "min": 1.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     },
+     "filename": {
+      "example": "/tmp/snapshot_{{ entity_id.name }}.mp4",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "lookback": {
+      "default": 0,
+      "selector": {
+       "number": {
+        "max": 300.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "camera"
+       ]
+      }
+     ]
+    }
+   },
+   "snapshot": {
+    "fields": {
+     "filename": {
+      "example": "/tmp/snapshot_{{ entity_id.name }}.jpg",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "camera"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "camera"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "camera"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "climate": {
+   "set_fan_mode": {
+    "fields": {
+     "fan_mode": {
+      "example": "low",
+      "required": true,
+      "selector": {
+       "state": {
+        "attribute": "fan_mode",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ],
+       "supported_features": [
+        8
+       ]
+      }
+     ]
+    }
+   },
+   "set_humidity": {
+    "fields": {
+     "humidity": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 99.0,
+        "min": 30.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ],
+       "supported_features": [
+        4
+       ]
+      }
+     ]
+    }
+   },
+   "set_hvac_mode": {
+    "fields": {
+     "hvac_mode": {
+      "selector": {
+       "state": {
+        "hide_states": [
+         "unavailable",
+         "unknown"
+        ],
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ]
+      }
+     ]
+    }
+   },
+   "set_preset_mode": {
+    "fields": {
+     "preset_mode": {
+      "example": "away",
+      "required": true,
+      "selector": {
+       "state": {
+        "attribute": "preset_mode",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ],
+       "supported_features": [
+        16
+       ]
+      }
+     ]
+    }
+   },
+   "set_swing_horizontal_mode": {
+    "fields": {
+     "swing_horizontal_mode": {
+      "example": "on",
+      "required": true,
+      "selector": {
+       "state": {
+        "attribute": "swing_horizontal_mode",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ],
+       "supported_features": [
+        512
+       ]
+      }
+     ]
+    }
+   },
+   "set_swing_mode": {
+    "fields": {
+     "swing_mode": {
+      "example": "on",
+      "required": true,
+      "selector": {
+       "state": {
+        "attribute": "swing_mode",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ],
+       "supported_features": [
+        32
+       ]
+      }
+     ]
+    }
+   },
+   "set_temperature": {
+    "fields": {
+     "hvac_mode": {
+      "selector": {
+       "state": {
+        "hide_states": [
+         "unavailable",
+         "unknown"
+        ],
+        "multiple": false
+       }
+      }
+     },
+     "temperature": {
+      "filter": {
+       "supported_features": [
+        1
+       ]
+      },
+      "selector": {
+       "number": {
+        "max": 250.0,
+        "min": 0.0,
+        "mode": "box",
+        "step": 0.1
+       }
+      }
+     },
+     "temperature_range": {
+      "fields": {
+       "target_temp_high": {
+        "filter": {
+         "supported_features": [
+          2
+         ]
+        },
+        "selector": {
+         "number": {
+          "max": 250.0,
+          "min": 0.0,
+          "mode": "box",
+          "step": 0.1
+         }
+        }
+       },
+       "target_temp_low": {
+        "filter": {
+         "supported_features": [
+          2
+         ]
+        },
+        "selector": {
+         "number": {
+          "max": 250.0,
+          "min": 0.0,
+          "mode": "box",
+          "step": 0.1
+         }
+        }
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ],
+       "supported_features": [
+        1,
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ],
+       "supported_features": [
+        128,
+        256
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ],
+       "supported_features": [
+        128
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "climate"
+       ],
+       "supported_features": [
+        256
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "cloud": {
+   "remote_connect": {
+    "fields": {}
+   },
+   "remote_disconnect": {
+    "fields": {}
+   }
+  },
+  "conversation": {
+   "process": {
+    "fields": {
+     "agent_id": {
+      "example": "homeassistant",
+      "selector": {
+       "conversation_agent": {}
+      }
+     },
+     "conversation_id": {
+      "example": "my_conversation_1",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "language": {
+      "example": "NL",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "text": {
+      "example": "Turn all lights on",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": true
+    }
+   },
+   "reload": {
+    "fields": {
+     "agent_id": {
+      "example": "homeassistant",
+      "selector": {
+       "conversation_agent": {}
+      }
+     },
+     "language": {
+      "example": "NL",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   }
+  },
+  "counter": {
+   "decrement": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "counter"
+       ]
+      }
+     ]
+    }
+   },
+   "increment": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "counter"
+       ]
+      }
+     ]
+    }
+   },
+   "reset": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "counter"
+       ]
+      }
+     ]
+    }
+   },
+   "set_value": {
+    "fields": {
+     "value": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 9.223372036854776e+18,
+        "min": -9.223372036854776e+18,
+        "mode": "box",
+        "step": 1.0
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "counter"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "cover": {
+   "close_cover": {
+    "fields": {
+     "speed": {
+      "example": "fast",
+      "filter": {
+       "supported_features": [
+        256
+       ]
+      },
+      "selector": {
+       "state": {
+        "attribute": "speed",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "close_cover_tilt": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        32
+       ]
+      }
+     ]
+    }
+   },
+   "open_cover": {
+    "fields": {
+     "speed": {
+      "example": "fast",
+      "filter": {
+       "supported_features": [
+        256
+       ]
+      },
+      "selector": {
+       "state": {
+        "attribute": "speed",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "open_cover_tilt": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        16
+       ]
+      }
+     ]
+    }
+   },
+   "set_cover_position": {
+    "fields": {
+     "position": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     },
+     "speed": {
+      "example": "fast",
+      "filter": {
+       "supported_features": [
+        256
+       ]
+      },
+      "selector": {
+       "state": {
+        "attribute": "speed",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        4
+       ]
+      }
+     ]
+    }
+   },
+   "set_cover_tilt_position": {
+    "fields": {
+     "tilt_position": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        128
+       ]
+      }
+     ]
+    }
+   },
+   "stop_cover": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        8
+       ]
+      }
+     ]
+    }
+   },
+   "stop_cover_tilt": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        64
+       ]
+      }
+     ]
+    }
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        3
+       ]
+      }
+     ]
+    }
+   },
+   "toggle_cover_tilt": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "cover"
+       ],
+       "supported_features": [
+        48
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "date": {
+   "set_value": {
+    "fields": {
+     "date": {
+      "example": "2022/11/01",
+      "required": true,
+      "selector": {
+       "date": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "date"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "datetime": {
+   "set_value": {
+    "fields": {
+     "datetime": {
+      "example": "2023-10-07T21:35:22",
+      "required": true,
+      "selector": {
+       "datetime": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "datetime"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "demo": {
+   "randomize_device_tracker_data": {
+    "fields": {}
+   }
+  },
+  "device_tracker": {
+   "see": {
+    "fields": {
+     "battery": {
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     },
+     "dev_id": {
+      "example": "phonedave",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "gps": {
+      "example": "[51.509802, -0.086692]",
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "gps_accuracy": {
+      "selector": {
+       "number": {
+        "min": 0.0,
+        "mode": "box",
+        "step": 1.0,
+        "unit_of_measurement": "m"
+       }
+      }
+     },
+     "host_name": {
+      "example": "Dave",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "location_name": {
+      "example": "home",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "mac": {
+      "example": "FF:FF:FF:FF:FF:FF",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   }
+  },
+  "esphome": {
+   "bench_cyd_dismiss_alert": {
+    "description": "Performs the action dismiss_alert of the node bench-cyd",
+    "fields": {},
+    "name": ""
+   },
+   "bench_cyd_end_touch_diagnostics": {
+    "description": "Performs the action end_touch_diagnostics of the node bench-cyd",
+    "fields": {},
+    "name": ""
+   },
+   "bench_cyd_light_controls_preview": {
+    "description": "Performs the action light_controls_preview of the node bench-cyd",
+    "fields": {},
+    "name": ""
+   },
+   "bench_cyd_open_settings": {
+    "description": "Performs the action open_settings of the node bench-cyd",
+    "fields": {
+     "page": {
+      "description": null,
+      "example": "42",
+      "name": "page",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_cyd_preview_busy": {
+    "description": "Performs the action preview_busy of the node bench-cyd",
+    "fields": {
+     "index": {
+      "description": null,
+      "example": "42",
+      "name": "index",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_cyd_preview_runtime_card": {
+    "description": "Performs the action preview_runtime_card of the node bench-cyd",
+    "fields": {
+     "index": {
+      "description": null,
+      "example": "42",
+      "name": "index",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_cyd_screen_message": {
+    "description": "Performs the action screen_message of the node bench-cyd",
+    "fields": {
+     "message": {
+      "description": null,
+      "example": "Example text",
+      "name": "message",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     }
+    },
+    "name": "",
+    "response": {
+     "optional": true
+    }
+   },
+   "bench_cyd_show_alert": {
+    "description": "Performs the action show_alert of the node bench-cyd",
+    "fields": {
+     "button_text": {
+      "description": null,
+      "example": "Example text",
+      "name": "button_text",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "color": {
+      "description": null,
+      "example": "Example text",
+      "name": "color",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "flash": {
+      "description": null,
+      "example": "False",
+      "name": "flash",
+      "required": true,
+      "selector": {
+       "boolean": null
+      }
+     },
+     "icon": {
+      "description": null,
+      "example": "Example text",
+      "name": "icon",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "subtitle": {
+      "description": null,
+      "example": "Example text",
+      "name": "subtitle",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "timeout": {
+      "description": null,
+      "example": "42",
+      "name": "timeout",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     },
+     "title": {
+      "description": null,
+      "example": "Example text",
+      "name": "title",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_cyd_show_alert_choice": {
+    "description": "Performs the action show_alert_choice of the node bench-cyd",
+    "fields": {
+     "button2_color": {
+      "description": null,
+      "example": "Example text",
+      "name": "button2_color",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "button2_text": {
+      "description": null,
+      "example": "Example text",
+      "name": "button2_text",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "button_color": {
+      "description": null,
+      "example": "Example text",
+      "name": "button_color",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "button_text": {
+      "description": null,
+      "example": "Example text",
+      "name": "button_text",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "color": {
+      "description": null,
+      "example": "Example text",
+      "name": "color",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "flash": {
+      "description": null,
+      "example": "False",
+      "name": "flash",
+      "required": true,
+      "selector": {
+       "boolean": null
+      }
+     },
+     "icon": {
+      "description": null,
+      "example": "Example text",
+      "name": "icon",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "subtitle": {
+      "description": null,
+      "example": "Example text",
+      "name": "subtitle",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "timeout": {
+      "description": null,
+      "example": "42",
+      "name": "timeout",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     },
+     "title": {
+      "description": null,
+      "example": "Example text",
+      "name": "title",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_cyd_show_page": {
+    "description": "Performs the action show_page of the node bench-cyd",
+    "fields": {
+     "page": {
+      "description": null,
+      "example": "42",
+      "name": "page",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_cyd_touch_diagnostics": {
+    "description": "Performs the action touch_diagnostics of the node bench-cyd",
+    "fields": {},
+    "name": ""
+   },
+   "bench_cyd_ui_self_test": {
+    "description": "Performs the action ui_self_test of the node bench-cyd",
+    "fields": {},
+    "name": ""
+   },
+   "bench_cyd_ui_state": {
+    "description": "Performs the action ui_state of the node bench-cyd",
+    "fields": {},
+    "name": ""
+   },
+   "bench_guition_dismiss_alert": {
+    "description": "Performs the action dismiss_alert of the node bench-guition",
+    "fields": {},
+    "name": ""
+   },
+   "bench_guition_end_touch_diagnostics": {
+    "description": "Performs the action end_touch_diagnostics of the node bench-guition",
+    "fields": {},
+    "name": ""
+   },
+   "bench_guition_light_controls_preview": {
+    "description": "Performs the action light_controls_preview of the node bench-guition",
+    "fields": {},
+    "name": ""
+   },
+   "bench_guition_open_settings": {
+    "description": "Performs the action open_settings of the node bench-guition",
+    "fields": {
+     "page": {
+      "description": null,
+      "example": "42",
+      "name": "page",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_guition_preview_busy": {
+    "description": "Performs the action preview_busy of the node bench-guition",
+    "fields": {
+     "index": {
+      "description": null,
+      "example": "42",
+      "name": "index",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_guition_preview_camera": {
+    "description": "Performs the action preview_camera of the node bench-guition",
+    "fields": {
+     "entity": {
+      "description": null,
+      "example": "Example text",
+      "name": "entity",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_guition_preview_runtime_card": {
+    "description": "Performs the action preview_runtime_card of the node bench-guition",
+    "fields": {
+     "index": {
+      "description": null,
+      "example": "42",
+      "name": "index",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_guition_screen_message": {
+    "description": "Performs the action screen_message of the node bench-guition",
+    "fields": {
+     "message": {
+      "description": null,
+      "example": "Example text",
+      "name": "message",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     }
+    },
+    "name": "",
+    "response": {
+     "optional": true
+    }
+   },
+   "bench_guition_show_alert": {
+    "description": "Performs the action show_alert of the node bench-guition",
+    "fields": {
+     "button_text": {
+      "description": null,
+      "example": "Example text",
+      "name": "button_text",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "color": {
+      "description": null,
+      "example": "Example text",
+      "name": "color",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "flash": {
+      "description": null,
+      "example": "False",
+      "name": "flash",
+      "required": true,
+      "selector": {
+       "boolean": null
+      }
+     },
+     "icon": {
+      "description": null,
+      "example": "Example text",
+      "name": "icon",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "subtitle": {
+      "description": null,
+      "example": "Example text",
+      "name": "subtitle",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "timeout": {
+      "description": null,
+      "example": "42",
+      "name": "timeout",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     },
+     "title": {
+      "description": null,
+      "example": "Example text",
+      "name": "title",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_guition_show_alert_choice": {
+    "description": "Performs the action show_alert_choice of the node bench-guition",
+    "fields": {
+     "button2_color": {
+      "description": null,
+      "example": "Example text",
+      "name": "button2_color",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "button2_text": {
+      "description": null,
+      "example": "Example text",
+      "name": "button2_text",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "button_color": {
+      "description": null,
+      "example": "Example text",
+      "name": "button_color",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "button_text": {
+      "description": null,
+      "example": "Example text",
+      "name": "button_text",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "color": {
+      "description": null,
+      "example": "Example text",
+      "name": "color",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "flash": {
+      "description": null,
+      "example": "False",
+      "name": "flash",
+      "required": true,
+      "selector": {
+       "boolean": null
+      }
+     },
+     "icon": {
+      "description": null,
+      "example": "Example text",
+      "name": "icon",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "subtitle": {
+      "description": null,
+      "example": "Example text",
+      "name": "subtitle",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "timeout": {
+      "description": null,
+      "example": "42",
+      "name": "timeout",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     },
+     "title": {
+      "description": null,
+      "example": "Example text",
+      "name": "title",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_guition_show_page": {
+    "description": "Performs the action show_page of the node bench-guition",
+    "fields": {
+     "page": {
+      "description": null,
+      "example": "42",
+      "name": "page",
+      "required": true,
+      "selector": {
+       "number": {
+        "mode": "box"
+       }
+      }
+     }
+    },
+    "name": ""
+   },
+   "bench_guition_touch_diagnostics": {
+    "description": "Performs the action touch_diagnostics of the node bench-guition",
+    "fields": {},
+    "name": ""
+   },
+   "bench_guition_ui_self_test": {
+    "description": "Performs the action ui_self_test of the node bench-guition",
+    "fields": {},
+    "name": ""
+   },
+   "bench_guition_ui_snapshot": {
+    "description": "Performs the action ui_snapshot of the node bench-guition",
+    "fields": {},
+    "name": ""
+   },
+   "bench_guition_ui_state": {
+    "description": "Performs the action ui_state of the node bench-guition",
+    "fields": {},
+    "name": ""
+   }
+  },
+  "fan": {
+   "decrease_speed": {
+    "fields": {
+     "additional_fields": {
+      "collapsed": true,
+      "fields": {
+       "percentage_step": {
+        "required": false,
+        "selector": {
+         "number": {
+          "max": 100.0,
+          "min": 0.0,
+          "mode": "slider",
+          "step": 1.0,
+          "unit_of_measurement": "%"
+         }
+        }
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "fan"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "increase_speed": {
+    "fields": {
+     "additional_fields": {
+      "collapsed": true,
+      "fields": {
+       "percentage_step": {
+        "required": false,
+        "selector": {
+         "number": {
+          "max": 100.0,
+          "min": 0.0,
+          "mode": "slider",
+          "step": 1.0,
+          "unit_of_measurement": "%"
+         }
+        }
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "fan"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "oscillate": {
+    "fields": {
+     "oscillating": {
+      "required": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "fan"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "set_direction": {
+    "fields": {
+     "direction": {
+      "required": true,
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "forward",
+         "reverse"
+        ],
+        "sort": false,
+        "translation_key": "direction"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "fan"
+       ],
+       "supported_features": [
+        4
+       ]
+      }
+     ]
+    }
+   },
+   "set_percentage": {
+    "fields": {
+     "percentage": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "fan"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "set_preset_mode": {
+    "fields": {
+     "preset_mode": {
+      "example": "auto",
+      "required": true,
+      "selector": {
+       "state": {
+        "attribute": "preset_mode",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "fan"
+       ],
+       "supported_features": [
+        8
+       ]
+      }
+     ]
+    }
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "fan"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "fan"
+       ],
+       "supported_features": [
+        16
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {
+     "percentage": {
+      "filter": {
+       "supported_features": [
+        1
+       ]
+      },
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     },
+     "preset_mode": {
+      "example": "auto",
+      "filter": {
+       "supported_features": [
+        8
+       ]
+      },
+      "selector": {
+       "state": {
+        "attribute": "preset_mode",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "fan"
+       ],
+       "supported_features": [
+        32
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "ffmpeg": {
+   "restart": {
+    "fields": {
+     "entity_id": {
+      "selector": {
+       "entity": {
+        "domain": [
+         "binary_sensor"
+        ],
+        "integration": "ffmpeg",
+        "multiple": false,
+        "reorder": false
+       }
+      }
+     }
+    }
+   },
+   "start": {
+    "fields": {
+     "entity_id": {
+      "selector": {
+       "entity": {
+        "domain": [
+         "binary_sensor"
+        ],
+        "integration": "ffmpeg",
+        "multiple": false,
+        "reorder": false
+       }
+      }
+     }
+    }
+   },
+   "stop": {
+    "fields": {
+     "entity_id": {
+      "selector": {
+       "entity": {
+        "domain": [
+         "binary_sensor"
+        ],
+        "integration": "ffmpeg",
+        "multiple": false,
+        "reorder": false
+       }
+      }
+     }
+    }
+   }
+  },
+  "file": {
+   "read_file": {
+    "fields": {
+     "file_encoding": {
+      "example": "JSON",
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "JSON",
+         "YAML"
+        ],
+        "sort": false
+       }
+      }
+     },
+     "file_name": {
+      "example": "www/my_file.json",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    }
+   }
+  },
+  "frontend": {
+   "reload_themes": {
+    "fields": {}
+   },
+   "set_theme": {
+    "fields": {
+     "name": {
+      "example": "default",
+      "required": false,
+      "selector": {
+       "theme": {
+        "include_default": true
+       }
+      }
+     },
+     "name_dark": {
+      "example": "default",
+      "required": false,
+      "selector": {
+       "theme": {
+        "include_default": true
+       }
+      }
+     }
+    }
+   }
+  },
+  "group": {
+   "reload": {
+    "fields": {}
+   },
+   "remove": {
+    "fields": {
+     "object_id": {
+      "example": "test_group",
+      "required": true,
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "set": {
+    "fields": {
+     "add_entities": {
+      "example": "domain.entity_id1, domain.entity_id2",
+      "selector": {
+       "entity": {
+        "multiple": true,
+        "reorder": false
+       }
+      }
+     },
+     "all": {
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "entities": {
+      "example": "domain.entity_id1, domain.entity_id2",
+      "selector": {
+       "entity": {
+        "multiple": true,
+        "reorder": false
+       }
+      }
+     },
+     "icon": {
+      "example": "mdi:camera",
+      "selector": {
+       "icon": {}
+      }
+     },
+     "name": {
+      "example": "My test group",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "object_id": {
+      "example": "test_group",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "remove_entities": {
+      "example": "domain.entity_id1, domain.entity_id2",
+      "selector": {
+       "entity": {
+        "multiple": true,
+        "reorder": false
+       }
+      }
+     }
+    }
+   }
+  },
+  "hassio": {
+   "addon_restart": {
+    "fields": {
+     "addon": {
+      "example": "core_ssh",
+      "required": true,
+      "selector": {
+       "addon": {}
+      }
+     }
+    }
+   },
+   "addon_start": {
+    "fields": {
+     "addon": {
+      "example": "core_ssh",
+      "required": true,
+      "selector": {
+       "addon": {}
+      }
+     }
+    }
+   },
+   "addon_stdin": {
+    "fields": {
+     "addon": {
+      "example": "core_ssh",
+      "required": true,
+      "selector": {
+       "addon": {}
+      }
+     }
+    }
+   },
+   "addon_stop": {
+    "fields": {
+     "addon": {
+      "example": "core_ssh",
+      "required": true,
+      "selector": {
+       "addon": {}
+      }
+     }
+    }
+   },
+   "app_restart": {
+    "fields": {
+     "app": {
+      "example": "core_ssh",
+      "required": true,
+      "selector": {
+       "app": {}
+      }
+     }
+    }
+   },
+   "app_start": {
+    "fields": {
+     "app": {
+      "example": "core_ssh",
+      "required": true,
+      "selector": {
+       "app": {}
+      }
+     }
+    }
+   },
+   "app_stdin": {
+    "fields": {
+     "app": {
+      "example": "core_ssh",
+      "required": true,
+      "selector": {
+       "app": {}
+      }
+     },
+     "input": {
+      "required": true,
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "app_stop": {
+    "fields": {
+     "app": {
+      "example": "core_ssh",
+      "required": true,
+      "selector": {
+       "app": {}
+      }
+     }
+    }
+   },
+   "backup_full": {
+    "fields": {
+     "compressed": {
+      "default": true,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "homeassistant_exclude_database": {
+      "default": false,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "location": {
+      "example": "my_backup_mount",
+      "selector": {
+       "backup_location": {}
+      }
+     },
+     "name": {
+      "example": "Backup 1",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "password": {
+      "example": "password",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": true
+    }
+   },
+   "backup_partial": {
+    "fields": {
+     "addons": {
+      "example": [
+       "core_ssh",
+       "core_samba",
+       "core_mosquitto"
+      ],
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "apps": {
+      "example": [
+       "core_ssh",
+       "core_samba",
+       "core_mosquitto"
+      ],
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "compressed": {
+      "default": true,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "folders": {
+      "example": [
+       "homeassistant",
+       "share"
+      ],
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "homeassistant": {
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "homeassistant_exclude_database": {
+      "default": false,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "location": {
+      "example": "my_backup_mount",
+      "selector": {
+       "backup_location": {}
+      }
+     },
+     "name": {
+      "example": "Partial backup 1",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "password": {
+      "example": "password",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": true
+    }
+   },
+   "host_reboot": {
+    "fields": {}
+   },
+   "host_shutdown": {
+    "fields": {}
+   },
+   "mount_reload": {
+    "fields": {
+     "device_id": {
+      "required": true,
+      "selector": {
+       "device": {
+        "filter": [
+         {
+          "integration": "hassio",
+          "model": "Home Assistant Mount"
+         }
+        ],
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "restore_full": {
+    "fields": {
+     "password": {
+      "example": "password",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "slug": {
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "restore_partial": {
+    "fields": {
+     "addons": {
+      "example": [
+       "core_ssh",
+       "core_samba",
+       "core_mosquitto"
+      ],
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "apps": {
+      "example": [
+       "core_ssh",
+       "core_samba",
+       "core_mosquitto"
+      ],
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "folders": {
+      "example": [
+       "homeassistant",
+       "share"
+      ],
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "homeassistant": {
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "password": {
+      "example": "password",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "slug": {
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   }
+  },
+  "homeassistant": {
+   "check_config": {
+    "fields": {}
+   },
+   "reload_all": {
+    "fields": {}
+   },
+   "reload_config_entry": {
+    "fields": {
+     "entry_id": {
+      "required": false,
+      "selector": {
+       "config_entry": {}
+      }
+     }
+    },
+    "target": {}
+   },
+   "reload_core_config": {
+    "fields": {}
+   },
+   "reload_custom_templates": {
+    "fields": {}
+   },
+   "restart": {
+    "fields": {}
+   },
+   "save_persistent_states": {
+    "fields": {}
+   },
+   "set_location": {
+    "fields": {
+     "elevation": {
+      "example": 120,
+      "required": false,
+      "selector": {
+       "number": {
+        "mode": "box",
+        "step": "any"
+       }
+      }
+     },
+     "latitude": {
+      "example": 32.87336,
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 90.0,
+        "min": -90.0,
+        "mode": "box",
+        "step": "any"
+       }
+      }
+     },
+     "longitude": {
+      "example": 117.22743,
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 180.0,
+        "min": -180.0,
+        "mode": "box",
+        "step": "any"
+       }
+      }
+     }
+    }
+   },
+   "stop": {
+    "fields": {}
+   },
+   "toggle": {
+    "fields": {},
+    "target": {}
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {}
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {}
+   },
+   "update_entity": {
+    "fields": {
+     "entity_id": {
+      "required": true,
+      "selector": {
+       "entity": {
+        "multiple": true,
+        "reorder": false
+       }
+      }
+     }
+    }
+   }
+  },
+  "humidifier": {
+   "set_humidity": {
+    "fields": {
+     "humidity": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "humidifier"
+       ]
+      }
+     ]
+    }
+   },
+   "set_mode": {
+    "fields": {
+     "mode": {
+      "example": "away",
+      "required": true,
+      "selector": {
+       "state": {
+        "attribute": "mode",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "humidifier"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "humidifier"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "humidifier"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "humidifier"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "image": {
+   "snapshot": {
+    "fields": {
+     "filename": {
+      "example": "/tmp/image_snapshot.jpg",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "image"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "image_processing": {
+   "scan": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "image_processing"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "input_boolean": {
+   "reload": {
+    "fields": {}
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_boolean"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_boolean"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_boolean"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "input_button": {
+   "press": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_button"
+       ]
+      }
+     ]
+    }
+   },
+   "reload": {
+    "fields": {}
+   }
+  },
+  "input_datetime": {
+   "reload": {
+    "fields": {}
+   },
+   "set_datetime": {
+    "fields": {
+     "date": {
+      "example": "\"2019-04-20\"",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "datetime": {
+      "example": "\"2019-04-20 05:04:20\"",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "time": {
+      "example": "\"05:04:20\"",
+      "selector": {
+       "time": {}
+      }
+     },
+     "timestamp": {
+      "selector": {
+       "number": {
+        "max": 9.223372036854776e+18,
+        "min": 0.0,
+        "mode": "box",
+        "step": 1.0
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_datetime"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "input_number": {
+   "decrement": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_number"
+       ]
+      }
+     ]
+    }
+   },
+   "increment": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_number"
+       ]
+      }
+     ]
+    }
+   },
+   "reload": {
+    "fields": {}
+   },
+   "set_value": {
+    "fields": {
+     "value": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 9.223372036854776e+18,
+        "min": 0.0,
+        "mode": "box",
+        "step": 0.001
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_number"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "input_select": {
+   "reload": {
+    "fields": {}
+   },
+   "select_first": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_select"
+       ]
+      }
+     ]
+    }
+   },
+   "select_last": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_select"
+       ]
+      }
+     ]
+    }
+   },
+   "select_next": {
+    "fields": {
+     "cycle": {
+      "default": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_select"
+       ]
+      }
+     ]
+    }
+   },
+   "select_option": {
+    "fields": {
+     "option": {
+      "example": "\"Item A\"",
+      "required": true,
+      "selector": {
+       "state": {
+        "hide_states": [
+         "unavailable",
+         "unknown"
+        ],
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_select"
+       ]
+      }
+     ]
+    }
+   },
+   "select_previous": {
+    "fields": {
+     "cycle": {
+      "default": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_select"
+       ]
+      }
+     ]
+    }
+   },
+   "set_options": {
+    "fields": {
+     "options": {
+      "example": "[\"Item A\", \"Item B\", \"Item C\"]",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": true
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_select"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "input_text": {
+   "reload": {
+    "fields": {}
+   },
+   "set_value": {
+    "fields": {
+     "value": {
+      "example": "This is an example text",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "input_text"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "lawn_mower": {
+   "dock": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "lawn_mower"
+       ],
+       "supported_features": [
+        4
+       ]
+      }
+     ]
+    }
+   },
+   "pause": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "lawn_mower"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "start_mowing": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "lawn_mower"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "light": {
+   "toggle": {
+    "fields": {
+     "additional_fields": {
+      "collapsed": true,
+      "fields": {
+       "brightness": {
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "brightness",
+           "color_temp",
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "number": {
+          "max": 255.0,
+          "min": 0.0,
+          "mode": "slider",
+          "step": 1.0
+         }
+        }
+       },
+       "color_name": {
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "select": {
+          "custom_value": false,
+          "multiple": false,
+          "options": [
+           "homeassistant",
+           "aliceblue",
+           "antiquewhite",
+           "aqua",
+           "aquamarine",
+           "azure",
+           "beige",
+           "bisque",
+           "blanchedalmond",
+           "blue",
+           "blueviolet",
+           "brown",
+           "burlywood",
+           "cadetblue",
+           "chartreuse",
+           "chocolate",
+           "coral",
+           "cornflowerblue",
+           "cornsilk",
+           "crimson",
+           "cyan",
+           "darkblue",
+           "darkcyan",
+           "darkgoldenrod",
+           "darkgray",
+           "darkgreen",
+           "darkgrey",
+           "darkkhaki",
+           "darkmagenta",
+           "darkolivegreen",
+           "darkorange",
+           "darkorchid",
+           "darkred",
+           "darksalmon",
+           "darkseagreen",
+           "darkslateblue",
+           "darkslategray",
+           "darkslategrey",
+           "darkturquoise",
+           "darkviolet",
+           "deeppink",
+           "deepskyblue",
+           "dimgray",
+           "dimgrey",
+           "dodgerblue",
+           "firebrick",
+           "floralwhite",
+           "forestgreen",
+           "fuchsia",
+           "gainsboro",
+           "ghostwhite",
+           "gold",
+           "goldenrod",
+           "gray",
+           "green",
+           "greenyellow",
+           "grey",
+           "honeydew",
+           "hotpink",
+           "indianred",
+           "indigo",
+           "ivory",
+           "khaki",
+           "lavender",
+           "lavenderblush",
+           "lawngreen",
+           "lemonchiffon",
+           "lightblue",
+           "lightcoral",
+           "lightcyan",
+           "lightgoldenrodyellow",
+           "lightgray",
+           "lightgreen",
+           "lightgrey",
+           "lightpink",
+           "lightsalmon",
+           "lightseagreen",
+           "lightskyblue",
+           "lightslategray",
+           "lightslategrey",
+           "lightsteelblue",
+           "lightyellow",
+           "lime",
+           "limegreen",
+           "linen",
+           "magenta",
+           "maroon",
+           "mediumaquamarine",
+           "mediumblue",
+           "mediumorchid",
+           "mediumpurple",
+           "mediumseagreen",
+           "mediumslateblue",
+           "mediumspringgreen",
+           "mediumturquoise",
+           "mediumvioletred",
+           "midnightblue",
+           "mintcream",
+           "mistyrose",
+           "moccasin",
+           "navajowhite",
+           "navy",
+           "navyblue",
+           "oldlace",
+           "olive",
+           "olivedrab",
+           "orange",
+           "orangered",
+           "orchid",
+           "palegoldenrod",
+           "palegreen",
+           "paleturquoise",
+           "palevioletred",
+           "papayawhip",
+           "peachpuff",
+           "peru",
+           "pink",
+           "plum",
+           "powderblue",
+           "purple",
+           "red",
+           "rosybrown",
+           "royalblue",
+           "saddlebrown",
+           "salmon",
+           "sandybrown",
+           "seagreen",
+           "seashell",
+           "sienna",
+           "silver",
+           "skyblue",
+           "slateblue",
+           "slategray",
+           "slategrey",
+           "snow",
+           "springgreen",
+           "steelblue",
+           "tan",
+           "teal",
+           "thistle",
+           "tomato",
+           "turquoise",
+           "violet",
+           "wheat",
+           "white",
+           "whitesmoke",
+           "yellow",
+           "yellowgreen"
+          ],
+          "sort": false,
+          "translation_key": "color_name"
+         }
+        }
+       },
+       "flash": {
+        "filter": {
+         "supported_features": [
+          8
+         ]
+        },
+        "selector": {
+         "select": {
+          "custom_value": false,
+          "multiple": false,
+          "options": [
+           "long",
+           "short"
+          ],
+          "sort": false,
+          "translation_key": "flash"
+         }
+        }
+       },
+       "hs_color": {
+        "example": "[300, 70]",
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "object": {
+          "multiple": false
+         }
+        }
+       },
+       "profile": {
+        "example": "relax",
+        "selector": {
+         "text": {
+          "multiline": false,
+          "multiple": false
+         }
+        }
+       },
+       "rgbw_color": {
+        "example": "[255, 100, 100, 50]",
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "object": {
+          "multiple": false
+         }
+        }
+       },
+       "rgbww_color": {
+        "example": "[255, 100, 100, 50, 70]",
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "object": {
+          "multiple": false
+         }
+        }
+       },
+       "white": {
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "white"
+          ]
+         }
+        },
+        "selector": {
+         "constant": {
+          "label": "Enabled",
+          "value": true
+         }
+        }
+       },
+       "xy_color": {
+        "example": "[0.52, 0.43]",
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "object": {
+          "multiple": false
+         }
+        }
+       }
+      }
+     },
+     "brightness_pct": {
+      "filter": {
+       "attribute": {
+        "supported_color_modes": [
+         "brightness",
+         "color_temp",
+         "hs",
+         "xy",
+         "rgb",
+         "rgbw",
+         "rgbww"
+        ]
+       }
+      },
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     },
+     "color_temp_kelvin": {
+      "filter": {
+       "attribute": {
+        "supported_color_modes": [
+         "color_temp",
+         "hs",
+         "xy",
+         "rgb",
+         "rgbw",
+         "rgbww"
+        ]
+       }
+      },
+      "selector": {
+       "color_temp": {
+        "max": 6500,
+        "min": 2000,
+        "unit": "kelvin"
+       }
+      }
+     },
+     "effect": {
+      "filter": {
+       "supported_features": [
+        4
+       ]
+      },
+      "selector": {
+       "state": {
+        "attribute": "effect",
+        "multiple": false
+       }
+      }
+     },
+     "rgb_color": {
+      "example": "[255, 100, 100]",
+      "filter": {
+       "attribute": {
+        "supported_color_modes": [
+         "hs",
+         "xy",
+         "rgb",
+         "rgbw",
+         "rgbww"
+        ]
+       }
+      },
+      "selector": {
+       "color_rgb": {}
+      }
+     },
+     "transition": {
+      "filter": {
+       "supported_features": [
+        32
+       ]
+      },
+      "selector": {
+       "number": {
+        "max": 300.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "light"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {
+     "additional_fields": {
+      "collapsed": true,
+      "fields": {
+       "flash": {
+        "filter": {
+         "supported_features": [
+          8
+         ]
+        },
+        "selector": {
+         "select": {
+          "custom_value": false,
+          "multiple": false,
+          "options": [
+           "long",
+           "short"
+          ],
+          "sort": false,
+          "translation_key": "flash"
+         }
+        }
+       }
+      }
+     },
+     "transition": {
+      "filter": {
+       "supported_features": [
+        32
+       ]
+      },
+      "selector": {
+       "number": {
+        "max": 300.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "light"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {
+     "additional_fields": {
+      "collapsed": true,
+      "fields": {
+       "brightness": {
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "brightness",
+           "color_temp",
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "number": {
+          "max": 255.0,
+          "min": 0.0,
+          "mode": "slider",
+          "step": 1.0
+         }
+        }
+       },
+       "brightness_step": {
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "brightness",
+           "color_temp",
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "number": {
+          "max": 255.0,
+          "min": -225.0,
+          "mode": "slider",
+          "step": 1.0
+         }
+        }
+       },
+       "color_name": {
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "select": {
+          "custom_value": false,
+          "multiple": false,
+          "options": [
+           "homeassistant",
+           "aliceblue",
+           "antiquewhite",
+           "aqua",
+           "aquamarine",
+           "azure",
+           "beige",
+           "bisque",
+           "blanchedalmond",
+           "blue",
+           "blueviolet",
+           "brown",
+           "burlywood",
+           "cadetblue",
+           "chartreuse",
+           "chocolate",
+           "coral",
+           "cornflowerblue",
+           "cornsilk",
+           "crimson",
+           "cyan",
+           "darkblue",
+           "darkcyan",
+           "darkgoldenrod",
+           "darkgray",
+           "darkgreen",
+           "darkgrey",
+           "darkkhaki",
+           "darkmagenta",
+           "darkolivegreen",
+           "darkorange",
+           "darkorchid",
+           "darkred",
+           "darksalmon",
+           "darkseagreen",
+           "darkslateblue",
+           "darkslategray",
+           "darkslategrey",
+           "darkturquoise",
+           "darkviolet",
+           "deeppink",
+           "deepskyblue",
+           "dimgray",
+           "dimgrey",
+           "dodgerblue",
+           "firebrick",
+           "floralwhite",
+           "forestgreen",
+           "fuchsia",
+           "gainsboro",
+           "ghostwhite",
+           "gold",
+           "goldenrod",
+           "gray",
+           "green",
+           "greenyellow",
+           "grey",
+           "honeydew",
+           "hotpink",
+           "indianred",
+           "indigo",
+           "ivory",
+           "khaki",
+           "lavender",
+           "lavenderblush",
+           "lawngreen",
+           "lemonchiffon",
+           "lightblue",
+           "lightcoral",
+           "lightcyan",
+           "lightgoldenrodyellow",
+           "lightgray",
+           "lightgreen",
+           "lightgrey",
+           "lightpink",
+           "lightsalmon",
+           "lightseagreen",
+           "lightskyblue",
+           "lightslategray",
+           "lightslategrey",
+           "lightsteelblue",
+           "lightyellow",
+           "lime",
+           "limegreen",
+           "linen",
+           "magenta",
+           "maroon",
+           "mediumaquamarine",
+           "mediumblue",
+           "mediumorchid",
+           "mediumpurple",
+           "mediumseagreen",
+           "mediumslateblue",
+           "mediumspringgreen",
+           "mediumturquoise",
+           "mediumvioletred",
+           "midnightblue",
+           "mintcream",
+           "mistyrose",
+           "moccasin",
+           "navajowhite",
+           "navy",
+           "navyblue",
+           "oldlace",
+           "olive",
+           "olivedrab",
+           "orange",
+           "orangered",
+           "orchid",
+           "palegoldenrod",
+           "palegreen",
+           "paleturquoise",
+           "palevioletred",
+           "papayawhip",
+           "peachpuff",
+           "peru",
+           "pink",
+           "plum",
+           "powderblue",
+           "purple",
+           "red",
+           "rosybrown",
+           "royalblue",
+           "saddlebrown",
+           "salmon",
+           "sandybrown",
+           "seagreen",
+           "seashell",
+           "sienna",
+           "silver",
+           "skyblue",
+           "slateblue",
+           "slategray",
+           "slategrey",
+           "snow",
+           "springgreen",
+           "steelblue",
+           "tan",
+           "teal",
+           "thistle",
+           "tomato",
+           "turquoise",
+           "violet",
+           "wheat",
+           "white",
+           "whitesmoke",
+           "yellow",
+           "yellowgreen"
+          ],
+          "sort": false,
+          "translation_key": "color_name"
+         }
+        }
+       },
+       "flash": {
+        "filter": {
+         "supported_features": [
+          8
+         ]
+        },
+        "selector": {
+         "select": {
+          "custom_value": false,
+          "multiple": false,
+          "options": [
+           "long",
+           "short"
+          ],
+          "sort": false,
+          "translation_key": "flash"
+         }
+        }
+       },
+       "hs_color": {
+        "example": "[300, 70]",
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "object": {
+          "multiple": false
+         }
+        }
+       },
+       "profile": {
+        "example": "relax",
+        "selector": {
+         "text": {
+          "multiline": false,
+          "multiple": false
+         }
+        }
+       },
+       "rgbw_color": {
+        "example": "[255, 100, 100, 50]",
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "object": {
+          "multiple": false
+         }
+        }
+       },
+       "rgbww_color": {
+        "example": "[255, 100, 100, 50, 70]",
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "object": {
+          "multiple": false
+         }
+        }
+       },
+       "white": {
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "white"
+          ]
+         }
+        },
+        "selector": {
+         "constant": {
+          "label": "Enabled",
+          "value": true
+         }
+        }
+       },
+       "xy_color": {
+        "example": "[0.52, 0.43]",
+        "filter": {
+         "attribute": {
+          "supported_color_modes": [
+           "hs",
+           "xy",
+           "rgb",
+           "rgbw",
+           "rgbww"
+          ]
+         }
+        },
+        "selector": {
+         "object": {
+          "multiple": false
+         }
+        }
+       }
+      }
+     },
+     "brightness_pct": {
+      "filter": {
+       "attribute": {
+        "supported_color_modes": [
+         "brightness",
+         "color_temp",
+         "hs",
+         "xy",
+         "rgb",
+         "rgbw",
+         "rgbww"
+        ]
+       }
+      },
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     },
+     "brightness_step_pct": {
+      "filter": {
+       "attribute": {
+        "supported_color_modes": [
+         "brightness",
+         "color_temp",
+         "hs",
+         "xy",
+         "rgb",
+         "rgbw",
+         "rgbww"
+        ]
+       }
+      },
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": -100.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     },
+     "color_temp_kelvin": {
+      "filter": {
+       "attribute": {
+        "supported_color_modes": [
+         "color_temp",
+         "hs",
+         "xy",
+         "rgb",
+         "rgbw",
+         "rgbww"
+        ]
+       }
+      },
+      "selector": {
+       "color_temp": {
+        "max": 6500,
+        "min": 2000,
+        "unit": "kelvin"
+       }
+      }
+     },
+     "effect": {
+      "filter": {
+       "supported_features": [
+        4
+       ]
+      },
+      "selector": {
+       "state": {
+        "attribute": "effect",
+        "multiple": false
+       }
+      }
+     },
+     "rgb_color": {
+      "example": "[255, 100, 100]",
+      "filter": {
+       "attribute": {
+        "supported_color_modes": [
+         "hs",
+         "xy",
+         "rgb",
+         "rgbw",
+         "rgbww"
+        ]
+       }
+      },
+      "selector": {
+       "color_rgb": {}
+      }
+     },
+     "transition": {
+      "filter": {
+       "supported_features": [
+        32
+       ]
+      },
+      "selector": {
+       "number": {
+        "max": 300.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "light"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "local_file": {
+   "update_file_path": {
+    "fields": {
+     "file_path": {
+      "example": "/config/www/images/image.jpg",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "camera"
+       ],
+       "integration": "local_file"
+      }
+     ]
+    }
+   }
+  },
+  "lock": {
+   "lock": {
+    "fields": {
+     "code": {
+      "example": 1234,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "lock"
+       ]
+      }
+     ]
+    }
+   },
+   "open": {
+    "fields": {
+     "code": {
+      "example": 1234,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "lock"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "unlock": {
+    "fields": {
+     "code": {
+      "example": 1234,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "lock"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "logbook": {
+   "log": {
+    "fields": {
+     "domain": {
+      "example": "light",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "entity_id": {
+      "selector": {
+       "entity": {
+        "multiple": false,
+        "reorder": false
+       }
+      }
+     },
+     "message": {
+      "example": "is being used",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "name": {
+      "example": "Kitchen",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   }
+  },
+  "logger": {
+   "set_default_level": {
+    "fields": {
+     "level": {
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "debug",
+         "info",
+         "warning",
+         "error",
+         "fatal",
+         "critical"
+        ],
+        "sort": false,
+        "translation_key": "level"
+       }
+      }
+     }
+    }
+   },
+   "set_level": {
+    "fields": {}
+   }
+  },
+  "media_player": {
+   "browse_media": {
+    "fields": {
+     "media_content_id": {
+      "example": "A:ALBUMARTIST/Beatles",
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "media_content_type": {
+      "example": "music",
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        131072
+       ]
+      }
+     ]
+    }
+   },
+   "clear_playlist": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        8192
+       ]
+      }
+     ]
+    }
+   },
+   "join": {
+    "fields": {
+     "group_members": {
+      "example": "- media_player.multiroom_player2\n- media_player.multiroom_player3\n",
+      "required": true,
+      "selector": {
+       "entity": {
+        "domain": [
+         "media_player"
+        ],
+        "multiple": true,
+        "reorder": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        524288
+       ]
+      }
+     ]
+    }
+   },
+   "media_next_track": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        32
+       ]
+      }
+     ]
+    }
+   },
+   "media_pause": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "media_play": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        16384
+       ]
+      }
+     ]
+    }
+   },
+   "media_play_pause": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        16385
+       ]
+      }
+     ]
+    }
+   },
+   "media_previous_track": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        16
+       ]
+      }
+     ]
+    }
+   },
+   "media_seek": {
+    "fields": {
+     "seek_position": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 9.223372036854776e+18,
+        "min": 0.0,
+        "mode": "box",
+        "step": 0.01
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "media_stop": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        4096
+       ]
+      }
+     ]
+    }
+   },
+   "play_media": {
+    "fields": {
+     "announce": {
+      "example": "true",
+      "filter": {
+       "supported_features": [
+        1048576
+       ]
+      },
+      "required": false,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "enqueue": {
+      "filter": {
+       "supported_features": [
+        2097152
+       ]
+      },
+      "required": false,
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "play",
+         "next",
+         "add",
+         "replace"
+        ],
+        "sort": false,
+        "translation_key": "enqueue"
+       }
+      }
+     },
+     "media": {
+      "example": "{\"media_content_id\": \"https://home-assistant.io/images/cast/splash.png\", \"media_content_type\": \"music\"}",
+      "required": true,
+      "selector": {
+       "media": {
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        512
+       ]
+      }
+     ]
+    }
+   },
+   "repeat_set": {
+    "fields": {
+     "repeat": {
+      "required": true,
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "off",
+         "all",
+         "one"
+        ],
+        "sort": false,
+        "translation_key": "repeat"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        262144
+       ]
+      }
+     ]
+    }
+   },
+   "search_media": {
+    "fields": {
+     "media_content_id": {
+      "example": "A:ALBUMARTIST/Beatles",
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "media_content_type": {
+      "example": "music",
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "media_filter_classes": {
+      "example": [
+       "album",
+       "artist"
+      ],
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": true
+       }
+      }
+     },
+     "search_query": {
+      "example": "Beatles",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        4194304
+       ]
+      }
+     ]
+    }
+   },
+   "select_sound_mode": {
+    "fields": {
+     "sound_mode": {
+      "example": "Music",
+      "selector": {
+       "state": {
+        "attribute": "sound_mode",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        65536
+       ]
+      }
+     ]
+    }
+   },
+   "select_source": {
+    "fields": {
+     "source": {
+      "example": "video1",
+      "required": true,
+      "selector": {
+       "state": {
+        "attribute": "source",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        2048
+       ]
+      }
+     ]
+    }
+   },
+   "shuffle_set": {
+    "fields": {
+     "shuffle": {
+      "required": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        32768
+       ]
+      }
+     ]
+    }
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        384
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        256
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        128
+       ]
+      }
+     ]
+    }
+   },
+   "unjoin": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        524288
+       ]
+      }
+     ]
+    }
+   },
+   "volume_down": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        4,
+        1024
+       ]
+      }
+     ]
+    }
+   },
+   "volume_mute": {
+    "fields": {
+     "is_volume_muted": {
+      "required": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        8
+       ]
+      }
+     ]
+    }
+   },
+   "volume_set": {
+    "fields": {
+     "volume_level": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 1.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 0.01
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        4
+       ]
+      }
+     ]
+    }
+   },
+   "volume_up": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "media_player"
+       ],
+       "supported_features": [
+        4,
+        1024
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "notify": {
+   "notify": {
+    "description": "Sends a notification message using the notify service.",
+    "fields": {
+     "data": {
+      "example": "platform specific",
+      "selector": {
+       "object": null
+      }
+     },
+     "message": {
+      "example": "The garage door has been open for 10 minutes.",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "target": {
+      "example": "platform specific",
+      "selector": {
+       "object": null
+      }
+     },
+     "title": {
+      "example": "Your Garage Door Friend",
+      "selector": {
+       "text": null
+      }
+     }
+    },
+    "name": "Send a notification with notify"
+   },
+   "persistent_notification": {
+    "fields": {
+     "data": {
+      "example": "platform specific",
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "message": {
+      "example": "The garage door has been open for 10 minutes.",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "title": {
+      "example": "Your Garage Door Friend",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "send_message": {
+    "fields": {
+     "message": {
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "title": {
+      "filter": {
+       "supported_features": [
+        1
+       ]
+      },
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "notify"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "number": {
+   "set_value": {
+    "fields": {
+     "value": {
+      "example": 42,
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "number"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "persistent_notification": {
+   "create": {
+    "fields": {
+     "message": {
+      "example": "Please check your configuration.yaml.",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "notification_id": {
+      "example": 1234,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "title": {
+      "example": "Test notification",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "dismiss": {
+    "fields": {
+     "notification_id": {
+      "example": 1234,
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "dismiss_all": {
+    "fields": {}
+   }
+  },
+  "person": {
+   "reload": {
+    "fields": {}
+   }
+  },
+  "recorder": {
+   "disable": {
+    "fields": {}
+   },
+   "enable": {
+    "fields": {}
+   },
+   "get_statistics": {
+    "fields": {
+     "end_time": {
+      "example": "2025-01-02 00:00:00",
+      "required": false,
+      "selector": {
+       "datetime": {}
+      }
+     },
+     "period": {
+      "example": "hour",
+      "required": true,
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "5minute",
+         "hour",
+         "day",
+         "week",
+         "month",
+         "year"
+        ],
+        "sort": false
+       }
+      }
+     },
+     "start_time": {
+      "example": "2025-01-01 00:00:00",
+      "required": true,
+      "selector": {
+       "datetime": {}
+      }
+     },
+     "statistic_ids": {
+      "example": [
+       "sensor.energy_consumption",
+       "sensor.temperature"
+      ],
+      "required": true,
+      "selector": {
+       "statistic": {
+        "multiple": true
+       }
+      }
+     },
+     "types": {
+      "example": [
+       "mean",
+       "sum"
+      ],
+      "required": true,
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": true,
+        "options": [
+         "change",
+         "last_reset",
+         "max",
+         "mean",
+         "min",
+         "state",
+         "sum"
+        ],
+        "sort": false
+       }
+      }
+     },
+     "units": {
+      "example": {
+       "energy": "kWh",
+       "temperature": "\u00b0C"
+      },
+      "required": false,
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    }
+   },
+   "purge": {
+    "fields": {
+     "apply_filter": {
+      "default": false,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "keep_days": {
+      "selector": {
+       "number": {
+        "max": 365.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "days"
+       }
+      }
+     },
+     "repack": {
+      "default": false,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    }
+   },
+   "purge_entities": {
+    "fields": {
+     "domains": {
+      "example": "sun",
+      "required": false,
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "entity_globs": {
+      "example": "domain*.object_id*",
+      "required": false,
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "entity_id": {
+      "required": false,
+      "selector": {
+       "entity": {
+        "multiple": true,
+        "reorder": false
+       }
+      }
+     },
+     "keep_days": {
+      "default": 0,
+      "selector": {
+       "number": {
+        "max": 365.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "days"
+       }
+      }
+     }
+    }
+   }
+  },
+  "remote": {
+   "delete_command": {
+    "fields": {
+     "command": {
+      "example": "Mute",
+      "required": true,
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "device": {
+      "example": "television",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "remote"
+       ]
+      }
+     ]
+    }
+   },
+   "learn_command": {
+    "fields": {
+     "alternative": {
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "command": {
+      "example": "Turn on",
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "command_type": {
+      "default": "ir",
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "ir",
+         "rf"
+        ],
+        "sort": false
+       }
+      }
+     },
+     "device": {
+      "example": "television",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "timeout": {
+      "selector": {
+       "number": {
+        "max": 60.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 5.0,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "remote"
+       ]
+      }
+     ]
+    }
+   },
+   "send_command": {
+    "fields": {
+     "command": {
+      "example": "Play",
+      "required": true,
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "delay_secs": {
+      "default": 0.4,
+      "selector": {
+       "number": {
+        "max": 60.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 0.1,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     },
+     "device": {
+      "example": "32756745",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "hold_secs": {
+      "default": 0,
+      "selector": {
+       "number": {
+        "max": 60.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 0.1,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     },
+     "num_repeats": {
+      "default": 1,
+      "selector": {
+       "number": {
+        "max": 255.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "remote"
+       ]
+      }
+     ]
+    }
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "remote"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "remote"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {
+     "activity": {
+      "example": "BedroomTV",
+      "filter": {
+       "supported_features": [
+        4
+       ]
+      },
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "remote"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "scene": {
+   "apply": {
+    "fields": {
+     "entities": {
+      "example": "light.kitchen: \"on\"\nlight.ceiling:\n  state: \"on\"\n  brightness: 80\n",
+      "required": true,
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "transition": {
+      "selector": {
+       "number": {
+        "max": 300.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     }
+    }
+   },
+   "create": {
+    "fields": {
+     "entities": {
+      "example": "light.tv_back_light: \"on\"\nlight.ceiling:\n  state: \"on\"\n  brightness: 200\n",
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     },
+     "scene_id": {
+      "example": "all_lights",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "snapshot_entities": {
+      "example": "- light.ceiling\n- light.kitchen\n",
+      "selector": {
+       "entity": {
+        "multiple": true,
+        "reorder": false
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "scene"
+       ],
+       "integration": "homeassistant"
+      }
+     ]
+    }
+   },
+   "reload": {
+    "fields": {}
+   },
+   "turn_on": {
+    "fields": {
+     "transition": {
+      "selector": {
+       "number": {
+        "max": 300.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "seconds"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "scene"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "schedule": {
+   "get_schedule": {
+    "fields": {},
+    "response": {
+     "optional": false
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "schedule"
+       ]
+      }
+     ]
+    }
+   },
+   "reload": {
+    "fields": {}
+   }
+  },
+  "script": {
+   "good_night": {
+    "description": "",
+    "fields": {},
+    "name": "Good night",
+    "response": {
+     "optional": true
+    }
+   },
+   "reload": {
+    "fields": {}
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "script"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "script"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "script"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "select": {
+   "select_first": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "select"
+       ]
+      }
+     ]
+    }
+   },
+   "select_last": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "select"
+       ]
+      }
+     ]
+    }
+   },
+   "select_next": {
+    "fields": {
+     "cycle": {
+      "default": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "select"
+       ]
+      }
+     ]
+    }
+   },
+   "select_option": {
+    "fields": {
+     "option": {
+      "example": "\"Item A\"",
+      "required": true,
+      "selector": {
+       "state": {
+        "hide_states": [
+         "unavailable",
+         "unknown"
+        ],
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "select"
+       ]
+      }
+     ]
+    }
+   },
+   "select_previous": {
+    "fields": {
+     "cycle": {
+      "default": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "select"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "shopping_list": {
+   "add_item": {
+    "fields": {
+     "name": {
+      "example": "Beer",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "clear_completed_items": {
+    "fields": {}
+   },
+   "complete_all": {
+    "fields": {}
+   },
+   "complete_item": {
+    "fields": {
+     "name": {
+      "example": "Beer",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "incomplete_all": {
+    "fields": {}
+   },
+   "incomplete_item": {
+    "fields": {
+     "name": {
+      "example": "Beer",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "remove_item": {
+    "fields": {
+     "name": {
+      "example": "Beer",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   },
+   "sort": {
+    "fields": {
+     "reverse": {
+      "default": false,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    }
+   }
+  },
+  "siren": {
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "siren"
+       ],
+       "supported_features": [
+        3
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "siren"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {
+     "duration": {
+      "example": 15,
+      "filter": {
+       "supported_features": [
+        16
+       ]
+      },
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "tone": {
+      "example": "fire",
+      "filter": {
+       "supported_features": [
+        4
+       ]
+      },
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "volume_level": {
+      "example": 0.5,
+      "filter": {
+       "supported_features": [
+        8
+       ]
+      },
+      "required": false,
+      "selector": {
+       "number": {
+        "max": 1.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 0.05
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "siren"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "switch": {
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "switch"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "switch"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "switch"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "system_log": {
+   "clear": {
+    "fields": {}
+   },
+   "write": {
+    "fields": {
+     "level": {
+      "default": "error",
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "debug",
+         "info",
+         "warning",
+         "error",
+         "critical"
+        ],
+        "sort": false,
+        "translation_key": "level"
+       }
+      }
+     },
+     "logger": {
+      "example": "mycomponent.myplatform",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "message": {
+      "example": "Something went wrong",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    }
+   }
+  },
+  "text": {
+   "set_value": {
+    "fields": {
+     "value": {
+      "example": "Hello world!",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "text"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "time": {
+   "set_value": {
+    "fields": {
+     "time": {
+      "example": "22:15",
+      "required": true,
+      "selector": {
+       "time": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "time"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "timer": {
+   "cancel": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "timer"
+       ]
+      }
+     ]
+    }
+   },
+   "change": {
+    "fields": {
+     "duration": {
+      "default": 0,
+      "example": "00:01:00, 60 or -60",
+      "required": true,
+      "selector": {
+       "duration": {
+        "allow_negative": true,
+        "enable_second": true
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "timer"
+       ]
+      }
+     ]
+    }
+   },
+   "finish": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "timer"
+       ]
+      }
+     ]
+    }
+   },
+   "pause": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "timer"
+       ]
+      }
+     ]
+    }
+   },
+   "reload": {
+    "fields": {}
+   },
+   "start": {
+    "fields": {
+     "duration": {
+      "example": "00:01:00 or 60",
+      "selector": {
+       "duration": {
+        "enable_second": true
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "timer"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "todo": {
+   "add_item": {
+    "fields": {
+     "description": {
+      "example": "A more complete description of the to-do item than that provided by the summary.",
+      "filter": {
+       "supported_features": [
+        64
+       ]
+      },
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "due_date": {
+      "example": "2023-11-17",
+      "filter": {
+       "supported_features": [
+        16
+       ]
+      },
+      "selector": {
+       "date": {}
+      }
+     },
+     "due_datetime": {
+      "example": "2023-11-17 13:30:00",
+      "filter": {
+       "supported_features": [
+        32
+       ]
+      },
+      "selector": {
+       "datetime": {}
+      }
+     },
+     "item": {
+      "example": "Submit income tax return",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "todo"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "get_items": {
+    "fields": {
+     "status": {
+      "default": "needs_action",
+      "example": "needs_action",
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": true,
+        "options": [
+         "needs_action",
+         "completed"
+        ],
+        "sort": false,
+        "translation_key": "status"
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "todo"
+       ]
+      }
+     ]
+    }
+   },
+   "remove_completed_items": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "todo"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "remove_item": {
+    "fields": {
+     "item": {
+      "example": "Submit income tax return",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "todo"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "update_item": {
+    "fields": {
+     "description": {
+      "example": "A more complete description of the to-do item than that provided by the summary.",
+      "filter": {
+       "supported_features": [
+        64
+       ]
+      },
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "due_date": {
+      "example": "2023-11-17",
+      "filter": {
+       "supported_features": [
+        16
+       ]
+      },
+      "selector": {
+       "date": {}
+      }
+     },
+     "due_datetime": {
+      "example": "2023-11-17 13:30:00",
+      "filter": {
+       "supported_features": [
+        32
+       ]
+      },
+      "selector": {
+       "datetime": {}
+      }
+     },
+     "item": {
+      "example": "Submit income tax return",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "rename": {
+      "example": "Something else",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "status": {
+      "example": "needs_action",
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "needs_action",
+         "completed"
+        ],
+        "sort": false,
+        "translation_key": "status"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "todo"
+       ],
+       "supported_features": [
+        4
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "tts": {
+   "clear_cache": {
+    "fields": {}
+   },
+   "cloud_say": {
+    "description": "Say something using text-to-speech on a media player with cloud.",
+    "fields": {
+     "cache": {
+      "default": false,
+      "selector": {
+       "boolean": null
+      }
+     },
+     "entity_id": {
+      "required": true,
+      "selector": {
+       "entity": {
+        "domain": "media_player"
+       }
+      }
+     },
+     "language": {
+      "example": "ru",
+      "selector": {
+       "text": null
+      }
+     },
+     "message": {
+      "example": "My name is hanna",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "options": {
+      "example": "platform specific",
+      "selector": {
+       "object": null
+      }
+     }
+    },
+    "name": "Say a TTS message with cloud"
+   },
+   "demo_say": {
+    "description": "Say something using text-to-speech on a media player with demo.",
+    "fields": {
+     "cache": {
+      "default": false,
+      "selector": {
+       "boolean": null
+      }
+     },
+     "entity_id": {
+      "required": true,
+      "selector": {
+       "entity": {
+        "domain": "media_player"
+       }
+      }
+     },
+     "language": {
+      "example": "ru",
+      "selector": {
+       "text": null
+      }
+     },
+     "message": {
+      "example": "My name is hanna",
+      "required": true,
+      "selector": {
+       "text": null
+      }
+     },
+     "options": {
+      "example": "platform specific",
+      "selector": {
+       "object": null
+      }
+     }
+    },
+    "name": "Say a TTS message with demo"
+   },
+   "speak": {
+    "fields": {
+     "cache": {
+      "default": true,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "language": {
+      "example": "ru",
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "media_player_entity_id": {
+      "required": true,
+      "selector": {
+       "entity": {
+        "domain": [
+         "media_player"
+        ],
+        "multiple": false,
+        "reorder": false
+       }
+      }
+     },
+     "message": {
+      "example": "My name is hanna",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "options": {
+      "example": "platform specific",
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "tts"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "update": {
+   "clear_skipped": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "update"
+       ]
+      }
+     ]
+    }
+   },
+   "install": {
+    "fields": {
+     "backup": {
+      "filter": {
+       "supported_features": [
+        8
+       ]
+      },
+      "required": false,
+      "selector": {
+       "boolean": {}
+      }
+     },
+     "version": {
+      "example": "1.0.0",
+      "required": false,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "update"
+       ]
+      }
+     ]
+    }
+   },
+   "skip": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "update"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "vacuum": {
+   "clean_area": {
+    "fields": {
+     "cleaning_area_id": {
+      "required": true,
+      "selector": {
+       "area": {
+        "multiple": true,
+        "reorder": true
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "vacuum"
+       ],
+       "supported_features": [
+        16384
+       ]
+      }
+     ]
+    }
+   },
+   "clean_spot": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "vacuum"
+       ]
+      }
+     ]
+    }
+   },
+   "locate": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "vacuum"
+       ],
+       "supported_features": [
+        512
+       ]
+      }
+     ]
+    }
+   },
+   "pause": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "vacuum"
+       ],
+       "supported_features": [
+        4
+       ]
+      }
+     ]
+    }
+   },
+   "return_to_base": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "vacuum"
+       ],
+       "supported_features": [
+        16
+       ]
+      }
+     ]
+    }
+   },
+   "send_command": {
+    "fields": {
+     "command": {
+      "example": "set_dnd_timer",
+      "required": true,
+      "selector": {
+       "text": {
+        "multiline": false,
+        "multiple": false
+       }
+      }
+     },
+     "params": {
+      "example": "{ \"key\": \"value\" }",
+      "selector": {
+       "object": {
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "vacuum"
+       ]
+      }
+     ]
+    }
+   },
+   "set_fan_speed": {
+    "fields": {
+     "fan_speed": {
+      "example": "low",
+      "required": true,
+      "selector": {
+       "state": {
+        "attribute": "fan_speed",
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "vacuum"
+       ]
+      }
+     ]
+    }
+   },
+   "start": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "vacuum"
+       ],
+       "supported_features": [
+        8192
+       ]
+      }
+     ]
+    }
+   },
+   "stop": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "vacuum"
+       ],
+       "supported_features": [
+        8
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "valve": {
+   "close_valve": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "valve"
+       ],
+       "supported_features": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   "open_valve": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "valve"
+       ],
+       "supported_features": [
+        1
+       ]
+      }
+     ]
+    }
+   },
+   "set_valve_position": {
+    "fields": {
+     "position": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": "slider",
+        "step": 1.0,
+        "unit_of_measurement": "%"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "valve"
+       ],
+       "supported_features": [
+        4
+       ]
+      }
+     ]
+    }
+   },
+   "stop_valve": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "valve"
+       ],
+       "supported_features": [
+        8
+       ]
+      }
+     ]
+    }
+   },
+   "toggle": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "valve"
+       ],
+       "supported_features": [
+        3
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "water_heater": {
+   "set_away_mode": {
+    "fields": {
+     "away_mode": {
+      "required": true,
+      "selector": {
+       "boolean": {}
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "water_heater"
+       ]
+      }
+     ]
+    }
+   },
+   "set_operation_mode": {
+    "fields": {
+     "operation_mode": {
+      "example": "eco",
+      "required": true,
+      "selector": {
+       "state": {
+        "hide_states": [
+         "unavailable",
+         "unknown"
+        ],
+        "multiple": false
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "water_heater"
+       ]
+      }
+     ]
+    }
+   },
+   "set_temperature": {
+    "fields": {
+     "operation_mode": {
+      "example": "eco",
+      "selector": {
+       "state": {
+        "hide_states": [
+         "unavailable",
+         "unknown"
+        ],
+        "multiple": false
+       }
+      }
+     },
+     "temperature": {
+      "required": true,
+      "selector": {
+       "number": {
+        "max": 250.0,
+        "min": 0.0,
+        "mode": "box",
+        "step": 0.5,
+        "unit_of_measurement": "\u00b0"
+       }
+      }
+     }
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "water_heater"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_off": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "water_heater"
+       ]
+      }
+     ]
+    }
+   },
+   "turn_on": {
+    "fields": {},
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "water_heater"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "weather": {
+   "get_forecasts": {
+    "fields": {
+     "type": {
+      "required": true,
+      "selector": {
+       "select": {
+        "custom_value": false,
+        "multiple": false,
+        "options": [
+         "daily",
+         "hourly",
+         "twice_daily"
+        ],
+        "sort": false,
+        "translation_key": "forecast_type"
+       }
+      }
+     }
+    },
+    "response": {
+     "optional": false
+    },
+    "target": {
+     "entity": [
+      {
+       "domain": [
+        "weather"
+       ],
+       "supported_features": [
+        1,
+        2,
+        4
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "zone": {
+   "reload": {
+    "fields": {}
+   }
+  }
+ },
+ "states": {
+  "air_quality.demo_air_quality_home": {
+   "attributes": {
+    "attribution": "Powered by Home Assistant",
+    "friendly_name": "Demo Air Quality Home",
+    "nitrogen_oxide": 100,
+    "particulate_matter_10": 23,
+    "particulate_matter_2_5": 14,
+    "unit_of_measurement": "\u03bcg/m\u00b3"
+   },
+   "state": "14"
+  },
+  "air_quality.demo_air_quality_office": {
+   "attributes": {
+    "attribution": "Powered by Home Assistant",
+    "friendly_name": "Demo Air Quality Office",
+    "particulate_matter_10": 16,
+    "particulate_matter_2_5": 4,
+    "unit_of_measurement": "\u03bcg/m\u00b3"
+   },
+   "state": "4"
+  },
+  "alarm_control_panel.security": {
+   "attributes": {
+    "changed_by": null,
+    "code_arm_required": true,
+    "code_format": "number",
+    "friendly_name": "Security",
+    "next_state": null,
+    "previous_state": null,
+    "supported_features": 63
+   },
+   "state": "armed_away"
+  },
+  "binary_sensor.basement_floor_wet": {
+   "attributes": {
+    "device_class": "moisture",
+    "friendly_name": "Basement Floor Wet"
+   },
+   "state": "off"
+  },
+  "binary_sensor.movement_backyard": {
+   "attributes": {
+    "device_class": "motion",
+    "friendly_name": "Movement Backyard"
+   },
+   "state": "on"
+  },
+  "binary_sensor.outside_temperature_battery_charging": {
+   "attributes": {
+    "device_class": "battery_charging",
+    "friendly_name": "Outside Temperature Battery Charging"
+   },
+   "state": "off"
+  },
+  "button.push": {
+   "attributes": {
+    "friendly_name": "Push"
+   },
+   "state": "unknown"
+  },
+  "calendar.calendar_1": {
+   "attributes": {
+    "all_day": false,
+    "description": "Future Description",
+    "end_time": "2026-09-30 17:56:26",
+    "friendly_name": "Calendar 1",
+    "location": "Future Location",
+    "message": "Future Event",
+    "start_time": "2026-09-30 16:56:26"
+   },
+   "state": "off"
+  },
+  "calendar.calendar_2": {
+   "attributes": {
+    "all_day": false,
+    "description": "",
+    "end_time": "2026-09-30 16:56:26",
+    "friendly_name": "Calendar 2",
+    "location": "",
+    "message": "Current Event",
+    "start_time": "2026-09-30 15:56:26"
+   },
+   "state": "on"
+  },
+  "camera.demo_camera": {
+   "attributes": {
+    "friendly_name": "Demo camera",
+    "supported_features": 3
+   },
+   "state": "streaming"
+  },
+  "camera.demo_camera_png": {
+   "attributes": {
+    "friendly_name": "Demo camera png",
+    "supported_features": 3
+   },
+   "state": "streaming"
+  },
+  "camera.demo_camera_without_stream": {
+   "attributes": {
+    "friendly_name": "Demo camera without stream",
+    "supported_features": 1
+   },
+   "state": "streaming"
+  },
+  "climate.ecobee": {
+   "attributes": {
+    "current_temperature": 73,
+    "fan_mode": "auto_low",
+    "fan_modes": [
+     "on_low",
+     "on_high",
+     "auto_low",
+     "auto_high",
+     "off"
+    ],
+    "friendly_name": "Ecobee",
+    "hvac_modes": [
+     "off",
+     "cool",
+     "heat_cool",
+     "auto",
+     "dry",
+     "fan_only"
+    ],
+    "max_temp": 95,
+    "min_temp": 45,
+    "preset_mode": "home",
+    "preset_modes": [
+     "home",
+     "eco",
+     "away"
+    ],
+    "supported_features": 442,
+    "swing_mode": "auto",
+    "swing_modes": [
+     "auto",
+     "1",
+     "2",
+     "3",
+     "off"
+    ],
+    "target_temp_high": 76,
+    "target_temp_low": 69
+   },
+   "state": "heat_cool"
+  },
+  "climate.heatpump": {
+   "attributes": {
+    "current_temperature": 77,
+    "friendly_name": "HeatPump",
+    "hvac_action": "heating",
+    "hvac_modes": [
+     "heat",
+     "off"
+    ],
+    "max_temp": 95,
+    "min_temp": 45,
+    "supported_features": 385,
+    "temperature": 68
+   },
+   "state": "heat"
+  },
+  "climate.hvac": {
+   "attributes": {
+    "current_humidity": 54.2,
+    "current_temperature": 72,
+    "fan_mode": "on_high",
+    "fan_modes": [
+     "on_low",
+     "on_high",
+     "auto_low",
+     "auto_high",
+     "off"
+    ],
+    "friendly_name": "Hvac",
+    "humidity": 67.4,
+    "hvac_action": "cooling",
+    "hvac_modes": [
+     "off",
+     "heat",
+     "cool",
+     "auto",
+     "dry",
+     "fan_only"
+    ],
+    "max_humidity": 99,
+    "max_temp": 95,
+    "min_humidity": 30,
+    "min_temp": 45,
+    "supported_features": 943,
+    "swing_horizontal_mode": "auto",
+    "swing_horizontal_modes": [
+     "auto",
+     "rangefull",
+     "off"
+    ],
+    "swing_mode": "off",
+    "swing_modes": [
+     "auto",
+     "1",
+     "2",
+     "3",
+     "off"
+    ],
+    "target_humidity_step": 5,
+    "target_temp_high": null,
+    "target_temp_low": null,
+    "temperature": 70
+   },
+   "state": "cool"
+  },
+  "cover.garage_door": {
+   "attributes": {
+    "device_class": "garage",
+    "friendly_name": "Garage Door",
+    "is_closed": true,
+    "supported_features": 3
+   },
+   "state": "closed"
+  },
+  "cover.hall_window": {
+   "attributes": {
+    "current_position": 10,
+    "friendly_name": "Hall Window",
+    "is_closed": false,
+    "supported_features": 15
+   },
+   "state": "open"
+  },
+  "cover.kitchen_window": {
+   "attributes": {
+    "friendly_name": "Kitchen Window",
+    "is_closed": true,
+    "supported_features": 11
+   },
+   "state": "closed"
+  },
+  "cover.living_room_window": {
+   "attributes": {
+    "current_position": 70,
+    "current_tilt_position": 50,
+    "friendly_name": "Living Room Window",
+    "is_closed": false,
+    "supported_features": 511,
+    "supported_speeds": [
+     "slow",
+     "default"
+    ]
+   },
+   "state": "open"
+  },
+  "cover.pergola_roof": {
+   "attributes": {
+    "current_tilt_position": 60,
+    "friendly_name": "Pergola Roof",
+    "is_closed": true,
+    "supported_features": 240
+   },
+   "state": "closed"
+  },
+  "device_tracker.demo_anne_therese": {
+   "attributes": {
+    "battery": 75,
+    "friendly_name": "Anne Therese",
+    "gps_accuracy": 134,
+    "latitude": 51.927945,
+    "longitude": 4.473295,
+    "source_type": "gps"
+   },
+   "state": "not_home"
+  },
+  "device_tracker.demo_home_boy": {
+   "attributes": {
+    "battery": 53,
+    "friendly_name": "Home Boy",
+    "gps_accuracy": 20,
+    "latitude": 51.92248,
+    "longitude": 4.47919,
+    "source_type": "gps"
+   },
+   "state": "home"
+  },
+  "device_tracker.demo_paulus": {
+   "attributes": {
+    "battery": 17,
+    "friendly_name": "Paulus",
+    "gps_accuracy": 114,
+    "latitude": 51.91563,
+    "longitude": 4.48852,
+    "source_type": "gps"
+   },
+   "state": "not_home"
+  },
+  "fan.ceiling_fan": {
+   "attributes": {
+    "friendly_name": "Ceiling Fan",
+    "percentage": null,
+    "percentage_step": 33.333333333333336,
+    "preset_mode": null,
+    "preset_modes": null,
+    "supported_features": 49
+   },
+   "state": "off"
+  },
+  "fan.living_room_fan": {
+   "attributes": {
+    "direction": "forward",
+    "friendly_name": "Living Room Fan",
+    "oscillating": false,
+    "percentage": null,
+    "percentage_step": 33.333333333333336,
+    "preset_mode": null,
+    "preset_modes": [
+     "auto",
+     "smart",
+     "sleep",
+     "on"
+    ],
+    "supported_features": 55
+   },
+   "state": "off"
+  },
+  "fan.percentage_full_fan": {
+   "attributes": {
+    "direction": "forward",
+    "friendly_name": "Percentage Full Fan",
+    "oscillating": false,
+    "percentage": null,
+    "percentage_step": 33.333333333333336,
+    "preset_mode": null,
+    "preset_modes": [
+     "auto",
+     "smart",
+     "sleep",
+     "on"
+    ],
+    "supported_features": 55
+   },
+   "state": "off"
+  },
+  "fan.percentage_limited_fan": {
+   "attributes": {
+    "friendly_name": "Percentage Limited Fan",
+    "percentage": null,
+    "percentage_step": 33.333333333333336,
+    "preset_mode": null,
+    "preset_modes": [
+     "auto",
+     "smart",
+     "sleep",
+     "on"
+    ],
+    "supported_features": 49
+   },
+   "state": "off"
+  },
+  "fan.preset_only_limited_fan": {
+   "attributes": {
+    "friendly_name": "Preset Only Limited Fan",
+    "preset_mode": null,
+    "preset_modes": [
+     "auto",
+     "smart",
+     "sleep",
+     "on"
+    ],
+    "supported_features": 56
+   },
+   "state": "off"
+  },
+  "geo_location.dust_storm": {
+   "attributes": {
+    "friendly_name": "Dust Storm",
+    "icon": "mdi:weather-dust",
+    "latitude": 51.92125,
+    "longitude": 4.4931,
+    "source": "demo",
+    "unit_of_measurement": "km"
+   },
+   "state": "1.0"
+  },
+  "geo_location.tsunami": {
+   "attributes": {
+    "friendly_name": "Tsunami",
+    "icon": "mdi:waves-arrow-right",
+    "latitude": 51.79886,
+    "longitude": 5.01435,
+    "source": "demo",
+    "unit_of_measurement": "km"
+   },
+   "state": "39.1"
+  },
+  "humidifier.dehumidifier": {
+   "attributes": {
+    "action": "drying",
+    "current_humidity": 59.4,
+    "device_class": "dehumidifier",
+    "friendly_name": "Dehumidifier",
+    "humidity": 54.2,
+    "max_humidity": 100,
+    "min_humidity": 0,
+    "supported_features": 0
+   },
+   "state": "on"
+  },
+  "humidifier.humidifier": {
+   "attributes": {
+    "action": "humidifying",
+    "current_humidity": 45,
+    "device_class": "humidifier",
+    "friendly_name": "Humidifier",
+    "humidity": 65,
+    "max_humidity": 100,
+    "min_humidity": 0,
+    "supported_features": 0,
+    "target_humidity_step": 5
+   },
+   "state": "on"
+  },
+  "humidifier.hygrostat": {
+   "attributes": {
+    "available_modes": [
+     "home",
+     "eco"
+    ],
+    "friendly_name": "Hygrostat",
+    "humidity": 50,
+    "max_humidity": 100,
+    "min_humidity": 0,
+    "mode": "home",
+    "supported_features": 1
+   },
+   "state": "on"
+  },
+  "image_processing.demo_face": {
+   "attributes": {
+    "device_class": "face",
+    "faces": [
+     {
+      "age": 16.0,
+      "confidence": 98.34,
+      "entity_id": "image_processing.demo_face",
+      "gender": "male",
+      "name": "Hans"
+     },
+     {
+      "age": 28.0,
+      "entity_id": "image_processing.demo_face",
+      "gender": "female",
+      "name": "Helena"
+     },
+     {
+      "confidence": 62.53,
+      "name": "Luna"
+     }
+    ],
+    "friendly_name": "Demo Face",
+    "total_faces": 4
+   },
+   "state": "Hans"
+  },
+  "light.bed_light": {
+   "attributes": {
+    "brightness": null,
+    "color_mode": null,
+    "color_temp_kelvin": null,
+    "effect": null,
+    "effect_list": [
+     "rainbow",
+     "off"
+    ],
+    "friendly_name": "Bed Light",
+    "hs_color": null,
+    "max_color_temp_kelvin": 6535,
+    "min_color_temp_kelvin": 2000,
+    "rgb_color": null,
+    "supported_color_modes": [
+     "color_temp",
+     "hs"
+    ],
+    "supported_features": 4,
+    "xy_color": null
+   },
+   "state": "off"
+  },
+  "light.ceiling_lights": {
+   "attributes": {
+    "brightness": 180,
+    "color_mode": "color_temp",
+    "color_temp_kelvin": 2631,
+    "friendly_name": "Ceiling Lights",
+    "hs_color": [
+     28.55,
+     67.974
+    ],
+    "max_color_temp_kelvin": 6535,
+    "min_color_temp_kelvin": 2000,
+    "rgb_color": [
+     255,
+     164,
+     82
+    ],
+    "supported_color_modes": [
+     "color_temp",
+     "hs"
+    ],
+    "supported_features": 0,
+    "xy_color": [
+     0.532,
+     0.388
+    ]
+   },
+   "state": "on"
+  },
+  "light.entrance_color_white_lights": {
+   "attributes": {
+    "brightness": 180,
+    "color_mode": "hs",
+    "friendly_name": "Entrance Color + White Lights",
+    "hs_color": [
+     345,
+     75
+    ],
+    "rgb_color": [
+     255,
+     64,
+     112
+    ],
+    "supported_color_modes": [
+     "hs",
+     "white"
+    ],
+    "supported_features": 0,
+    "xy_color": [
+     0.588,
+     0.274
+    ]
+   },
+   "state": "on"
+  },
+  "light.kitchen_lights": {
+   "attributes": {
+    "brightness": 180,
+    "color_mode": "hs",
+    "color_temp_kelvin": null,
+    "friendly_name": "Kitchen Lights",
+    "hs_color": [
+     345,
+     75
+    ],
+    "max_color_temp_kelvin": 6535,
+    "min_color_temp_kelvin": 2000,
+    "rgb_color": [
+     255,
+     64,
+     112
+    ],
+    "supported_color_modes": [
+     "color_temp",
+     "hs"
+    ],
+    "supported_features": 0,
+    "xy_color": [
+     0.588,
+     0.274
+    ]
+   },
+   "state": "on"
+  },
+  "light.living_room_rgbww_lights": {
+   "attributes": {
+    "brightness": 180,
+    "color_mode": "rgbww",
+    "friendly_name": "Living Room RGBWW Lights",
+    "hs_color": [
+     0.923,
+     50.98
+    ],
+    "rgb_color": [
+     255,
+     127,
+     125
+    ],
+    "rgbww_color": [
+     255,
+     0,
+     0,
+     255,
+     0
+    ],
+    "supported_color_modes": [
+     "rgbww"
+    ],
+    "supported_features": 0,
+    "xy_color": [
+     0.528,
+     0.315
+    ]
+   },
+   "state": "on"
+  },
+  "light.office_rgbw_lights": {
+   "attributes": {
+    "brightness": 180,
+    "color_mode": "rgbw",
+    "friendly_name": "Office RGBW Lights",
+    "hs_color": [
+     0.0,
+     49.804
+    ],
+    "rgb_color": [
+     255,
+     128,
+     128
+    ],
+    "rgbw_color": [
+     255,
+     0,
+     0,
+     255
+    ],
+    "supported_color_modes": [
+     "rgbw"
+    ],
+    "supported_features": 0,
+    "xy_color": [
+     0.524,
+     0.313
+    ]
+   },
+   "state": "on"
+  },
+  "lock.front_door": {
+   "attributes": {
+    "friendly_name": "Front Door",
+    "supported_features": 0
+   },
+   "state": "locked"
+  },
+  "lock.kitchen_door": {
+   "attributes": {
+    "friendly_name": "Kitchen Door",
+    "supported_features": 0
+   },
+   "state": "unlocked"
+  },
+  "lock.openable_lock": {
+   "attributes": {
+    "friendly_name": "Openable Lock",
+    "supported_features": 1
+   },
+   "state": "locked"
+  },
+  "lock.poorly_installed_door": {
+   "attributes": {
+    "friendly_name": "Poorly Installed Door",
+    "supported_features": 0
+   },
+   "state": "unlocked"
+  },
+  "media_player.bedroom": {
+   "attributes": {
+    "app_name": "YouTube",
+    "friendly_name": "Bedroom",
+    "is_volume_muted": false,
+    "media_content_id": "kxopViU98Xo",
+    "media_content_type": "movie",
+    "media_duration": 360000,
+    "media_position": 54000,
+    "media_position_updated_at": "2026-09-30T14:26:26.463173+00:00",
+    "media_title": "Epic sax guy 10 hours",
+    "shuffle": false,
+    "sound_mode": "Music",
+    "sound_mode_list": [
+     "Music",
+     "Movie"
+    ],
+    "supported_features": 119695,
+    "volume_level": 1.0
+   },
+   "state": "playing"
+  },
+  "media_player.browse": {
+   "attributes": {
+    "friendly_name": "Browse",
+    "is_volume_muted": false,
+    "shuffle": false,
+    "sound_mode": "Music",
+    "supported_features": 4325376,
+    "volume_level": 1.0
+   },
+   "state": "playing"
+  },
+  "media_player.group": {
+   "attributes": {
+    "friendly_name": "Group",
+    "group_members": null,
+    "is_volume_muted": false,
+    "shuffle": false,
+    "sound_mode": "Music",
+    "sound_mode_list": [
+     "Music",
+     "Movie"
+    ],
+    "supported_features": 643983,
+    "volume_level": 1.0
+   },
+   "state": "playing"
+  },
+  "media_player.kitchen": {
+   "attributes": {
+    "friendly_name": "Kitchen",
+    "group_members": [],
+    "is_volume_muted": false,
+    "media_album_name": "Bounzz",
+    "media_artist": "Technohead",
+    "media_content_id": "bounzz-1",
+    "media_content_type": "music",
+    "media_duration": 213,
+    "media_title": "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)",
+    "media_track": 1,
+    "repeat": "off",
+    "shuffle": false,
+    "sound_mode": "Music",
+    "sound_mode_list": [
+     "Music",
+     "Movie"
+    ],
+    "supported_features": 914877,
+    "volume_level": 1.0
+   },
+   "state": "playing"
+  },
+  "media_player.living_room": {
+   "attributes": {
+    "app_name": "YouTube",
+    "friendly_name": "Living Room",
+    "is_volume_muted": false,
+    "media_content_id": "eyU3bRy2x44",
+    "media_content_type": "movie",
+    "media_duration": 300,
+    "media_position": 45,
+    "media_position_updated_at": "2026-09-30T14:26:26.463163+00:00",
+    "media_title": "\u2665\u2665 The Best Fireplace Video (3 hours)",
+    "shuffle": false,
+    "sound_mode": "Music",
+    "sound_mode_list": [
+     "Music",
+     "Movie"
+    ],
+    "supported_features": 119695,
+    "volume_level": 1.0
+   },
+   "state": "playing"
+  },
+  "media_player.lounge_room": {
+   "attributes": {
+    "app_name": "Netflix",
+    "device_class": "tv",
+    "friendly_name": "Lounge room",
+    "is_volume_muted": false,
+    "media_content_id": "house-of-cards-1",
+    "media_content_type": "tvshow",
+    "media_duration": 3600,
+    "media_episode": "1",
+    "media_season": "1",
+    "media_series_title": "House of Cards",
+    "media_title": "Chapter 1",
+    "shuffle": false,
+    "sound_mode": "Music",
+    "sound_mode_list": [
+     "Music",
+     "Movie"
+    ],
+    "source": "dvd",
+    "source_list": [
+     "dvd",
+     "youtube"
+    ],
+    "supported_features": 121265,
+    "volume_level": 1.0
+   },
+   "state": "playing"
+  },
+  "media_player.search": {
+   "attributes": {
+    "friendly_name": "Search",
+    "is_volume_muted": false,
+    "shuffle": false,
+    "sound_mode": "Music",
+    "supported_features": 4194304,
+    "volume_level": 1.0
+   },
+   "state": "playing"
+  },
+  "media_player.walkman": {
+   "attributes": {
+    "friendly_name": "Walkman",
+    "group_members": [],
+    "is_volume_muted": false,
+    "media_album_name": "Bounzz",
+    "media_artist": "Technohead",
+    "media_content_id": "bounzz-1",
+    "media_content_type": "music",
+    "media_duration": 213,
+    "media_title": "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)",
+    "media_track": 1,
+    "repeat": "off",
+    "shuffle": false,
+    "sound_mode": "Music",
+    "sound_mode_list": [
+     "Music",
+     "Movie"
+    ],
+    "supported_features": 914877,
+    "volume_level": 1.0
+   },
+   "state": "playing"
+  },
+  "notify.notifier": {
+   "attributes": {
+    "friendly_name": "Notifier",
+    "supported_features": 1
+   },
+   "state": "unknown"
+  },
+  "number.large_range": {
+   "attributes": {
+    "friendly_name": "Large Range",
+    "max": 1000,
+    "min": 1,
+    "mode": "auto",
+    "step": 1
+   },
+   "state": "500"
+  },
+  "number.pwm_1": {
+   "attributes": {
+    "friendly_name": "PWM 1",
+    "max": 1.0,
+    "min": 0.0,
+    "mode": "box",
+    "step": 0.01
+   },
+   "state": "0.42"
+  },
+  "number.small_range": {
+   "attributes": {
+    "friendly_name": "Small Range",
+    "max": 255,
+    "min": 1,
+    "mode": "auto",
+    "step": 1
+   },
+   "state": "128"
+  },
+  "number.temperature_setting": {
+   "attributes": {
+    "device_class": "temperature",
+    "friendly_name": "Temperature setting",
+    "max": 95.0,
+    "min": 59.0,
+    "mode": "box",
+    "step": 1,
+    "unit_of_measurement": "\u00b0F"
+   },
+   "state": "72.0"
+  },
+  "number.volume": {
+   "attributes": {
+    "friendly_name": "volume",
+    "max": 100.0,
+    "min": 0.0,
+    "mode": "slider",
+    "step": 1.0
+   },
+   "state": "42.0"
+  },
+  "remote.remote_one": {
+   "attributes": {
+    "friendly_name": "Remote One",
+    "supported_features": 0
+   },
+   "state": "off"
+  },
+  "remote.remote_two": {
+   "attributes": {
+    "friendly_name": "Remote Two",
+    "supported_features": 0
+   },
+   "state": "on"
+  },
+  "script.good_night": {
+   "attributes": {
+    "current": 0,
+    "friendly_name": "Good night",
+    "icon": "mdi:weather-night",
+    "last_triggered": null,
+    "mode": "single"
+   },
+   "state": "off"
+  },
+  "select.speed": {
+   "attributes": {
+    "friendly_name": "Speed",
+    "options": [
+     "light_speed",
+     "ridiculous_speed",
+     "ludicrous_speed"
+    ]
+   },
+   "state": "ridiculous_speed"
+  },
+  "sensor.backup_backup_manager_state": {
+   "attributes": {
+    "device_class": "enum",
+    "friendly_name": "Backup Status Back-up Manager",
+    "options": [
+     "idle",
+     "create_backup",
+     "blocked",
+     "receive_backup",
+     "restore_backup"
+    ]
+   },
+   "state": "idle"
+  },
+  "sensor.backup_last_attempted_automatic_backup": {
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Backup Recentste gepoogde automatische back-up"
+   },
+   "state": "unknown"
+  },
+  "sensor.backup_last_successful_automatic_backup": {
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Backup Laatste succesvolle automatische back-up"
+   },
+   "state": "unknown"
+  },
+  "sensor.backup_next_scheduled_automatic_backup": {
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Backup Volgende geplande automatische back-up"
+   },
+   "state": "unknown"
+  },
+  "sensor.carbon_dioxide": {
+   "attributes": {
+    "device_class": "carbon_dioxide",
+    "friendly_name": "Carbon dioxide",
+    "state_class": "measurement",
+    "unit_of_measurement": "ppm"
+   },
+   "state": "54"
+  },
+  "sensor.carbon_dioxide_battery": {
+   "attributes": {
+    "device_class": "battery",
+    "friendly_name": "Carbon dioxide Battery",
+    "state_class": "measurement",
+    "unit_of_measurement": "%"
+   },
+   "state": "99"
+  },
+  "sensor.carbon_monoxide": {
+   "attributes": {
+    "device_class": "carbon_monoxide",
+    "friendly_name": "Carbon monoxide",
+    "state_class": "measurement",
+    "unit_of_measurement": "ppm"
+   },
+   "state": "54"
+  },
+  "sensor.outside_humidity": {
+   "attributes": {
+    "device_class": "humidity",
+    "friendly_name": "Outside Humidity",
+    "state_class": "measurement",
+    "unit_of_measurement": "%"
+   },
+   "state": "54"
+  },
+  "sensor.outside_temperature": {
+   "attributes": {
+    "device_class": "temperature",
+    "friendly_name": "Outside Temperature",
+    "state_class": "measurement",
+    "unit_of_measurement": "\u00b0F"
+   },
+   "state": "60.08"
+  },
+  "sensor.outside_temperature_battery": {
+   "attributes": {
+    "device_class": "battery",
+    "friendly_name": "Outside Temperature Battery",
+    "state_class": "measurement",
+    "unit_of_measurement": "%"
+   },
+   "state": "12"
+  },
+  "sensor.power_consumption": {
+   "attributes": {
+    "device_class": "power",
+    "friendly_name": "Power consumption",
+    "state_class": "measurement",
+    "unit_of_measurement": "W"
+   },
+   "state": "100"
+  },
+  "sensor.sun_next_dawn": {
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Sun Volgende dageraad"
+   },
+   "state": "2026-10-01T05:08:52+00:00"
+  },
+  "sensor.sun_next_dusk": {
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Sun Volgende schemering"
+   },
+   "state": "2026-09-30T17:55:54+00:00"
+  },
+  "sensor.sun_next_midnight": {
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Sun Volgende middernacht"
+   },
+   "state": "2026-09-30T23:31:46+00:00"
+  },
+  "sensor.sun_next_noon": {
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Sun Volgende middag"
+   },
+   "state": "2026-10-01T11:31:55+00:00"
+  },
+  "sensor.sun_next_rising": {
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Sun Volgende opkomst"
+   },
+   "state": "2026-10-01T05:43:05+00:00"
+  },
+  "sensor.sun_next_setting": {
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Sun Volgende ondergang"
+   },
+   "state": "2026-09-30T17:21:47+00:00"
+  },
+  "sensor.thermostat": {
+   "attributes": {
+    "device_class": "enum",
+    "friendly_name": "Thermostat",
+    "options": [
+     "away",
+     "comfort",
+     "eco",
+     "sleep"
+    ]
+   },
+   "state": "eco"
+  },
+  "sensor.total_energy_kwh": {
+   "attributes": {
+    "device_class": "energy",
+    "friendly_name": "Total energy 1",
+    "state_class": "total",
+    "unit_of_measurement": "kWh"
+   },
+   "state": "152.0"
+  },
+  "sensor.total_energy_mwh": {
+   "attributes": {
+    "device_class": "energy",
+    "friendly_name": "Total energy 2",
+    "state_class": "total",
+    "unit_of_measurement": "MWh"
+   },
+   "state": "0.0760000000000001"
+  },
+  "sensor.total_gas_ft3": {
+   "attributes": {
+    "device_class": "gas",
+    "friendly_name": "Total gas 2",
+    "state_class": "total",
+    "unit_of_measurement": "ft\u00b3"
+   },
+   "state": "304.0"
+  },
+  "sensor.total_gas_m3": {
+   "attributes": {
+    "device_class": "gas",
+    "friendly_name": "Total gas 1",
+    "state_class": "total",
+    "unit_of_measurement": "ft\u00b3"
+   },
+   "state": "268.391467083315"
+  },
+  "siren.siren": {
+   "attributes": {
+    "friendly_name": "Siren",
+    "supported_features": 3
+   },
+   "state": "on"
+  },
+  "siren.siren_with_all_features": {
+   "attributes": {
+    "available_tones": [
+     "fire",
+     "alarm"
+    ],
+    "friendly_name": "Siren with all features",
+    "supported_features": 31
+   },
+   "state": "on"
+  },
+  "sun.sun": {
+   "attributes": {
+    "azimuth": 229.85,
+    "elevation": 23.49,
+    "friendly_name": "Sun",
+    "next_dawn": "2026-10-01T05:08:52.090825+00:00",
+    "next_dusk": "2026-09-30T17:55:54.249037+00:00",
+    "next_midnight": "2026-09-30T23:31:46+00:00",
+    "next_noon": "2026-10-01T11:31:55+00:00",
+    "next_rising": "2026-10-01T05:43:05.449889+00:00",
+    "next_setting": "2026-09-30T17:21:47.679346+00:00",
+    "rising": false
+   },
+   "state": "above_horizon"
+  },
+  "switch.ac": {
+   "attributes": {
+    "device_class": "outlet",
+    "friendly_name": "AC"
+   },
+   "state": "off"
+  },
+  "switch.decorative_lights": {
+   "attributes": {
+    "assumed_state": true,
+    "friendly_name": "Decorative Lights"
+   },
+   "state": "on"
+  },
+  "vacuum.demo_vacuum_0_ground_floor": {
+   "attributes": {
+    "cleaned_area": 0,
+    "fan_speed": "medium",
+    "fan_speed_list": [
+     "min",
+     "medium",
+     "high",
+     "max"
+    ],
+    "friendly_name": "Demo vacuum 0 ground floor",
+    "supported_features": 32700
+   },
+   "state": "docked"
+  },
+  "vacuum.demo_vacuum_1_first_floor": {
+   "attributes": {
+    "cleaned_area": 0,
+    "fan_speed": "medium",
+    "fan_speed_list": [
+     "min",
+     "medium",
+     "high",
+     "max"
+    ],
+    "friendly_name": "Demo vacuum 1 first floor",
+    "supported_features": 12348
+   },
+   "state": "docked"
+  },
+  "vacuum.demo_vacuum_2_second_floor": {
+   "attributes": {
+    "cleaned_area": 0,
+    "friendly_name": "Demo vacuum 2 second floor",
+    "supported_features": 12296
+   },
+   "state": "docked"
+  },
+  "vacuum.demo_vacuum_3_third_floor": {
+   "attributes": {
+    "cleaned_area": 0,
+    "friendly_name": "Demo vacuum 3 third floor",
+    "supported_features": 3
+   },
+   "state": "docked"
+  },
+  "vacuum.demo_vacuum_4_fourth_floor": {
+   "attributes": {
+    "cleaned_area": 0,
+    "friendly_name": "Demo vacuum 4 fourth floor",
+    "supported_features": 0
+   },
+   "state": "docked"
+  },
+  "valve.back_garden": {
+   "attributes": {
+    "current_position": 70,
+    "friendly_name": "Back Garden",
+    "is_closed": false,
+    "supported_features": 15
+   },
+   "state": "open"
+  },
+  "valve.front_garden": {
+   "attributes": {
+    "friendly_name": "Front Garden",
+    "is_closed": false,
+    "supported_features": 3
+   },
+   "state": "open"
+  },
+  "valve.orchard": {
+   "attributes": {
+    "friendly_name": "Orchard",
+    "is_closed": true,
+    "supported_features": 3
+   },
+   "state": "closed"
+  },
+  "valve.trees": {
+   "attributes": {
+    "current_position": 30,
+    "friendly_name": "Trees",
+    "is_closed": false,
+    "supported_features": 15
+   },
+   "state": "open"
+  },
+  "water_heater.demo_water_heater": {
+   "attributes": {
+    "away_mode": "off",
+    "current_temperature": null,
+    "friendly_name": "Demo Water Heater",
+    "max_temp": 140,
+    "min_temp": 110,
+    "operation_list": [
+     "eco",
+     "electric",
+     "performance",
+     "high_demand",
+     "heat_pump",
+     "gas",
+     "off"
+    ],
+    "operation_mode": "eco",
+    "supported_features": 15,
+    "target_temp_high": null,
+    "target_temp_low": null,
+    "target_temp_step": 1,
+    "temperature": 119
+   },
+   "state": "eco"
+  },
+  "water_heater.demo_water_heater_celsius": {
+   "attributes": {
+    "away_mode": "on",
+    "current_temperature": null,
+    "friendly_name": "Demo Water Heater Celsius",
+    "max_temp": 140,
+    "min_temp": 110,
+    "operation_list": [
+     "eco",
+     "electric",
+     "performance",
+     "high_demand",
+     "heat_pump",
+     "gas",
+     "off"
+    ],
+    "operation_mode": "eco",
+    "supported_features": 15,
+    "target_temp_high": null,
+    "target_temp_low": null,
+    "target_temp_step": 1,
+    "temperature": 113
+   },
+   "state": "eco"
+  },
+  "weather.demo_weather_north": {
+   "attributes": {
+    "attribution": "Powered by Home Assistant",
+    "friendly_name": "Demo Weather North",
+    "humidity": 54,
+    "precipitation_unit": "in",
+    "pressure": 987.0,
+    "pressure_unit": "inHg",
+    "supported_features": 7,
+    "temperature": -12,
+    "temperature_unit": "\u00b0F",
+    "visibility_unit": "mi",
+    "wind_speed": 4.8,
+    "wind_speed_unit": "mph"
+   },
+   "state": "rainy"
+  },
+  "weather.demo_weather_south": {
+   "attributes": {
+    "attribution": "Powered by Home Assistant",
+    "friendly_name": "Demo Weather South",
+    "humidity": 92,
+    "precipitation_unit": "in",
+    "pressure": 32.45,
+    "pressure_unit": "inHg",
+    "supported_features": 1,
+    "temperature": 71,
+    "temperature_unit": "\u00b0F",
+    "visibility_unit": "mi",
+    "wind_speed": 1.12,
+    "wind_speed_unit": "mph"
+   },
+   "state": "sunny"
+  },
+  "weather.forecast_thuis": {
+   "attributes": {
+    "attribution": "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute.",
+    "cloud_coverage": 100.0,
+    "dew_point": 62,
+    "friendly_name": "Forecast Thuis",
+    "humidity": 67,
+    "precipitation_unit": "in",
+    "pressure": 30.01,
+    "pressure_unit": "inHg",
+    "supported_features": 3,
+    "temperature": 74,
+    "temperature_unit": "\u00b0F",
+    "uv_index": 1.6,
+    "visibility_unit": "mi",
+    "wind_bearing": 190.4,
+    "wind_speed": 5.84,
+    "wind_speed_unit": "mph"
+   },
+   "state": "cloudy"
+  }
+ }
+}

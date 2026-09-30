@@ -28,7 +28,7 @@ from updates import Updater
 from aiohttp import ClientError, ClientSession, ClientTimeout, WSMsgType, web
 from core import alarm_extras, lock_extras, ALERT_EVENT, board_of, BROADCAST_EVENTS, BROADCAST_SHOW, BUILTIN, CAMERA_DOMAINS, entity_id, SETTINGS_BESIDE_BLOCK, TILE_EVENTS, TILE_RESULT_EVENT, layout_snapshot, match_screen, HEADER_MIN_FIRMWARE, NAME_TILE_SETTINGS, TRANSPORT_MIN_FIRMWARE, alert_action, alert_camera, alert_choice, alert_data, choice_service, ALERT_CHOICE_ACTION, ALERT_CHOICE_MIN_FIRMWARE, parse_firmware, alert_reference, alert_screen_choice, alert_screen_names, alert_service, alert_targets, backgrounds, builtin_name, controls_catalogue, device_prefixes, discover, discover_screens, encode, entity_slug, extras, media_cover, media_extras, forecast_kinds, header_items, inbox_prefix, message_action, min_firmware, name_clash, packets, revision, screen_items, state_message, validate_header, validate_layout, validate_settings
 from core import calibrate_entity, can_standby, dimmable, SETTING_ENTITIES, SETTING_RULES, STANDBY_KEYS, setting_action, setting_entities, setting_from_state, state_word
-from core import BOARD_KEYS, is_key
+from core import BOARD_KEYS, is_key, drawn_controls
 from core import (Grid, page_target, PAGE_TILE_REPEAT_MIN_FIRMWARE, ENTITY_REPEAT_MIN_FIRMWARE, ROTATION_MIN_FIRMWARE, SHAPES, firmware_features, grid_of, orientation_at,
                   packed_slots, run_tile_event, screen_firmware, shape_of, turns_of, version_text)
 import header_bar
@@ -596,6 +596,18 @@ class HomeAssistant:
         entries = await self.request('config_entries/get', domain='esphome')
         return {entry['entry_id']: entry for entry in entries or [] if isinstance(entry, dict) and entry.get('entry_id')}
 
+    async def discovered_esphome(self):
+        """The ESPHome devices Home Assistant found on the network and has not paired yet (app 0.4.32): a screen that
+        was just flashed shows up here once it is on the Wi-Fi, so New screen can say it arrived, or that it did not."""
+        flows = await self.request('config_entries/flow/progress')
+        names = set()
+        for flow in flows or []:
+            if isinstance(flow, dict) and flow.get('handler') == 'esphome':
+                name = ((flow.get('context') or {}).get('title_placeholders') or {}).get('name')
+                if isinstance(name, str) and name:
+                    names.add(name.lower())
+        return names
+
     async def delete_config_entry(self, entry_id):
         """Remove one integration with its device and its entities, the way Home Assistant's own Delete does
         (app 0.2.112). ESPHome answers `supports_remove_device: false`: one node is one entry, so the entry
@@ -777,6 +789,21 @@ class Manager:
         legacy screen therefore uses 2x3 once it appears in HA's registry.
         An absent screen still waits for discovery rather than being guessed.
         """
+        screen = self._discovered(inbox)
+        if screen is None:
+            return None
+        reported = self.reported_grid(inbox)
+        if reported is not None:
+            return reported
+        profile = self.built_as(screen)
+        if profile.get('package') and board_of({**screen, 'package': profile['package']}) in SHAPES:
+            return self.grid_of(screen)
+        if board_of(screen) in SHAPES:
+            return self.grid_of(screen)
+        return Grid(2, 3)
+
+    def _discovered(self, inbox):
+        """The screen as discovery sees it now, or None while it is not in Home Assistant's registry."""
         # Discovery is pure here: following renames can write storage, so it must
         # not run recursively from the store's migration callback.
         ha = self.ha
@@ -785,18 +812,15 @@ class Manager:
         if key != self._verified_screens_key:
             self._verified_screens_key = key
             self._verified_screens = {item['id']: item for item in discover_screens(items, ha.states, ha.devices, ha.areas)}
-        screen = self._verified_screens.get(inbox)
-        if screen is None:
-            return None
-        shape = screen.get('shape')
+        return self._verified_screens.get(inbox)
+
+    def reported_grid(self, inbox):
+        """The grid the screen reports itself ("Screen layout", firmware 0.2.77+), or None when it says nothing.
+        verified_grid takes this one first; only this one may move a saved layout to a new grid on its own."""
+        shape = (self._discovered(inbox) or {}).get('shape')
         if isinstance(shape, dict) and all(type(shape.get(k)) is int and shape[k] > 0 for k in ('columns', 'rows')):
             return Grid(shape['columns'], shape['rows'])
-        profile = self.built_as(screen)
-        if profile.get('package') and board_of({**screen, 'package': profile['package']}) in SHAPES:
-            return self.grid_of(screen)
-        if board_of(screen) in SHAPES:
-            return self.grid_of(screen)
-        return Grid(2, 3)
+        return None
 
     def refresh_page_records(self):
         """Online metadata completes pending migrations without a browser Save."""
@@ -1114,11 +1138,12 @@ class Manager:
         """The grid of a screen's pages (core.grid_of), with the board its profile builds from and the way it was built
         to hang filled in, so a save, an event and the message to the screen count the same cells whether the screen is
         online or not."""
-        if isinstance(screen, dict) and not (screen.get('package') and screen.get('orientation')):
+        if isinstance(screen, dict) and not (screen.get('package') and screen.get('orientation') and 'grid_rows' in screen):
             # The profiles once, not once per question: reading them stats every file in the ESPHome folder.
             profiles = self.firmware.profile_names()
             screen = {**screen, 'package': screen.get('package') or self.package_of(screen, profiles),
-                      'orientation': screen.get('orientation') or self.orientation_of(screen, profiles)}
+                      'orientation': screen.get('orientation') or self.orientation_of(screen, profiles),
+                      'grid_rows': screen.get('grid_rows', self.built_as(screen, profiles).get('grid_rows'))}
         return grid_of(screen)
 
     def turns(self, screen):
@@ -1530,7 +1555,8 @@ class Manager:
             raise ValueError(t('addon.errors.not_paired'))
         # Every position on the grid of this screen's pages: two by three on the first boards, whatever a newer
         # screen reports or its profile builds from (Manager.grid_of).
-        grid = self.grid_of(screen)
+        # With the pages its firmware takes: eight from 0.18.0, as many as 64 tiles fill before.
+        grid = self.grid_of(screen).for_firmware(self.firmware_version(inbox, screen))
         layout = validate_layout(data, grid=grid)
         # A CYD has no memory for camera images, whatever its firmware; say so before asking for an update.
         if any(t['entity'].split('.')[0] in CAMERA_DOMAINS for t in layout['tiles']) and board_of(screen) not in camera_feed.BOXES:
@@ -1669,7 +1695,11 @@ class Manager:
         """ESP Screens profiles without a paired screen: flashed but not yet added in Home Assistant, or not flashed yet.
 
         Pairing happens in Home Assistant itself, outside this page; the sidebar shows these so nobody wonders
-        where the freshly flashed screen went."""
+        where the freshly flashed screen went. Until Home Assistant has answered once after a start, no paired screen is
+        known yet: every profile would look like one waiting, and its Remove would take a paired screen's YAML, so none
+        is listed until then (app 0.4.32)."""
+        if not self.ha.online and not getattr(self.ha, 'registry', None):
+            return []
         nodes = {s.get('node') for s in screens}
         devices = {s.get('device') for s in screens}
         installed = getattr(self.firmware, 'installed', set())
@@ -1710,9 +1740,10 @@ class Manager:
         hourly = self.forecasts.get((entity, 'hourly'))
         return not entry or not hourly or time.monotonic() - min(entry[0], hourly[0]) > FORECAST_SECONDS
 
-    async def tile_message(self, index, tile, lamps=False):
+    async def tile_message(self, index, tile, lamps=False, features=None):
         """The state message of one tile: state, options, extras, and the history the background task holds. `lamps`:
-        the screen takes a light group's lamps (its hello said `group_lamps`, firmware 0.3.9+)."""
+        the screen takes a light group's lamps (its hello said `group_lamps`, firmware 0.3.9+). `features`: the other
+        flags its hello said (page_delivery), None where the screen's hello is not known."""
         forecast=hourly=None
         if tile['entity'].startswith('weather.') and hasattr(self.ha,'forecast'):
             entity = tile['entity']
@@ -1735,7 +1766,9 @@ class Manager:
         if tile['entity'].startswith('vacuum.'):
             ha_catalogue.chip_words(extra,tile['entity'],self.ha.states,device,getattr(self.ha,'state_words',None))
         message=state_message(index,tile,self.ha.states,extra,
-                              precision=header_bar.precision_of(entry) if tile['entity'].startswith('sensor.') else None,entry=entry)
+                              precision=header_bar.precision_of(entry) if tile['entity'].startswith('sensor.') else None,entry=entry,
+                              units=getattr(self.ha,'units',None))
+        drawn_controls(message, features)
         # Home Assistant's word where the screen would show the raw state (firmware 0.2.58+ shows it).
         state=self.ha.states.get(tile['entity'],{})
         word=ha_catalogue.screen_word(tile['entity'],message['state'],state.get('attributes'),entry,getattr(self.ha,'state_words',None))
@@ -1882,7 +1915,8 @@ class Manager:
             reuse = not full and i < len(previous['states']) and tile['entity'] not in dirty and dirty.isdisjoint(self.related_entities(tile))
             if reuse and tile['entity'].startswith('weather.') and self.forecast_due(tile['entity']):
                 reuse = False
-            states.append(previous['states'][i] if reuse else await self.tile_message(i, tile))
+            # A screen on this route has no hello, and none of the flags a newer option needs.
+            states.append(previous['states'][i] if reuse else await self.tile_message(i, tile, features=frozenset()))
         outgoing = []
         if force or not previous or layout_msg != previous['layout']:
             outgoing.append(layout_msg)
@@ -2346,7 +2380,7 @@ class Manager:
         # screen keeps one per page a navigation tile goes to, and one of everything else.
         firmware = self.firmware_version(inbox, screen) or (0, 0, 0)
         layout, tile = run_tile_event(self.layouts.get(inbox) or {'title': screen['name'], 'tiles': []}, TILE_EVENTS[event_type], data,
-                                      firmware >= PAGE_TILE_REPEAT_MIN_FIRMWARE, self.grid_of(screen),
+                                      firmware >= PAGE_TILE_REPEAT_MIN_FIRMWARE, self.grid_of(screen).for_firmware(firmware),
                                       firmware >= ENTITY_REPEAT_MIN_FIRMWARE)
         await self.check_supported(inbox, layout)
         record = self.store.get(inbox)
@@ -2388,7 +2422,7 @@ class Manager:
             layout, node = self.layouts.get(inbox), screen.get('node')
             if not layout or not node:
                 continue
-            snapshot = layout_snapshot(screen, layout, self.grid_of(screen))
+            snapshot = layout_snapshot(screen, layout, self.grid_of(screen).for_firmware(self.firmware_version(inbox, screen)))
             if self.published.get(inbox) == snapshot:
                 continue
             try:
@@ -2548,6 +2582,8 @@ def create_app(manager, development=False):
             # And which way it was built to hang (app 0.2.107), for the same reason: a screen standing up has another
             # canvas and another grid, and while it is offline only its own YAML says so.
             screen['orientation'] = manager.orientation_of(screen, profiles)
+            # And the rows it was built with, when its own YAML chose them (a Guition with four rows, app 0.4.31).
+            screen['grid_rows'] = manager.built_as(screen, profiles).get('grid_rows')
             screen['shape'] = shape_of(screen)
             # Whether the board draws pictures (camera tiles, an alert's snapshot, an album cover): the boards with
             # memory for them say so with their camera sizes (boards.json); the firmware that draws them is a
@@ -2575,12 +2611,24 @@ def create_app(manager, development=False):
                 'pending': manager.pending_profiles(screens, profiles),
                 'updates': manager.updates.summary(screens, profiles),
                 'language': manager.region.view()}
+    async def seen_pending(payload):
+        """Marks each screen that waits for pairing that Home Assistant has found on the network (`seen`); the rest is
+        not on the Wi-Fi (yet). Nothing is marked while Home Assistant cannot be asked."""
+        if not payload.get('pending'):
+            return payload
+        try:
+            names = await asyncio.wait_for(manager.ha.discovered_esphome(), 4)
+        except Exception:  # noqa: BLE001 - the list is a help, never a reason for the inventory to fail
+            return payload
+        for entry in payload['pending']:
+            entry['seen'] = str(entry.get('node') or '').lower() in names
+        return payload
     async def inventory(request):
         if request.query.get('light') == '1':
             # The page polls the light form; entities, backgrounds and icons (~100 KB) only on demand.
-            return web.json_response(light_payload())
+            return web.json_response(await seen_pending(light_payload()))
         screens, entities = manager.inventory()
-        payload = light_payload(screens)
+        payload = await seen_pending(light_payload(screens))
         payload['entities'] = entities
         # Labels and help in the editor's language (app 0.2.90); ids and keys stay as they are.
         payload['backgrounds'] = backgrounds()
@@ -2840,7 +2888,8 @@ def create_app(manager, development=False):
             state = manager.ha.states.get(eid, {})
             entry = index.get(eid)
             message = state_message(0, {'entity': eid, 'name': ''}, manager.ha.states,
-                                    precision=header_bar.precision_of(entry) if eid.startswith('sensor.') else None)
+                                    precision=header_bar.precision_of(entry) if eid.startswith('sensor.') else None,
+                                    units=getattr(manager.ha, 'units', None))
             attributes = dict(message['a'])
             if eid.startswith('media_player.'):
                 for key in ('media_title', 'media_artist', 'media_album_name', 'media_duration', 'media_position'):
@@ -2997,12 +3046,34 @@ def create_app(manager, development=False):
             if clash:
                 raise ValueError(clash)
         return web.json_response(manager.firmware.install(data))
+    async def firmware_wifi(request):
+        """New screen → Wi-Fi: another network or password in ESPHome's secrets.yaml (app 0.4.32), for a screen that did
+        not come online. Every screen builds with these two lines, so each takes them at its next update."""
+        data = await request.json()
+        if not isinstance(data, dict):
+            raise ValueError(t('addon.errors.firmware.wifi_needed'))
+        manager.firmware.change_wifi(data)
+        return web.json_response(manager.firmware.wifi_status())
     async def firmware_download(request):
         """New screen and Firmware & USB → Download: the factory image this app just built, for ESPHome Web on
         the owner's own computer. Like the profile it came from, it holds the Wi-Fi password and the screen's keys."""
         path, name = manager.firmware.image(request.match_info['file'])
         return web.FileResponse(path, headers={'Content-Type': 'application/octet-stream',
                                                'Content-Disposition': f'attachment; filename="{name}"'})
+    async def firmware_files(request):
+        """A screen's menu → Download screen files: its YAML, Override YAML and the secrets they use, as a zip, to
+        build the screen with ESPHome on your own computer."""
+        body, name = manager.firmware.files(request.match_info['file'])
+        return web.Response(body=body, content_type='application/zip', headers={'Content-Disposition': f'attachment; filename="{name}"'})
+    async def firmware_forget(request):
+        """A screen that never got its firmware (GitHub #114, app 0.4.32): New screen wrote its profile, the build was
+        cancelled or failed, and the sidebar kept it waiting. Only such a profile goes, one no paired screen builds from;
+        a paired screen leaves through its own Remove, which takes it out of Home Assistant too."""
+        file = request.match_info['file']
+        waiting = {p['file'] for p in manager.pending_profiles(manager.screens(), manager.firmware.profile_names())}
+        if file not in waiting:
+            raise LayoutError(t('addon.errors.firmware.profile_missing'))
+        return web.json_response({'removed': await manager.firmware.delete_profile(file)})
     async def firmware_flashed(request):
         """New screen and Firmware & USB → This computer (browser): the page wrote the image it downloaded onto a
         screen over Web Serial, so the screen list nudges pairing as for one flashed from Home Assistant's own USB port."""
@@ -3067,8 +3138,11 @@ def create_app(manager, development=False):
     app.router.add_get('/api/firmware/profiles/{file}/override', firmware_override)
     app.router.add_put('/api/firmware/profiles/{file}/override', firmware_override_save)
     app.router.add_get('/api/firmware/profiles/{file}/download', firmware_download)
+    app.router.add_get('/api/firmware/profiles/{file}/files', firmware_files)
     app.router.add_post('/api/firmware/profiles/{file}/flashed', firmware_flashed)
+    app.router.add_delete('/api/firmware/profiles/{file}', firmware_forget)
     app.router.add_post('/api/firmware/profiles', firmware_create)
+    app.router.add_put('/api/firmware/wifi', firmware_wifi)
     app.router.add_get('/', index)
     app.router.add_get('/api/inventory', inventory)
     app.router.add_get('/api/capabilities', capabilities)

@@ -1,0 +1,664 @@
+{
+ "domains": {
+  "alarm_control_panel": {
+   "actions": {
+    "alarm_arm_away": [
+     [
+      "ARM_AWAY"
+     ]
+    ],
+    "alarm_arm_custom_bypass": [
+     [
+      "ARM_CUSTOM_BYPASS"
+     ]
+    ],
+    "alarm_arm_home": [
+     [
+      "ARM_HOME"
+     ]
+    ],
+    "alarm_arm_night": [
+     [
+      "ARM_NIGHT"
+     ]
+    ],
+    "alarm_arm_vacation": [
+     [
+      "ARM_VACATION"
+     ]
+    ],
+    "alarm_disarm": [],
+    "alarm_trigger": [
+     [
+      "TRIGGER"
+     ]
+    ]
+   },
+   "enum": "AlarmControlPanelEntityFeature",
+   "features": {
+    "ARM_AWAY": 2,
+    "ARM_CUSTOM_BYPASS": 16,
+    "ARM_HOME": 1,
+    "ARM_NIGHT": 4,
+    "ARM_VACATION": 32,
+    "TRIGGER": 8
+   }
+  },
+  "automation": {
+   "actions": {
+    "toggle": [],
+    "trigger": [],
+    "turn_off": [],
+    "turn_on": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "binary_sensor": {
+   "actions": {},
+   "enum": null,
+   "features": {}
+  },
+  "button": {
+   "actions": {
+    "press": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "camera": {
+   "actions": {
+    "disable_motion_detection": [],
+    "enable_motion_detection": [],
+    "play_stream": [],
+    "record": [],
+    "snapshot": [],
+    "turn_off": [],
+    "turn_on": []
+   },
+   "enum": "CameraEntityFeature",
+   "features": {
+    "ON_OFF": 1,
+    "STREAM": 2
+   }
+  },
+  "climate": {
+   "actions": {
+    "set_fan_mode": [
+     [
+      "FAN_MODE"
+     ]
+    ],
+    "set_humidity": [
+     [
+      "TARGET_HUMIDITY"
+     ]
+    ],
+    "set_hvac_mode": [],
+    "set_preset_mode": [
+     [
+      "PRESET_MODE"
+     ]
+    ],
+    "set_swing_horizontal_mode": [
+     [
+      "SWING_HORIZONTAL_MODE"
+     ]
+    ],
+    "set_swing_mode": [
+     [
+      "SWING_MODE"
+     ]
+    ],
+    "set_temperature": [
+     [
+      "TARGET_TEMPERATURE"
+     ],
+     [
+      "TARGET_TEMPERATURE_RANGE"
+     ]
+    ],
+    "toggle": [
+     [
+      "TURN_OFF"
+     ],
+     [
+      "TURN_ON"
+     ]
+    ],
+    "turn_off": [
+     [
+      "TURN_OFF"
+     ]
+    ],
+    "turn_on": [
+     [
+      "TURN_ON"
+     ]
+    ]
+   },
+   "enum": "ClimateEntityFeature",
+   "features": {
+    "FAN_MODE": 8,
+    "PRESET_MODE": 16,
+    "SWING_HORIZONTAL_MODE": 512,
+    "SWING_MODE": 32,
+    "TARGET_HUMIDITY": 4,
+    "TARGET_TEMPERATURE": 1,
+    "TARGET_TEMPERATURE_RANGE": 2,
+    "TURN_OFF": 128,
+    "TURN_ON": 256
+   }
+  },
+  "cover": {
+   "actions": {
+    "close_cover": [
+     [
+      "CLOSE"
+     ]
+    ],
+    "close_cover_tilt": [
+     [
+      "CLOSE_TILT"
+     ]
+    ],
+    "open_cover": [
+     [
+      "OPEN"
+     ]
+    ],
+    "open_cover_tilt": [
+     [
+      "OPEN_TILT"
+     ]
+    ],
+    "set_cover_position": [
+     [
+      "SET_POSITION"
+     ]
+    ],
+    "set_cover_tilt_position": [
+     [
+      "SET_TILT_POSITION"
+     ]
+    ],
+    "stop_cover": [
+     [
+      "STOP"
+     ]
+    ],
+    "stop_cover_tilt": [
+     [
+      "STOP_TILT"
+     ]
+    ],
+    "toggle": [
+     [
+      "OPEN",
+      "CLOSE"
+     ]
+    ],
+    "toggle_cover_tilt": [
+     [
+      "OPEN_TILT",
+      "CLOSE_TILT"
+     ]
+    ]
+   },
+   "enum": "CoverEntityFeature",
+   "features": {
+    "CLOSE": 2,
+    "CLOSE_TILT": 32,
+    "OPEN": 1,
+    "OPEN_TILT": 16,
+    "SET_POSITION": 4,
+    "SET_TILT_POSITION": 128,
+    "SPEED": 256,
+    "STOP": 8,
+    "STOP_TILT": 64
+   }
+  },
+  "fan": {
+   "actions": {
+    "decrease_speed": [
+     [
+      "SET_SPEED"
+     ]
+    ],
+    "increase_speed": [
+     [
+      "SET_SPEED"
+     ]
+    ],
+    "oscillate": [
+     [
+      "OSCILLATE"
+     ]
+    ],
+    "set_direction": [
+     [
+      "DIRECTION"
+     ]
+    ],
+    "set_percentage": [
+     [
+      "SET_SPEED"
+     ]
+    ],
+    "set_preset_mode": [
+     [
+      "SET_SPEED"
+     ],
+     [
+      "PRESET_MODE"
+     ]
+    ],
+    "toggle": [
+     [
+      "TURN_OFF"
+     ],
+     [
+      "TURN_ON"
+     ]
+    ],
+    "turn_off": [
+     [
+      "TURN_OFF"
+     ]
+    ],
+    "turn_on": [
+     [
+      "TURN_ON"
+     ]
+    ]
+   },
+   "enum": "FanEntityFeature",
+   "features": {
+    "DIRECTION": 4,
+    "OSCILLATE": 2,
+    "PRESET_MODE": 8,
+    "SET_SPEED": 1,
+    "TURN_OFF": 16,
+    "TURN_ON": 32
+   }
+  },
+  "image": {
+   "actions": {
+    "snapshot": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "input_boolean": {
+   "actions": {
+    "toggle": [],
+    "turn_off": [],
+    "turn_on": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "input_button": {
+   "actions": {
+    "press": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "input_number": {
+   "actions": {
+    "decrement": [],
+    "increment": [],
+    "set_value": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "input_select": {
+   "actions": {
+    "select_first": [],
+    "select_last": [],
+    "select_next": [],
+    "select_option": [],
+    "select_previous": [],
+    "set_options": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "light": {
+   "actions": {
+    "toggle": [],
+    "turn_off": [],
+    "turn_on": []
+   },
+   "enum": "LightEntityFeature",
+   "features": {
+    "EFFECT": 4,
+    "FLASH": 8,
+    "TRANSITION": 32
+   }
+  },
+  "lock": {
+   "actions": {
+    "lock": [],
+    "open": [
+     [
+      "OPEN"
+     ]
+    ],
+    "unlock": []
+   },
+   "enum": "LockEntityFeature",
+   "features": {
+    "OPEN": 1
+   }
+  },
+  "media_player": {
+   "actions": {
+    "browse_media": [],
+    "clear_playlist": [
+     [
+      "CLEAR_PLAYLIST"
+     ]
+    ],
+    "join": [
+     [
+      "GROUPING"
+     ]
+    ],
+    "media_next_track": [
+     [
+      "NEXT_TRACK"
+     ]
+    ],
+    "media_pause": [
+     [
+      "PAUSE"
+     ]
+    ],
+    "media_play": [
+     [
+      "PLAY"
+     ]
+    ],
+    "media_play_pause": [
+     [
+      "PLAY",
+      "PAUSE"
+     ]
+    ],
+    "media_previous_track": [
+     [
+      "PREVIOUS_TRACK"
+     ]
+    ],
+    "media_seek": [
+     [
+      "SEEK"
+     ]
+    ],
+    "media_stop": [
+     [
+      "STOP"
+     ]
+    ],
+    "play_media": [
+     [
+      "PLAY_MEDIA"
+     ]
+    ],
+    "repeat_set": [
+     [
+      "REPEAT_SET"
+     ]
+    ],
+    "search_media": [
+     [
+      "SEARCH_MEDIA"
+     ]
+    ],
+    "select_sound_mode": [
+     [
+      "SELECT_SOUND_MODE"
+     ]
+    ],
+    "select_source": [
+     [
+      "SELECT_SOURCE"
+     ]
+    ],
+    "shuffle_set": [
+     [
+      "SHUFFLE_SET"
+     ]
+    ],
+    "toggle": [
+     [
+      "TURN_OFF",
+      "TURN_ON"
+     ]
+    ],
+    "turn_off": [
+     [
+      "TURN_OFF"
+     ]
+    ],
+    "turn_on": [
+     [
+      "TURN_ON"
+     ]
+    ],
+    "unjoin": [
+     [
+      "GROUPING"
+     ]
+    ],
+    "volume_down": [
+     [
+      "VOLUME_SET"
+     ],
+     [
+      "VOLUME_STEP"
+     ]
+    ],
+    "volume_mute": [
+     [
+      "VOLUME_MUTE"
+     ]
+    ],
+    "volume_set": [
+     [
+      "VOLUME_SET"
+     ]
+    ],
+    "volume_up": [
+     [
+      "VOLUME_SET"
+     ],
+     [
+      "VOLUME_STEP"
+     ]
+    ]
+   },
+   "enum": "MediaPlayerEntityFeature",
+   "features": {
+    "BROWSE_MEDIA": 131072,
+    "CLEAR_PLAYLIST": 8192,
+    "GROUPING": 524288,
+    "MEDIA_ANNOUNCE": 1048576,
+    "MEDIA_ENQUEUE": 2097152,
+    "NEXT_TRACK": 32,
+    "PAUSE": 1,
+    "PLAY": 16384,
+    "PLAY_MEDIA": 512,
+    "PREVIOUS_TRACK": 16,
+    "REPEAT_SET": 262144,
+    "SEARCH_MEDIA": 4194304,
+    "SEEK": 2,
+    "SELECT_SOUND_MODE": 65536,
+    "SELECT_SOURCE": 2048,
+    "SHUFFLE_SET": 32768,
+    "STOP": 4096,
+    "TURN_OFF": 256,
+    "TURN_ON": 128,
+    "VOLUME_MUTE": 8,
+    "VOLUME_SET": 4,
+    "VOLUME_STEP": 1024
+   }
+  },
+  "number": {
+   "actions": {
+    "set_value": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "person": {
+   "actions": {},
+   "enum": null,
+   "features": {}
+  },
+  "scene": {
+   "actions": {
+    "turn_on": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "script": {
+   "actions": {
+    "reload": [],
+    "toggle": [],
+    "turn_off": [],
+    "turn_on": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "select": {
+   "actions": {
+    "select_first": [],
+    "select_last": [],
+    "select_next": [],
+    "select_option": [],
+    "select_previous": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "sensor": {
+   "actions": {},
+   "enum": null,
+   "features": {}
+  },
+  "sun": {
+   "actions": {},
+   "enum": null,
+   "features": {}
+  },
+  "switch": {
+   "actions": {
+    "toggle": [],
+    "turn_off": [],
+    "turn_on": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "timer": {
+   "actions": {
+    "cancel": [],
+    "change": [],
+    "finish": [],
+    "pause": [],
+    "start": []
+   },
+   "enum": null,
+   "features": {}
+  },
+  "vacuum": {
+   "actions": {
+    "clean_spot": [
+     [
+      "CLEAN_SPOT"
+     ]
+    ],
+    "locate": [
+     [
+      "LOCATE"
+     ]
+    ],
+    "pause": [
+     [
+      "PAUSE"
+     ]
+    ],
+    "return_to_base": [
+     [
+      "RETURN_HOME"
+     ]
+    ],
+    "send_command": [
+     [
+      "SEND_COMMAND"
+     ]
+    ],
+    "set_fan_speed": [
+     [
+      "FAN_SPEED"
+     ]
+    ],
+    "start": [
+     [
+      "START"
+     ]
+    ],
+    "stop": [
+     [
+      "STOP"
+     ]
+    ]
+   },
+   "enum": "VacuumEntityFeature",
+   "features": {
+    "CLEAN_AREA": 16384,
+    "CLEAN_SPOT": 1024,
+    "FAN_SPEED": 32,
+    "LOCATE": 512,
+    "MAP": 2048,
+    "PAUSE": 4,
+    "RETURN_HOME": 16,
+    "SEND_COMMAND": 256,
+    "START": 8192,
+    "STATE": 4096,
+    "STATUS": 128,
+    "STOP": 8,
+    "TURN_OFF": 2,
+    "TURN_ON": 1
+   }
+  },
+  "weather": {
+   "actions": {
+    "get_forecasts": [
+     [
+      "FORECAST_DAILY"
+     ],
+     [
+      "FORECAST_HOURLY"
+     ],
+     [
+      "FORECAST_TWICE_DAILY"
+     ]
+    ]
+   },
+   "enum": "WeatherEntityFeature",
+   "features": {
+    "FORECAST_DAILY": 1,
+    "FORECAST_HOURLY": 2,
+    "FORECAST_TWICE_DAILY": 4
+   }
+  }
+ },
+ "source": "home-assistant/core 2026.10.0.dev0 (dd2a9edc 2026-09-30)"
+}

@@ -1,0 +1,11 @@
+# What every tile has, whatever it shows. The files beside this one, one per entity type, add what that type can do.
+# docs/CATALOGUE.md says what every key means.
+
+# What a tap does. `toggle` only where Home Assistant lists <domain>.toggle for the entity (a type may name other
+# actions under `toggle:`), `action` an action Home Assistant lists for it; a type adds its own under `taps:`.
+taps: [auto, detail, toggle, none, action]
+# The sizes a tile has by name; every other rectangle smaller than the grid is a span ("3x2"), which a screen names in
+# its hello (tile_sizes) when its grid takes it.
+sizes: [single, wide, tall, square, full]
+# The hours of history a graph shows.
+history_hours: [1, 6, 24]

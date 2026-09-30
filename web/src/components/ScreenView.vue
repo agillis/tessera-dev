@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// One screen: the head with its status, the Layout and Settings tabs, and the drawer over the right side.
+// One screen: the head with its status, the Layout and Settings tabs, and the inspector in a column on the right.
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { t } from "../i18n";
 import {
-  canAlert, closeInspector, copyLayoutFrom, currentScreen, exportLayout, go, identify, importLayout, needsUpdate, redo, save, startUpdate, state, undo,
+  canAlert, closeInspector, copyLayoutFrom, currentScreen, currentTile, removeTile, exportLayout, go, identify, importLayout, needsUpdate, redo, save, startUpdate, state, undo,
 } from "../store";
 import LayoutView from "./LayoutView.vue";
 import SettingsTab from "./SettingsTab.vue";
@@ -52,11 +52,24 @@ async function onFile(e: Event) {
   if (state.dirty && !confirm(t("editor.screen_view.confirm.import"))) return;
   importLayout(await file.text());
 }
+// Escape belongs to the innermost thing open (app 0.4.32): a list of choices or a menu closes and the inspector under it
+// stays. Whether one was open is read before it closes, in the capture phase, since it is gone by the time the key
+// reaches this handler.
+let popoverEscape = false;
+function beforeKey(e: KeyboardEvent) {
+  popoverEscape = e.key === "Escape" && Boolean(document.querySelector(".ui-popover"));
+}
 function onKey(e: KeyboardEvent) {
   if (e.key === "Escape") {
+    if (popoverEscape) return;
     if (state.menuOpen) closeMenu();
     else if (state.palette) return;
     else if (state.inspector && !(e.target as HTMLElement)?.closest?.(".picker")) closeInspector();
+  } else if ((e.key === "Delete" || e.key === "Backspace") && !e.defaultPrevented && state.inspector?.kind === "tile" && currentTile.value
+    && !(e.target as HTMLElement)?.closest?.("input, textarea, select, [contenteditable], [role='menu'], dialog")) {
+    // The selected tile goes, as a selected object does in Keynote (app 0.4.32); Undo brings it back.
+    e.preventDefault();
+    removeTile(currentTile.value);
   } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
     e.preventDefault();
     if (state.dirty) save();
@@ -65,8 +78,8 @@ function onKey(e: KeyboardEvent) {
     if (e.shiftKey) redo(); else undo();
   }
 }
-onMounted(() => document.addEventListener("keydown", onKey));
-onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
+onMounted(() => { document.addEventListener("keydown", beforeKey, true); document.addEventListener("keydown", onKey); });
+onBeforeUnmount(() => { document.removeEventListener("keydown", beforeKey, true); document.removeEventListener("keydown", onKey); });
 </script>
 
 <template>
@@ -116,8 +129,10 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
   </header>
   <FeedbackPanel v-if="screen.feedback?.available" :key="`card-${screen.id}`" :screen="screen" mode="card" />
   <div class="body" id="body">
-    <LayoutView v-if="state.tab === 'layout'" />
-    <SettingsTab v-else />
+    <div class="work">
+      <LayoutView v-if="state.tab === 'layout'" />
+      <SettingsTab v-else />
+    </div>
     <Drawer />
   </div>
 </template>

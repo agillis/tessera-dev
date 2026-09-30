@@ -1,13 +1,19 @@
 <script setup lang="ts">
-// New screen: profile, Wi-Fi, and the first flash in one go.
+// New screen (app 0.4.32): three steps in one form, the way a setup assistant asks: which screen, what it is called and
+// how it hangs, and how it gets its firmware. Then one page follows the installation in the steps a person knows,
+// with the screen drawn filling in as it goes and ESPHome's own log a click away. The steps only show and hide; the
+// form, what it sends and when, is the one it always was.
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { getJson, send } from "../api";
-import { t } from "../i18n";
-import { copyText, createVirtualScreen, go, openIntegrations, toast } from "../store";
+import { t, te } from "../i18n";
+import { copyText, createVirtualScreen, go, openIntegrations, refresh, state, toast } from "../store";
 import { customPreview, previewProfiles } from "../model/preview";
 import { boardAbilities, boardDetail, boardList, boardTitle } from "../model/boards";
 import type { BoardChoice, BoardOrientation, Orientation } from "../types";
 import BrowserFlash from "./BrowserFlash.vue";
+import DeviceArt from "./DeviceArt.vue";
+import Icon from "./ui/Icon.vue";
+import { installProgress } from "../model/install-progress";
 import { flashSupport } from "../flasher/logic";
 import { useBrowserFlash } from "../flasher/session";
 
@@ -26,7 +32,6 @@ const installer = reactive({
 // Download stays for a browser that can't.
 const flash = useBrowserFlash();
 const support = flashSupport();
-const nodeVisible = ref(false);
 const data = ref<any>(null);
 const job = ref<any>(null);
 const logs = ref<string[]>([]);
@@ -66,6 +71,10 @@ const glassStyle = (board: BoardChoice) => {
 const abilities = computed(() => (chosen.value ? boardAbilities(chosen.value) : []));
 // The choices besides the orientation (a CYD's display controller): each starts at the board file's own value.
 const choices = computed(() => Object.entries(chosen.value?.choices || {}).map(([key, options]) => ({ key, options })));
+// A value says what it is (the display controller's model); a number of rows is said in words, and its first value is
+// the usual size rather than what most boards have (app 0.4.31).
+const optionName = (key: string, option: string) => te(`editor.installer.choice_option.${key}.${option}`) ? t(`editor.installer.choice_option.${key}.${option}`) : option;
+const firstNote = (key: string) => t(te(`editor.installer.choice_first.${key}`) ? `editor.installer.choice_first.${key}` : "editor.installer.choice_usual");
 // The first board until someone picks one, once the add-on has said which there are.
 watch(boardRows, (rows) => { if (!boards.value[form.board] && rows.length) form.board = rows[0].key; }, { immediate: true });
 // Which way the chosen board may hang, with the canvas and the cells of a page for each. Square glass hangs one way
@@ -166,8 +175,8 @@ function showProgress(current: any, lines: string[]) {
 const flashing = computed(() => installer.browser && job.value?.state === "success" && flash.state.phase !== "done" && flash.state.phase !== "failed");
 const running = computed(() => job.value?.state === "running" || flashing.value);
 const ok = computed(() => installer.view === "done" || (job.value?.state === "success" && (!installer.browser || flash.state.phase === "done")));
-// Stopped from here or by an app restart (app 0.4.28): not a failure, so it doesn't get the words or the mark of one.
-// Retry builds it again; the profile was written before the build began and is still there.
+// Stopped from here or by an app restart: not a failure, so it doesn't get the words or the badge of one. Retry
+// builds the profile again, which was written before the build began and is still there.
 const stopped = computed(() => installer.view !== "done" && job.value?.state === "interrupted");
 // Only the add-on's own job can be stopped from here. While this browser writes the image over Web Serial there is
 // nothing on the other side to stop.
@@ -248,6 +257,7 @@ async function submit(event: Event) {
     const picked = Object.fromEntries(choices.value.filter((choice) => form.choices[choice.key] !== choice.options[0]).map((choice) => [choice.key, form.choices[choice.key]]));
     if (Object.keys(picked).length) payload.choices = picked;
     if (askWifi.value) { if (wifiMissing.value.includes("wifi_ssid")) payload.wifi_ssid = form.wifi_ssid; if (wifiMissing.value.includes("wifi_password")) payload.wifi_password = form.wifi_password; }
+    if (wifiOther.value) await saveWifi();
     const result = await send("firmware/profiles", "POST", payload);
     Object.assign(installer, { file: result.file, apiKey: result.api_key, friendly: form.friendly_name.trim(), calibrate: !!chosen.value?.calibrate, target: form.target,
       browser, chip: chosen.value?.chip || null });
@@ -288,160 +298,387 @@ function reset() {
   flash.cancel();
   Object.assign(installer, { view: "setup", file: null, apiKey: null, nodeEdited: false, jobState: null, target: "", picked: false, action: null, browser: false, chip: null });
   Object.assign(form, { board: boardRows.value[0]?.key || "", orientation: "landscape", choices: {}, friendly_name: "", name: "", wifi_ssid: "", wifi_password: "", target: "" });
-  nodeVisible.value = false; job.value = null; logs.value = []; status.value = ""; note.value = ""; logOpen.value = false;
+  step.value = 1; query.value = ""; size.value = ""; wifiOther.value = false; doneAt.value = 0;
+  job.value = null; logs.value = []; status.value = ""; note.value = ""; logOpen.value = false;
   installerRefresh();
 }
 function close() {
   if (installer.view === "progress" && installer.jobState !== "running") installer.view = "done";
   go("");
 }
-onMounted(() => { installerRefresh(); poll = window.setInterval(installerRefresh, 3000); });
-onBeforeUnmount(() => { clearInterval(poll); flash.cancel(); });
+// ---- The steps of the setup ----
+const step = ref<1 | 2 | 3>(1);
+const stepTwo = ref<HTMLElement | null>(null);
+const query = ref("");
+const size = ref<"" | "small" | "medium" | "large">("");
+const SIZES = ["", "small", "medium", "large"] as const;
+const sizeOf = (inch: number) => inch < 4 ? "small" : inch < 6 ? "medium" : "large";
+// Search reads what someone knows of their screen: the brand, the size ("4", "4.3 inch"), what is printed on it, the chip.
+const shownBoards = computed(() => {
+  const words = query.value.trim().toLocaleLowerCase().replace(/[",]/g, ".").split(/\s+/).filter(Boolean);
+  return boardRows.value.filter((board) => (!size.value || sizeOf(board.inch) === size.value) && words.every((word) =>
+    `${boardTitle(board)} ${board.name} ${board.model} ${board.inch} ${board.touch} ${board.chip || ""} ${board.key}`.toLocaleLowerCase().includes(word.replace(/inch$/, ""))));
+});
+// One card per screen someone would recognise (app 0.4.32): the boards of one brand and size are the same screen in
+// other models (a CYD with another display controller, a V2 or V3 of a Guition), chosen in the next step by what is
+// printed on it. The list keeps growing; this keeps the gallery one card per screen.
+type Row = (typeof boardRows.value)[number];
+const familyKey = (board: { name: string; inch: number }) => `${board.name}|${board.inch}`;
+const families = computed(() => {
+  const found = new Map<string, Row[]>();
+  for (const board of shownBoards.value) found.set(familyKey(board), [...(found.get(familyKey(board)) || []), board]);
+  return [...found.values()];
+});
+const siblings = computed(() => chosen.value ? boardRows.value.filter((board) => familyKey(board) === familyKey(chosen.value!)) : []);
+function pickFamily(list: Row[]) { if (!list.some((board) => board.key === form.board)) form.board = list[0].key; }
+// A family is as far along as its furthest model: stable if one is, else new, else experimental.
+const familyStatus = (list: Row[]) => list.some((b) => b.status === "stable") ? "stable" : list.some((b) => b.status === "new") ? "new" : "experimental";
+// One model says what is printed on it; several say how many there are, and the next step asks which.
+const familyLines = (list: Row[]) => list.length > 1 ? [boardDetail(list[0])[1], t("editor.installer.models", list.length)] : boardDetail(list[0]);
+const sizeCount = (key: string) => new Set(boardRows.value.filter((board) => !key || sizeOf(board.inch) === key).map(familyKey)).size;
+function pickBoard(key: string) { form.board = key; }
+// Step two asks nothing it can't check on the spot: Next goes on only when its fields are filled in as they must be.
+function next() {
+  if (step.value === 1) { if (form.board || mode.value === "virtual") step.value = 2; return; }
+  if (step.value === 2) {
+    const fields = [...(stepTwo.value?.querySelectorAll<HTMLInputElement>("input, select") || [])];
+    const wrong = fields.find((field) => !field.checkValidity());
+    if (wrong) { wrong.reportValidity(); return; }
+    if (nodeTaken.value || nameTaken.value) return;
+    step.value = 3;
+  }
+}
+// Each step, and the installation after them, starts at its top.
+const root = ref<HTMLElement | null>(null);
+watch(() => [step.value, installer.view], () => root.value?.scrollTo?.({ top: 0 }));
+function back() { if (step.value > 1) step.value = (step.value - 1) as 1 | 2; }
+function tryVirtual() { mode.value = "virtual"; step.value = 2; }
+function realScreen() { mode.value = "physical"; step.value = 1; }
+// The drawing of the chosen screen, which way it hangs and with the name typed so far.
+const art = computed(() => {
+  const board = chosen.value;
+  if (mode.value === "virtual") return { width: previewForm.width, height: previewForm.height, columns: previewForm.columns, rows: previewForm.rows };
+  const side = board?.orientations[form.orientation] || board?.orientations.landscape;
+  // A board choice that sets the grid (the 4-inch Guition's number of rows, app 0.4.31) draws the grid it gives.
+  const chosenNumber = (key: string) => Number(form.choices[key]) || 0;
+  return { width: side?.width || board?.width || 480, height: side?.height || board?.height || 480,
+    columns: chosenNumber("GRID_COLS") || side?.columns || 2, rows: chosenNumber("GRID_ROWS") || side?.rows || 3 };
+});
+const boardArt = (board: BoardChoice) => {
+  const side = board.orientations.landscape;
+  return { width: side?.width || board.width, height: side?.height || board.height, columns: side?.columns || 2, rows: side?.rows || 3 };
+};
+// The ways in, as cards: USB on the Home Assistant machine first (each port found, or the one to plug into), then this
+// computer, a file, or nothing yet.
+const ways = computed(() => [
+  ...(ports.value.length ? ports.value : ["usb"]).map((port) => ({ value: port, icon: "flash" as const, title: t("editor.installer.ways.ha_title"),
+    detail: port === "usb" ? t("editor.installer.ways.ha_waiting") : t("editor.installer.ways.ha_found", { port: portLabel(port).replace(/^USB · /, "") }), live: port !== "usb" })),
+  { value: "browser", icon: "monitor-dashboard" as const, title: t("editor.installer.ways.browser_title"), detail: t("editor.installer.ways.browser_detail"), live: false },
+  { value: "download", icon: "tray-arrow-down" as const, title: t("editor.installer.ways.download_title"), detail: t("editor.installer.ways.download_detail"), live: false },
+  { value: "", icon: "clock-outline" as const, title: t("editor.installer.ways.later_title"), detail: t("editor.installer.ways.later_detail"), live: false },
+]);
+function pickWay(value: string) { form.target = value; installer.picked = true; installerRefresh(); }
+
+// ---- Another Wi-Fi network (app 0.4.32) ----
+// Ready Wi-Fi can still be the wrong one: "Another network" asks for both lines again, written before the build.
+const wifiOther = ref(false);
+async function saveWifi() {
+  await send("firmware/wifi", "PUT", { wifi_ssid: form.wifi_ssid, wifi_password: form.wifi_password });
+  form.wifi_password = "";
+}
+
+// ---- After the firmware is on it: did the screen reach the Wi-Fi? (app 0.4.32) ----
+// Home Assistant finds a screen on the network before anyone pairs it (the inventory's `seen`), so the page can say it
+// arrived, or after three minutes without it, that the Wi-Fi is the likely cause and what fixes it.
+const ARRIVE_MS = 3 * 60 * 1000;
+const doneAt = ref(0);
+const nodeName = computed(() => (installer.file || "").replace(/\.yaml$/, ""));
+const waitsForWifi = computed(() => ok.value && !download.value && installer.view === "progress");
+watch(waitsForWifi, (waits) => { if (waits && !doneAt.value) doneAt.value = Date.now(); });
+const arrival = computed(() => {
+  if (!waitsForWifi.value) return null;
+  if (state.inventory.screens.some((screen: any) => screen.node === nodeName.value)) return "paired";
+  if (state.inventory.pending?.some((entry) => entry.file === installer.file && entry.seen)) return "seen";
+  return now.value - doneAt.value > ARRIVE_MS ? "missing" : "waiting";
+});
+let arrivalPoll = 0;
+watch(arrival, (value) => {
+  clearInterval(arrivalPoll);
+  if (value && value !== "paired") arrivalPoll = window.setInterval(() => refresh(false), 5000);
+}, { immediate: true });
+const fixing = ref(false);
+// The right network, then the same installation again: over the same cable, or from this computer after its click.
+async function fixWifi(event: Event) {
+  if (!(event.target as HTMLFormElement).reportValidity()) return;
+  fixing.value = true;
+  try {
+    await saveWifi();
+    doneAt.value = 0;
+    await retry();
+  } catch (err: any) { toast(err.message); }
+  finally { fixing.value = false; }
+}
+
+// ---- The installation, step by step ----
+const progress = computed(() => installProgress(job.value, logs.value, { browser: installer.browser, mode: download.value ? "download" : "install", flash: flash.state }));
+const now = ref(Date.now());
+let clock = 0;
+const elapsed = computed(() => {
+  const started = Number(job.value?.started) * 1000;
+  if (!started) return "";
+  const end = job.value?.finished ? Number(job.value.finished) * 1000 : now.value;
+  const seconds = Math.max(0, Math.round((end - started) / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+});
+const artState = computed(() => running.value ? "working" : ok.value ? "done"
+  // A stopped build gets no badge at all: nothing went wrong and nothing was written.
+  : stopped.value ? "idle" : installer.view === "progress" ? "failed" : "idle");
+const stepLabel = (key: string) => t(key === "done" && download.value ? "editor.installer.steps_done.download" : `editor.installer.steps_done.${key}`);
+const logBox = ref<HTMLElement | null>(null);
+// The log follows its last line while someone reads the bottom, and stays put once they scroll up.
+watch(() => logs.value.length, () => {
+  const box = logBox.value;
+  if (!box || box.scrollHeight - box.scrollTop - box.clientHeight > 40) return;
+  requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; });
+});
+onMounted(() => { installerRefresh(); poll = window.setInterval(installerRefresh, 3000); clock = window.setInterval(() => { now.value = Date.now(); }, 1000); });
+onBeforeUnmount(() => { clearInterval(poll); clearInterval(clock); clearInterval(arrivalPoll); flash.cancel(); });
 </script>
 
 <template>
-  <div class="panel" id="installer">
-    <div class="panel-head">
-      <div class="tx">
-        <span class="eyebrow">{{ t("editor.nav.new_screen") }}</span>
-        <h1 id="install-title">{{ installer.view === "setup" ? t("editor.installer.title.setup") : title }}</h1>
-        <p v-if="installer.view === 'setup'">{{ t("editor.installer.intro") }}</p>
-      </div>
-      <button type="button" class="btn quiet" id="close-install" :aria-label="t('editor.common.close')" :disabled="flash.busy()" @click="close">{{ t("editor.common.back") }}</button>
-    </div>
-    <form v-if="installer.view === 'setup'" id="install-form" class="card" @submit.prevent="submit">
-      <div class="seg install-mode" role="group" :aria-label="t('editor.preview.type')">
-        <button type="button" :aria-pressed="mode === 'physical'" @click="mode = 'physical'">{{ t("editor.preview.physical") }}</button>
-        <button type="button" :aria-pressed="mode === 'virtual'" @click="mode = 'virtual'">{{ t("editor.preview.virtual") }}</button>
-      </div>
-      <p v-if="mode === 'virtual'" class="hint">{{ t("editor.preview.intro") }}</p>
-      <template v-if="mode === 'physical'">
-      <fieldset>
-        <legend>{{ t("editor.installer.board") }}</legend>
-        <div class="boards">
-          <label v-for="board in boardRows" :key="board.key" class="board">
-            <input type="radio" name="board" :value="board.key" v-model="form.board" />
-            <span class="board-glass" aria-hidden="true"><span class="orient-glass" :style="glassStyle(board)"><span class="orient-bar"></span><span class="orient-cells"><i v-for="cell in (board.orientations.landscape?.columns || 2) * (board.orientations.landscape?.rows || 3)" :key="cell"></i></span></span></span>
-            <span class="board-words"><b>{{ boardTitle(board) }}</b><small v-for="line in boardDetail(board)" :key="line">{{ line }}</small><em v-if="board.status !== 'stable'">{{ t(`editor.installer.status.${board.status}`) }}</em></span>
-          </label>
-        </div>
-        <p v-if="chosen && chosen.status !== 'stable'" class="hint" id="board-status">{{ t(`editor.installer.status_hint.${chosen.status}`) }}</p>
-        <ul v-if="abilities.length" class="abilities" id="board-abilities">
-          <li v-for="ability in abilities" :key="ability.key" :class="{ off: !ability.on }">{{ ability.text }}</li>
-        </ul>
-      </fieldset>
-      <!-- Which way the screen hangs: the cells of a page differ per way, so each option draws the grid it gives.
-           Only glass that is not square is asked about, and only once the add-on has said what the board can do. -->
-      <fieldset v-if="orientations.length" id="orientation-fields">
-        <legend>{{ t("editor.installer.orientation") }}</legend>
-        <div class="orients">
-          <label v-for="side in orientations" :key="side.key" class="orient">
-            <input type="radio" name="orientation" :value="side.key" v-model="form.orientation" />
-            <span class="orient-glass" aria-hidden="true"
-                  :style="{ '--glass-aspect': `${side.width} / ${side.height}`, '--glass-columns': side.columns, '--glass-rows': side.rows }">
-              <span class="orient-bar"></span>
-              <span class="orient-cells"><i v-for="cell in side.columns * side.rows" :key="cell"></i></span>
-            </span>
-            <span class="orient-words">
-              <b>{{ t(`editor.installer.orientation_${side.key}`) }}</b>
-              <small>{{ t("editor.installer.orientation_tiles", side.columns * side.rows) }}</small>
-            </span>
-          </label>
-        </div>
-        <small id="orientation-hint">{{ t("editor.installer.orientation_hint") }}</small>
-      </fieldset>
-      <!-- The board's other choices, one per part that differs between boards sold under its name. -->
-      <fieldset v-for="choice in choices" :key="choice.key" class="choice-fields" :id="`choice-${choice.key}`">
-        <legend>{{ t(`editor.installer.choice.${choice.key}`) }}</legend>
-        <div class="choice-options">
-          <label v-for="(option, index) in choice.options" :key="option" class="choice">
-            <input type="radio" :name="`choice-${choice.key}`" :value="option" v-model="form.choices[choice.key]" />
-            <span><b>{{ option }}</b><small v-if="index === 0">{{ t("editor.installer.choice_usual") }}</small></span>
-          </label>
-        </div>
-        <small>{{ t(`editor.installer.choice_hint.${choice.key}`) }}</small>
-      </fieldset>
-      <div class="field">
-        <label class="f-label" for="friendly_name">{{ t("editor.installer.name") }}</label>
-        <input id="friendly_name" name="friendly_name" v-model="form.friendly_name" required maxlength="60" :placeholder="t('editor.installer.name_placeholder')" autocomplete="off" />
-        <small class="node-line">{{ t("editor.installer.device_name") }} <code id="node-preview">{{ nodePreview }}</code><button type="button" class="btn link mini" id="edit-node" @click="installer.nodeEdited = true; nodeVisible = true">{{ t("editor.installer.customize") }}</button></small>
-        <small>{{ t("editor.installer.name_hint") }}</small>
-        <!-- One line, not two: a name that is taken usually makes a device name that is taken as well, and the
-             name is what someone changes. The device name speaks for itself only when it is the one that clashes. -->
-        <small v-if="nameTaken" id="name-taken" class="warn">{{ t("editor.installer.name_taken") }}</small>
-        <small v-else-if="nodeTaken" id="node-taken" class="warn">{{ t("editor.installer.node_taken") }}</small>
-      </div>
-      <div v-if="nodeVisible" class="field" id="node-label">
-        <label class="f-label" for="node-name">{{ t("editor.installer.device_name") }}</label>
-        <input id="node-name" name="name" v-model="form.name" pattern="[a-z][a-z0-9\-]{0,29}" maxlength="30" autocomplete="off" @input="installer.nodeEdited = true" />
-        <small>{{ t("editor.installer.device_name_hint") }}</small>
-      </div>
-      <fieldset v-if="askWifi" id="wifi-fields" class="wifi">
-        <legend>{{ t("editor.installer.wifi.title") }}</legend>
-        <p class="hint" id="wifi-status">{{ wifiStatus }}</p>
-        <div v-if="wifiMissing.includes('wifi_ssid')" class="field" id="wifi-ssid-label"><label class="f-label" for="wifi_ssid">{{ t("editor.installer.wifi.ssid") }}</label><input id="wifi_ssid" name="wifi_ssid" v-model="form.wifi_ssid" autocomplete="off" /></div>
-        <div v-if="wifiMissing.includes('wifi_password')" class="field" id="wifi-password-label"><label class="f-label" for="wifi_password">{{ t("editor.installer.wifi.password") }}</label><input id="wifi_password" name="wifi_password" type="password" v-model="form.wifi_password" autocomplete="new-password" /></div>
-      </fieldset>
-      <div class="field">
-        <label class="f-label" for="install-target">{{ t("editor.installer.install_via") }}</label>
-        <select id="install-target" name="target" v-model="form.target" @change="installer.picked = true; installerRefresh()">
-          <optgroup :label="t('editor.webflash.group_ha')">
-            <option v-if="!ports.length" value="usb">{{ t("editor.firmware.no_board") }}</option>
-            <option v-for="p in ports" :key="p" :value="p">{{ portLabel(p) }}</option>
-          </optgroup>
-          <optgroup :label="t('editor.webflash.group_here')">
-            <option value="browser">{{ t("editor.webflash.target") }}</option>
-            <option value="download">{{ t("editor.firmware.download_target") }}</option>
-          </optgroup>
-          <option value="">{{ t("editor.installer.later") }}</option>
-        </select>
-        <small id="target-hint">{{ targetHint }}</small>
-      </div>
-      <BrowserFlash v-if="form.target === 'browser'" :state="flash.state" />
-      <p v-if="note" class="hint" id="install-note">{{ note }}</p>
-      <div class="actions">
-        <button type="submit" class="btn primary" id="install-go" :disabled="goDisabled">{{ goLabel }}</button>
-        <span id="install-status" class="status-line error" role="status">{{ status }}</span>
-      </div>
-      </template>
-      <template v-else>
-        <div class="field">
-          <label class="f-label" for="virtual-profile">{{ t("editor.preview.profile") }}</label>
-          <select id="virtual-profile" v-model="previewForm.profile">
-            <option v-for="profile in previews" :key="profile.key" :value="profile.key">
-              {{ profile.name }} · {{ profile.shape.width }} × {{ profile.shape.height }} · {{ t(`editor.installer.orientation_${profile.orientation}`) }}
-            </option>
-          </select>
-          <small v-if="previewForm.profile === customPreview.key">{{ t("editor.preview.design_only") }}</small>
-        </div>
-        <details>
-          <summary>{{ t("editor.preview.override") }}</summary>
-          <div v-for="axis in (['width', 'height', 'columns', 'rows'] as const)" :key="axis" class="field">
-            <label class="f-label" :for="`virtual-${axis}`">{{ t(`editor.preview.${axis}`) }}</label>
-            <input :id="`virtual-${axis}`" type="number" v-model.number="previewForm[axis]" required step="1"
-              :min="axis === 'width' || axis === 'height' ? 160 : 1" :max="axis === 'width' || axis === 'height' ? 2560 : 8" />
+  <div ref="root" class="setup" id="installer" :class="installer.view === 'setup' ? `step-${step}` : 'following'">
+    <!-- The bar across the top: where in the setup you are, and the way out. -->
+    <header class="setup-head">
+      <span class="setup-brand">{{ t("editor.nav.new_screen") }}</span>
+      <ol v-if="installer.view === 'setup' && mode === 'physical'" class="setup-steps" :aria-label="t('editor.nav.new_screen')">
+        <li v-for="(key, index) in (['board', 'setup', 'install'] as const)" :key="key" :class="{ now: step === index + 1, past: step > index + 1 }">
+          <button type="button" :disabled="step <= index + 1" @click="step = (index + 1) as 1 | 2 | 3"><i>{{ step > index + 1 ? "✓" : index + 1 }}</i>{{ t(`editor.installer.steps.${key}`) }}</button>
+        </li>
+      </ol>
+      <span v-else class="setup-steps-spacer"></span>
+      <button type="button" class="icon-btn" id="close-install" :aria-label="t('editor.common.close')" :title="t('editor.common.close')" :disabled="flash.busy()" @click="close"><Icon name="close" /></button>
+    </header>
+
+    <form v-if="installer.view === 'setup'" id="install-form" class="setup-body" novalidate @submit.prevent="submit">
+      <!-- ① Which screen: search, sizes, and every board drawn as it hangs. -->
+      <section v-show="step === 1 && mode === 'physical'" class="setup-step pick">
+        <h1 id="install-title">{{ t("editor.installer.pick_title") }}</h1>
+        <p class="setup-lead">{{ t("editor.installer.pick_intro") }}</p>
+        <div class="pick-tools">
+          <label class="pick-search"><Icon name="magnify" /><input id="board-search" v-model="query" type="search" :placeholder="t('editor.installer.search')" autocomplete="off" spellcheck="false" /></label>
+          <div class="seg pick-sizes" role="group" :aria-label="t('editor.installer.board')">
+            <button v-for="key in SIZES" :key="key" type="button" :aria-pressed="size === key" @click="size = key">{{ t(`editor.installer.sizes.${key || "all"}`) }} <small>{{ sizeCount(key) }}</small></button>
           </div>
-        </details>
-        <div class="field">
-          <label class="f-label" for="virtual-name">{{ t("editor.preview.name") }}</label>
-          <input id="virtual-name" v-model="form.friendly_name" required maxlength="60" :placeholder="t('editor.preview.name_placeholder')" autocomplete="off" />
         </div>
-        <div class="actions">
-          <button type="submit" class="btn primary" id="virtual-create">{{ t("editor.preview.create") }}</button>
-          <span class="status-line error" role="status">{{ status }}</span>
+        <fieldset class="boards">
+          <legend class="sr-only">{{ t("editor.installer.board") }}</legend>
+          <label v-for="family in families" :key="family[0].key" class="board" :class="{ chosen: family.some((b) => b.key === form.board) }" @dblclick="pickFamily(family); next()">
+            <input type="radio" name="board" :value="family[0].key" :checked="family.some((b) => b.key === form.board)" @change="pickFamily(family)" />
+            <span class="board-art" aria-hidden="true" :style="{ '--inch': family[0].inch }"><DeviceArt v-bind="boardArt(family[0])" /></span>
+            <span class="board-words"><b>{{ boardTitle(family[0]) }}</b><small v-for="line in familyLines(family)" :key="line">{{ line }}</small></span>
+            <em v-if="familyStatus(family) !== 'stable'" class="board-badge" :class="familyStatus(family)">{{ t(`editor.installer.status.${familyStatus(family)}`) }}</em>
+            <span class="board-check" aria-hidden="true"><Icon name="check" /></span>
+          </label>
+          <p v-if="!shownBoards.length" class="pick-none">{{ t("editor.installer.none_found", { query: query.trim() }) }}</p>
+        </fieldset>
+        <button type="button" class="btn link try-virtual" id="try-virtual" @click="tryVirtual">{{ t("editor.installer.try_virtual") }}</button>
+      </section>
+
+      <!-- ② What it is called and how it hangs, beside the screen itself filling in its name. -->
+      <section v-show="step === 2" ref="stepTwo" class="setup-step make">
+        <div class="make-art" aria-hidden="true">
+          <div class="make-frame" :style="{ '--art-ratio': (art.width + 14 * art.height / 100) / (art.height + 14 * art.height / 100) }">
+            <DeviceArt v-bind="art" :name="form.friendly_name.trim()" />
+          </div>
+          <p v-if="mode === 'physical' && chosen" class="make-caption"><b>{{ boardTitle(chosen) }}</b> · {{ chosen.model }}</p>
         </div>
-      </template>
+        <div class="make-fields">
+          <h1>{{ t(mode === "virtual" ? "editor.preview.virtual" : "editor.installer.setup_title") }}</h1>
+          <p v-if="mode === 'virtual'" class="setup-lead">{{ t("editor.preview.intro") }}</p>
+          <template v-if="mode === 'physical'">
+          <p v-if="chosen && chosen.status !== 'stable'" class="make-note" id="board-status"><Icon name="information-outline" />{{ t(`editor.installer.status_hint.${chosen.status}`) }}</p>
+          <div class="field">
+            <label class="f-label" for="friendly_name">{{ t("editor.installer.name") }}</label>
+            <input id="friendly_name" name="friendly_name" v-model="form.friendly_name" required maxlength="60" :placeholder="t('editor.installer.name_placeholder')" autocomplete="off" />
+            <small>{{ t("editor.installer.name_hint") }}</small>
+            <!-- One line, not two: a name that is taken usually makes a device name that is taken as well, and the
+                 name is what someone changes. The device name speaks for itself only when it is the one that clashes. -->
+            <small v-if="nameTaken" id="name-taken" class="warn">{{ t("editor.installer.name_taken") }}</small>
+            <small v-else-if="nodeTaken" id="node-taken" class="warn">{{ t("editor.installer.node_taken") }}</small>
+          </div>
+          <!-- Which model of this screen: what is printed on the board tells them apart. -->
+          <fieldset v-if="siblings.length > 1" id="board-model" class="choice-fields">
+            <legend class="f-label">{{ t("editor.installer.model") }}</legend>
+            <div class="model-options">
+              <label v-for="board in siblings" :key="board.key" class="choice model">
+                <input type="radio" name="model" :value="board.key" v-model="form.board" />
+                <span><b>{{ board.model }}</b><small>{{ boardDetail(board)[1] }}</small>
+                  <em v-if="board.status !== 'stable'" class="board-badge inline" :class="board.status">{{ t(`editor.installer.status.${board.status}`) }}</em></span>
+              </label>
+            </div>
+            <small>{{ t("editor.installer.model_hint") }}</small>
+          </fieldset>
+          <!-- Which way the screen hangs: the cells of a page differ per way, so each option draws the grid it gives.
+               Only glass that is not square is asked about, and only once the add-on has said what the board can do. -->
+          <fieldset v-if="orientations.length" id="orientation-fields">
+            <legend class="f-label">{{ t("editor.installer.orientation") }}</legend>
+            <div class="orients">
+              <label v-for="side in orientations" :key="side.key" class="orient">
+                <input type="radio" name="orientation" :value="side.key" v-model="form.orientation" />
+                <span class="orient-glass" aria-hidden="true"
+                      :style="{ '--glass-aspect': `${side.width} / ${side.height}`, '--glass-columns': side.columns, '--glass-rows': side.rows }">
+                  <span class="orient-bar"></span>
+                  <span class="orient-cells"><i v-for="cell in side.columns * side.rows" :key="cell"></i></span>
+                </span>
+                <span class="orient-words">
+                  <b>{{ t(`editor.installer.orientation_${side.key}`) }}</b>
+                  <small>{{ t("editor.installer.orientation_tiles", side.columns * side.rows) }}</small>
+                </span>
+              </label>
+            </div>
+            <small id="orientation-hint">{{ t("editor.installer.orientation_hint") }}</small>
+          </fieldset>
+          <!-- The board's other choices, one per part that differs between boards sold under its name. -->
+          <fieldset v-for="choice in choices" :key="choice.key" class="choice-fields" :id="`choice-${choice.key}`">
+            <legend class="f-label">{{ t(`editor.installer.choice.${choice.key}`) }}</legend>
+            <div class="choice-options">
+              <label v-for="(option, index) in choice.options" :key="option" class="choice">
+                <input type="radio" :name="`choice-${choice.key}`" :value="option" v-model="form.choices[choice.key]" />
+                <span><b>{{ optionName(choice.key, option) }}</b><small v-if="index === 0">{{ firstNote(choice.key) }}</small></span>
+              </label>
+            </div>
+            <small>{{ t(`editor.installer.choice_hint.${choice.key}`) }}</small>
+          </fieldset>
+          <!-- Wi-Fi, always in sight: ready from ESPHome's secrets, or asked here once for every screen after it. -->
+          <fieldset id="wifi-section" class="wifi">
+            <legend class="f-label">{{ t("editor.installer.wifi.title") }}</legend>
+            <div v-if="askWifi" id="wifi-fields" class="wifi-fields">
+              <p class="hint" id="wifi-status">{{ wifiStatus }}</p>
+              <div v-if="wifiMissing.includes('wifi_ssid')" class="field" id="wifi-ssid-label"><label class="f-label" for="wifi_ssid">{{ t("editor.installer.wifi.ssid") }}</label><input id="wifi_ssid" name="wifi_ssid" v-model="form.wifi_ssid" required autocomplete="off" /></div>
+              <div v-if="wifiMissing.includes('wifi_password')" class="field" id="wifi-password-label"><label class="f-label" for="wifi_password">{{ t("editor.installer.wifi.password") }}</label><input id="wifi_password" name="wifi_password" type="password" v-model="form.wifi_password" autocomplete="new-password" /></div>
+            </div>
+            <template v-else>
+              <p class="wifi-state" :class="wifi?.state"><Icon :name="wifi?.state === 'invalid' ? 'alert-circle-outline' : 'check-circle'" />
+                <span>{{ wifiNote || t("editor.installer.wifi.ready") }}</span>
+                <button v-if="wifi?.state === 'ready'" type="button" class="btn link mini" id="wifi-other" @click="wifiOther = !wifiOther">{{ t(wifiOther ? "editor.common.cancel" : "editor.installer.wifi.other") }}</button></p>
+              <div v-if="wifiOther" id="wifi-fields" class="wifi-fields">
+                <p class="hint">{{ t("editor.installer.wifi.other_note") }}</p>
+                <div class="field"><label class="f-label" for="wifi_ssid">{{ t("editor.installer.wifi.ssid") }}</label><input id="wifi_ssid" name="wifi_ssid" v-model="form.wifi_ssid" required autocomplete="off" /></div>
+                <div class="field"><label class="f-label" for="wifi_password">{{ t("editor.installer.wifi.password") }}</label><input id="wifi_password" name="wifi_password" type="password" v-model="form.wifi_password" autocomplete="new-password" /></div>
+              </div>
+            </template>
+          </fieldset>
+          <!-- For whoever wants it, in sight under its own heading: the device name and what the board can and cannot do. -->
+          <section class="advanced">
+            <h2 class="f-label">{{ t("editor.installer.advanced") }}</h2>
+            <div class="field" id="node-label">
+              <label class="f-label" for="node-name">{{ t("editor.installer.device_name") }}</label>
+              <input id="node-name" name="name" v-model="form.name" pattern="[a-z][a-z0-9\-]{0,29}" maxlength="30" autocomplete="off" @input="installer.nodeEdited = true" />
+              <small>{{ t("editor.installer.device_name_hint") }} <code id="node-preview">{{ nodePreview }}</code></small>
+            </div>
+            <ul v-if="abilities.length" class="abilities" id="board-abilities">
+              <li v-for="ability in abilities" :key="ability.key" :class="{ off: !ability.on }">{{ ability.text }}</li>
+            </ul>
+          </section>
+          </template>
+          <template v-else>
+            <div class="field">
+              <label class="f-label" for="virtual-name">{{ t("editor.preview.name") }}</label>
+              <input id="virtual-name" v-model="form.friendly_name" required maxlength="60" :placeholder="t('editor.preview.name_placeholder')" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label class="f-label" for="virtual-profile">{{ t("editor.preview.profile") }}</label>
+              <select id="virtual-profile" v-model="previewForm.profile">
+                <option v-for="profile in previews" :key="profile.key" :value="profile.key">
+                  {{ profile.name }} · {{ profile.shape.width }} × {{ profile.shape.height }} · {{ t(`editor.installer.orientation_${profile.orientation}`) }}
+                </option>
+              </select>
+              <small v-if="previewForm.profile === customPreview.key">{{ t("editor.preview.design_only") }}</small>
+            </div>
+            <details class="advanced">
+              <summary>{{ t("editor.preview.override") }}</summary>
+              <div v-for="axis in (['width', 'height', 'columns', 'rows'] as const)" :key="axis" class="field">
+                <label class="f-label" :for="`virtual-${axis}`">{{ t(`editor.preview.${axis}`) }}</label>
+                <input :id="`virtual-${axis}`" type="number" v-model.number="previewForm[axis]" required step="1"
+                  :min="axis === 'width' || axis === 'height' ? 160 : 1" :max="axis === 'width' || axis === 'height' ? 2560 : 8" />
+              </div>
+            </details>
+          </template>
+        </div>
+      </section>
+
+      <!-- ③ How the firmware gets onto it. -->
+      <section v-show="step === 3 && mode === 'physical'" class="setup-step ways">
+        <h1>{{ t("editor.installer.install_title") }}</h1>
+        <fieldset id="install-target" class="way-list">
+          <legend class="sr-only">{{ t("editor.installer.install_via") }}</legend>
+          <label v-for="way in ways" :key="way.value" class="way" :class="{ chosen: form.target === way.value }">
+            <input type="radio" name="target" :value="way.value" :checked="form.target === way.value" @change="pickWay(way.value)" />
+            <span class="way-icon"><Icon :name="way.icon" /><i v-if="way.live" class="way-live"></i></span>
+            <span class="way-words"><b>{{ way.title }}</b><small>{{ way.detail }}</small></span>
+          </label>
+        </fieldset>
+        <p class="way-hint" id="target-hint">{{ targetHint }}</p>
+        <BrowserFlash v-if="form.target === 'browser'" :state="flash.state" />
+        <p v-if="note" class="hint" id="install-note">{{ note }}</p>
+      </section>
+
+      <footer class="setup-foot">
+        <button v-if="step > 1 && !(mode === 'virtual' && step === 2)" type="button" class="btn quiet" id="setup-back" @click="back">{{ t("editor.common.back") }}</button>
+        <button v-else-if="mode === 'virtual'" type="button" class="btn quiet" @click="realScreen">{{ t("editor.common.back") }}</button>
+        <span class="status-line error" id="install-status" role="status">{{ status }}</span>
+        <button v-if="mode === 'virtual'" type="submit" class="btn primary big" id="virtual-create">{{ t("editor.preview.create") }}</button>
+        <button v-else-if="step < 3" type="button" class="btn primary big" id="setup-next" :disabled="(step === 1 && !form.board) || (step === 2 && (nameTaken || nodeTaken))" @click="next">{{ t("editor.installer.next") }}<Icon name="arrow-right" /></button>
+        <button v-else type="submit" class="btn primary big" id="install-go" :disabled="goDisabled">{{ goLabel }}</button>
+      </footer>
     </form>
-    <div v-else id="install-progress" class="card">
-      <div class="progress-head">
-        <span v-if="running" class="spin" id="progress-spin"></span>
-        <span v-else class="outcome" :class="ok ? 'ok' : stopped ? 'stopped' : 'bad'" id="progress-mark">{{ ok ? "✓" : stopped ? "■" : "✕" }}</span>
-        <strong id="progress-title">{{ progressTitle }}</strong>
+
+    <!-- The installation: the screen filling in, the steps it goes through, and ESPHome's own log behind Details. -->
+    <div v-else id="install-progress" class="setup-body follow">
+      <div class="follow-art" aria-hidden="true">
+        <div class="make-frame" :style="{ '--art-ratio': (art.width + 14 * art.height / 100) / (art.height + 14 * art.height / 100) }">
+          <DeviceArt v-bind="art" :name="installer.friendly" :lit="installer.view === 'done' ? 0 : progress.percent / 100" :state="artState" />
+        </div>
       </div>
-      <p id="progress-detail">{{ progressDetail }}</p>
+      <div class="follow-words">
+        <h1 id="progress-title">{{ progressTitle }}</h1>
+        <p id="progress-detail">{{ progressDetail }}</p>
+      </div>
+      <!-- Did it reach the Wi-Fi: waiting, seen by Home Assistant, paired, or after three minutes the way to fix it. -->
+      <div v-if="arrival" class="arrive" :class="arrival" id="arrive" role="status">
+        <p v-if="arrival !== 'missing'" class="arrive-line">
+          <span v-if="arrival === 'waiting'" class="spin small"></span><Icon v-else name="check-circle" />
+          {{ t(`editor.installer.arrive.${arrival}`, { name: installer.friendly }) }}
+        </p>
+        <template v-else>
+          <h2><Icon name="alert-circle-outline" />{{ t("editor.installer.arrive.missing", { name: installer.friendly }) }}</h2>
+          <p>{{ t(chosen?.hotspot === false ? "editor.installer.arrive.no_hotspot" : "editor.installer.arrive.hotspot") }}</p>
+          <!-- The same line as under Another network: this Wi-Fi goes into secrets.yaml, which every screen builds with. -->
+          <p class="hint">{{ t("editor.installer.wifi.other_note") }}</p>
+          <form class="arrive-form" id="arrive-wifi" novalidate @submit.prevent="fixWifi">
+            <div class="field"><label class="f-label" for="fix_ssid">{{ t("editor.installer.wifi.ssid") }}</label><input id="fix_ssid" v-model="form.wifi_ssid" required autocomplete="off" /></div>
+            <div class="field"><label class="f-label" for="fix_password">{{ t("editor.installer.wifi.password") }}</label><input id="fix_password" type="password" v-model="form.wifi_password" autocomplete="new-password" /></div>
+            <button type="submit" class="btn primary" :disabled="fixing || flash.busy()"><span v-if="fixing" class="spin small"></span>{{ t("editor.installer.arrive.change") }}</button>
+          </form>
+        </template>
+      </div>
+      <!-- While it works, and when it stops short: the bar and the steps. Once it is on the screen, what comes next. -->
+      <template v-if="installer.view !== 'done' && !ok">
+        <div class="follow-bar" role="progressbar" :aria-valuenow="progress.percent" aria-valuemin="0" aria-valuemax="100" :class="{ bad: progress.failed }">
+          <i :style="{ width: `${progress.percent}%` }"></i>
+        </div>
+        <div class="follow-meta"><span>{{ progress.percent }} %</span><span v-if="elapsed">{{ t("editor.installer.elapsed", { time: elapsed }) }}</span></div>
+        <ol class="follow-steps" id="follow-steps">
+          <li v-for="item in progress.steps" :key="item.key" :class="item.state">
+            <span class="follow-dot"><span v-if="item.state === 'running'" class="spin small"></span><template v-else-if="item.state === 'done'">✓</template><template v-else-if="item.state === 'failed'">✕</template></span>
+            <span class="follow-name">{{ stepLabel(item.key) }}</span>
+            <span v-if="item.state === 'running' && item.percent !== null" class="follow-pct">{{ item.percent }} %</span>
+          </li>
+        </ol>
+      </template>
       <BrowserFlash v-if="installer.browser" :state="flash.state" />
-      <div v-if="ok && download && installer.view !== 'done'" id="install-download" class="card" style="background: var(--surface-2)">
-        <a class="btn primary" id="download-firmware" :href="image.href" :download="image.name">{{ t("editor.firmware.download_file", { name: image.name }) }}</a>
+      <div v-if="ok && download && installer.view !== 'done'" id="install-download" class="follow-card">
+        <a class="btn primary big" id="download-firmware" :href="image.href" :download="image.name"><Icon name="tray-arrow-down" />{{ t("editor.firmware.download_file", { name: image.name }) }}</a>
         <ol class="steps" id="download-steps">
           <li><i18n-t keypath="editor.installer.download_steps.plug" scope="global"><template #bold><b>{{ t("editor.installer.download_steps.plug_bold") }}</b></template></i18n-t></li>
           <li><i18n-t keypath="editor.installer.download_steps.open" scope="global">
@@ -454,7 +691,8 @@ onBeforeUnmount(() => { clearInterval(poll); flash.cancel(); });
         </ol>
         <small>{{ t("editor.installer.download_keep") }}</small>
       </div>
-      <div v-if="ok" id="install-result" class="field">
+      <div v-if="ok" id="install-result" class="follow-card">
+        <h2>{{ t("editor.installer.next_title") }}</h2>
         <ol class="steps" id="install-steps">
           <li><i18n-t keypath="editor.installer.pairing.ha" scope="global"><template #bold><b>{{ t("editor.installer.pairing.ha_bold") }}</b></template><template #name>{{ installer.friendly }}</template></i18n-t> <button type="button" class="btn quiet mini" @click="openIntegrations">{{ t("editor.common.open_integrations") }}</button></li>
           <li><i18n-t keypath="editor.installer.pairing.key" scope="global"><template #bold><b>{{ t("editor.installer.pairing.key_bold") }}</b></template></i18n-t></li>
@@ -469,16 +707,17 @@ onBeforeUnmount(() => { clearInterval(poll); flash.cancel(); });
           </div>
         </details>
       </div>
-      <details v-if="installer.view !== 'done'" id="install-log-wrap" class="log-wrap" :open="logOpen" @toggle="logOpen = ($event.target as HTMLDetailsElement).open">
-        <summary>{{ t("editor.installer.log") }}</summary>
-        <pre id="install-log" class="log">{{ logs.join("\n") }}</pre>
+      <details v-if="installer.view !== 'done'" id="install-log-wrap" class="follow-log" :open="logOpen" @toggle="logOpen = ($event.target as HTMLDetailsElement).open">
+        <summary><Icon name="code-braces" />{{ t(logOpen ? "editor.installer.hide_log" : "editor.installer.show_log") }}<button v-if="logOpen" type="button" class="btn quiet mini" @click.prevent="copyText(logs.join('\n'))">{{ t("editor.common.copy") }}</button></summary>
+        <pre id="install-log" ref="logBox" class="log">{{ logs.join("\n") }}</pre>
       </details>
-      <div class="actions">
+      <footer class="setup-foot">
         <button v-if="stoppable" type="button" class="btn quiet" id="install-stop" @click="stop()">{{ t("editor.firmware.stop") }}</button>
-        <button v-if="!running && !ok" type="button" class="btn primary" id="install-retry" @click="retry">{{ t("editor.installer.retry") }}</button>
         <button type="button" class="btn quiet" id="install-close" :disabled="flash.busy()" @click="reset">{{ ok ? t("editor.installer.another") : t("editor.installer.start_over") }}</button>
-        <button type="button" class="btn" :class="ok ? 'primary' : 'quiet'" :disabled="flash.busy()" @click="close">{{ ok ? t("editor.installer.done") : t("editor.common.close") }}</button>
-      </div>
+        <span class="status-line"></span>
+        <button v-if="!running && !ok" type="button" class="btn primary big" id="install-retry" @click="retry">{{ t("editor.installer.retry") }}</button>
+        <button v-else type="button" class="btn big" :class="ok ? 'primary' : 'quiet'" :disabled="flash.busy()" @click="close">{{ ok ? t("editor.installer.done") : t("editor.common.close") }}</button>
+      </footer>
     </div>
   </div>
 </template>

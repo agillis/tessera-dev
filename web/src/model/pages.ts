@@ -6,14 +6,18 @@ import { t } from "../i18n";
  * delivery boundaries translate to another format.
  */
 import type { ChildTile, HeaderItem, Layout, Page, PageGrid, PageLayout, PageTarget, PageTile, Tile, TileOptions } from "../types";
+import { spanOf, spanOffered } from "./sizes";
 
-import { dimensions, SIZES, type Size } from "./layout";
+import { dimensions, type Size } from "./layout";
+import { isSize } from "./sizes";
 import { validateCardOptions, validatePageShape } from './page-validation';
 import rules from './page-rules.json';
 
 export const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 export const instanceId = () => [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, "0")).join("");
-export const pageLimit = (grid: PageGrid) => Math.min(8, Math.floor(64 / (grid.columns * grid.rows)));
+// Eight pages on every grid (firmware 0.18.0+); a screen with older firmware has a lower limit, which the store checks
+// against the screen's own page_limit.
+export const pageLimit = (_grid: PageGrid) => 8;
 export const sameGrid = (a: PageGrid, b: PageGrid) => a.columns === b.columns && a.rows === b.rows;
 const byteLength = (value: string) => new TextEncoder().encode(value).length;
 
@@ -106,6 +110,12 @@ export function footprintSize(tile: PageTile, grid: PageGrid): Size {
   const { columns, rows } = tile.placement;
   const presentation = tile.appearance.presentation;
   if (presentation) {
+    // A span is its own rectangle, one the grid takes (app 0.4.32).
+    const span = spanOf(presentation);
+    if (span) {
+      if (span.columns !== columns || span.rows !== rows || !spanOffered(columns, rows, grid)) throw new Error(t("addon.errors.pages.footprint"));
+      return presentation;
+    }
     const sizes = { single: [1, 1], wide: [Math.min(2, grid.columns), 1], tall: [1, 2], square: [2, 2], full: [grid.columns, grid.rows] };
     const size = sizes[presentation];
     if (!size || size[0] !== columns || size[1] !== rows) throw new Error(t("addon.errors.pages.footprint"));
@@ -116,6 +126,7 @@ export function footprintSize(tile: PageTile, grid: PageGrid): Size {
   if (columns === grid.columns && rows === grid.rows) return "full";
   if (columns === 1 && rows === 2) return "tall";
   if (columns === 2 && rows === 2) return "square";
+  if (spanOffered(columns, rows, grid)) return `${columns}x${rows}` as Size;
   throw new Error(t("addon.errors.pages.footprint"));
 }
 /** An explicit review proposal. It never changes page membership, drops a tile,
@@ -163,7 +174,7 @@ export function entityOf(layout: PageLayout, tile: PageTile): string {
   return `screen.page_${index + 1}`;
 }
 /** A bedside clock's key (app 0.4.12) as the tile it is, and back as the child its clock keeps in the document. */
-const KEY_APPEARANCE = ["icon"] as const, KEY_INTERACTION = ["tap", "action", "guard"] as const;
+const KEY_APPEARANCE = ["icon", "overlay"] as const, KEY_INTERACTION = ["tap", "action", "guard"] as const;
 export function keyTile(child: ChildTile, holder: string, key: number): Tile {
   const options: TileOptions = {};
   for (const field of KEY_APPEARANCE) if (child.appearance[field] !== undefined) options[field] = clone(child.appearance[field]);
@@ -337,7 +348,7 @@ export function arrangeTiles(layout: PageLayout, grid: PageGrid, entries: { tile
         content = { kind: "builtin", name: tile.entity.slice(7) as "clock" | "nightstand" | "settings" };
       } else content = { kind: "entity", entityId: tile.entity };
       const size = options.size ?? "single";
-      if (!SIZES.includes(size as Size)) throw new Error(t("addon.errors.pages.size"));
+      if (!isSize(size)) throw new Error(t("addon.errors.pages.size"));
       const appearance: PageTile["appearance"] = { label: tile.name };
       if (size !== "single") appearance.presentation = size as Size;
       for (const [key, wire] of Object.entries(appearanceKeys)) {

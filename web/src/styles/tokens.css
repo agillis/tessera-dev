@@ -1,17 +1,18 @@
 /* Design tokens. Light is the default; dark follows the browser (Home Assistant's "auto" theme does too). */
 :root {
   color-scheme: light dark;
-  --ground: #f5f6f8;
+  /* Neutral greys in small steps, the way Attio layers its surfaces: depth from the step, not from a shadow (app 0.4.32). */
+  --ground: #f7f7f8;
   --surface: #ffffff;
-  --surface-2: #f9fafb;
-  --line: #e4e7ec;
-  --line-strong: #d3d8e0;
-  --ink: #16181d;
-  --ink-2: #565d6b;
-  --muted: #7a8290;
-  --accent: #2f63f0;
+  --surface-2: #f6f7f7;
+  --line: #e6e7ea;
+  --line-strong: #d9dade;
+  --ink: #101112;
+  --ink-2: #505155;
+  --muted: #77797c;
+  --accent: #266df0;
   --accent-ink: #ffffff;
-  --accent-soft: #edf2ff;
+  --accent-soft: #e5eeff;
   --good: #1e9a5f;
   --good-soft: #e6f6ee;
   --warn: #b56d00;
@@ -19,7 +20,11 @@
   --led-update: #e0902e;
   --danger: #c6372e;
   --danger-soft: #fdecea;
-  --seg: #eef0f3;
+  --seg: #f1f2f3;
+  /* What is open in the inspector (app 0.4.32): a tile in black, a page in the accent, the top bar in white. */
+  --kind-tile: #101112;
+  --kind-page: #266df0;
+  --kind-bar: #101112;
   --shadow: 0 12px 40px rgba(20, 24, 40, 0.12), 0 1px 2px rgba(20, 24, 40, 0.06);
   --code-bg: #f1f3f6;
   --focus: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
@@ -50,6 +55,9 @@
     --danger: #f07167;
     --danger-soft: #361b19;
     --seg: #262626;
+    --kind-tile: #000000;
+    --kind-page: #3f6fe0;
+    --kind-bar: #e1e1e1;
     --shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.45);
     --code-bg: #161616;
     --pop-shadow: 0 16px 44px rgba(0, 0, 0, 0.62), 0 2px 6px rgba(0, 0, 0, 0.4);

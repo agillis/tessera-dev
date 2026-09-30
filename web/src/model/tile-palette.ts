@@ -8,6 +8,8 @@ const weather: Record<string, number> = { sunny: c.AMBER, "clear-night": c.DEEP_
   lightning: c.YELLOW, "lightning-rainy": c.LIME, windy: c.GREEN, "windy-variant": c.GREEN, exceptional: c.RED };
 const modes: Record<string, number> = { heat: c.DEEP_ORANGE, cool: c.BLUE, heat_cool: c.AMBER, auto: c.GREEN, fan_only: c.CYAN, dry: c.ORANGE };
 const hex = (color: number) => `#${color.toString(16).padStart(6, "0")}`;
+/** Home Assistant's colour for a climate mode, as tile_controls::mode_color gives it. */
+export const modeColor = (mode: string) => hex(modes[mode] ?? c.GREY);
 const mix = (a: number, b: number, weight: number) => [16, 8, 0].reduce((out, shift) =>
   out | Math.floor((((a >> shift) & 255) * weight + ((b >> shift) & 255) * (255 - weight)) / 255) << shift, 0);
 

@@ -29,7 +29,8 @@ int main() {
   assert(!m.begin(0, 9, "Too many pages"));
   assert(!m.begin(0, 0, "No page"));
   assert(m.begin(0, 1, "Empty")); m.configured = true; assert(m.ready());
-  assert(m.begin(0, 1, "") && m.title == screen_text::tr(screen_text::txt::status_home));
+  // An empty title stays empty (firmware 0.17.0+): the top bar shows its home key alone.
+  assert(m.begin(0, 1, "") && m.title.empty());
 }
 // Built-in and new Home Assistant domains, plus wide-tile packing.
 static void test_domains_and_sizes() {
@@ -55,6 +56,27 @@ static void test_domains_and_sizes() {
   assert(m.tiles[1].cells() == 6 && m.tiles[0].cells() == 1);
 }
 struct RunExtra { RunExtra() { test_domains_and_sizes(); } } run_extra;
+// A span (firmware 0.19.0): a tile of 3 x 2 on a 4 x 4 grid takes exactly its rectangle, and nothing may overlap it.
+static void test_spans() {
+  using namespace runtime_tiles;
+  const Grid saved = grid;
+  grid = Grid{4, 4};
+  Model m;
+  seed(m, {"light.a", "light.b", "light.c"}, 2);
+  assert(m.valid_placement(0, 0, false, true, 2, 3));          // 3 x 2 from the top left
+  assert(!m.valid_placement(0, 2, false, true, 2, 3));         // two columns left of the edge: it does not fit
+  m.slots[0] = 0; m.tiles[0].wide = true; m.tiles[0].height = 2; m.tiles[0].span = 3; m.tiles[0].received = true;
+  assert(m.tiles[0].column_span() == 3 && m.tiles[0].row_span() == 2 && m.tiles[0].cells() == 6);
+  assert(!m.valid_placement(1, 5, false, false));               // under it
+  assert(m.valid_placement(1, 3, false, false));                // beside it, in the fourth column
+  assert(!m.valid_placement(1, 8, false, true, 3, 2));         // 2 x 3 from the third row would reach past the grid
+  assert(m.valid_placement(1, 8, false, true, 2, 4));           // 4 x 2 under it fills the bottom half
+  std::array<Placement, TILES_MAX> placed;
+  place(m, placed);
+  assert(placed[0].slot == 0);                                  // a span keeps the slot it was given
+  grid = saved;
+}
+struct RunSpans { RunSpans() { test_spans(); } } run_spans;
 // Placement checks reject overlap before a received tile can occupy the grid.
 static void test_explicit_slots() {
   using namespace runtime_tiles;

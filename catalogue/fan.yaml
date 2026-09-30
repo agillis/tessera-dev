@@ -1,0 +1,14 @@
+# Fan. Home Assistant: homeassistant/components/fan.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: fan
+displays:
+  standard: {}
+  watch: {}
+controls:
+  toggle:
+    needs: {actions: [fan.toggle]}
+  speed:
+    needs: {actions: [fan.set_percentage]}
+inline:
+  needs: {actions: [fan.set_percentage]}

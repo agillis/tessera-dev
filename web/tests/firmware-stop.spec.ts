@@ -99,18 +99,21 @@ describe("stopping a build in the New screen wizard", () => {
     const posted = wizard();
     const view = mount(InstallerView);
     await flush();
-    await view.find("#install-target").setValue("/dev/ttyUSB0");
+    // The wizard's three steps (app 0.4.32): the board, the name, then the way in.
+    await view.find("#setup-next").trigger("click");
     await view.find("#friendly_name").setValue("Hall");
+    await view.find("#setup-next").trigger("click");
+    await view.find('#install-target input[value="/dev/ttyUSB0"]').setValue();
     await view.find("#install-form").trigger("submit");
     await flush();
     expect(view.find("#progress-title").text()).toContain("Building");
     await view.find("#install-stop").trigger("click");
     await flush();
     expect(posted).toHaveLength(1);
-    expect(view.find("#install-title").text()).toBe("Stopped.");
     expect(view.find("#progress-title").text()).toBe("Build stopped");
     expect(view.find("#progress-detail").text()).toContain("Nothing was put on a screen");
-    expect(view.find("#progress-mark").classes()).toContain("stopped");
+    // The screen in the art wears a red badge for a failure (app 0.4.32); a stop earns none.
+    expect(view.find(".device-art").classes()).not.toContain("failed");
     expect(view.find("#install-stop").exists()).toBe(false);
     expect(view.find("#install-retry").exists()).toBe(true);
     expect(view.find("#install-log-wrap").attributes("open")).toBeUndefined();

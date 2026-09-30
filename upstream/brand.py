@@ -37,6 +37,8 @@ BRANDING = [
     ('repository.yaml', 'maintainer: MaxGramser\n', 'maintainer: agillis\n'),
     ('screen_manager/config.yaml', 'name: Tessera Screen Manager\n', 'name: Tessera Dev Screen Manager\n'),
     ('screen_manager/config.yaml', 'panel_title: Tessera\n', 'panel_title: Tessera Dev\n'),
+    ('screen_manager/config.yaml', 'url: https://tessera-maxgramser.on-forge.com\n',
+     f'url: https://github.com/{FORK_SLUG}\n'),
     ('screen_manager/config.yaml',
      'description: "Tessera: touch screens for Home Assistant.',
      'description: "Tessera Dev: touch screens for Home Assistant.'),

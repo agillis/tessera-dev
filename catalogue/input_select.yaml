@@ -1,0 +1,10 @@
+# Dropdown helper. Home Assistant: homeassistant/components/input_select.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: input_select
+displays:
+  standard: {}
+  watch: {}
+controls:
+  stepper:
+    needs: {actions: [input_select.select_option]}

@@ -158,6 +158,17 @@ def shapes():
                  # The alert card's two line heights (firmware 0.2.103+): with the canvas, the density and the look they
                  # are what screen_alert::layout needs to size an alert's picture (camera_feed.alert_box).
                  'alert': alert_lines(values),
+                 # The sizes of the faces a card's controls draw their numbers in (app 0.4.32): the editor's mockup picks
+                 # among them as runtime_tiles::stepper_keys does, the largest that fits, instead of sizes of its own;
+                 # and the icons of a card's keys, which a thermostat's mode bar measures its words beside.
+                 'fonts': {name: int(values[key]) for name, key in (('watch_value', 'FONT_WATCH_VALUE_SIZE'),
+                                                                   ('sublabel_big', 'FONT_SUBLABEL_BIG_SIZE'),
+                                                                   ('sublabel', 'FONT_SUBLABEL_SIZE'),
+                                                                   ('icon_mini', 'FONT_ICON_MINI_SIZE'))},
+                 # The glass's grid in its own pixels (the look's GRID_MARGIN, GRID_GAP_X and TILE_PAD): the editor's
+                 # mockup works out a card's width from them as runtime_tiles::cell_content_width does (app 0.4.32).
+                 'spacing': {name: int(values[key]) for name, key in (('margin', 'GRID_MARGIN'), ('gap', 'GRID_GAP_X'),
+                                                                  ('tile_pad', 'TILE_PAD'))},
                  # What New screen offers and the screen list names (boards.yaml with what the board's files say).
                  'catalog': catalog_of(board, values, lying),
                  # The chip it is built for, for the browser flasher's check of the board on the cable.

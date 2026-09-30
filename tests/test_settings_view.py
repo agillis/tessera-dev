@@ -19,7 +19,10 @@ class SettingsView(unittest.TestCase):
 
     def test_the_sidebar_is_the_one_way_to_the_tools(self):
         more = self.sidebar.split('<div class="more">', 1)[1]
-        self.assertEqual(re.findall(r'<button id="([\w-]+)"', more), ['open-alerts', 'open-settings', 'refresh'])
+        self.assertEqual(re.findall(r'<button id="([\w-]+)"', more), ['open-alerts', 'open-settings'])
+        # New screen and Refresh sit beside the Screens heading, as a list's own buttons do (app 0.4.32).
+        heading = self.sidebar.split('class="label label-row"', 1)[1].split('<div id="screens">', 1)[0]
+        self.assertEqual(re.findall(r'<button id="([\w-]+)"', heading), ['refresh', 'new-screen'])
         self.assertEqual(self.sidebar.count('id="new-screen"'), 1)
         for element in ('new-screen', 'open-alerts', 'open-settings'):
             self.assertEqual(editor_sources.PAGE.count(f'id="{element}"'), 1, element)

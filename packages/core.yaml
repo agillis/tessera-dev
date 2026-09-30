@@ -16,7 +16,7 @@
 # fonts/materialdesignicons-webfont.ttf (Apache 2.0, github.com/Templarian/MaterialDesign-Webfont).
 ############################################################
 substitutions:
-  SCREEN_FIRMWARE_VERSION: "0.19.0"
+  SCREEN_FIRMWARE_VERSION: "0.20.0"
   DASHBOARD_INBOX_INTERNAL: "false"
   CALIBRATION_ON_BOOT: "false"                     # a bench build: start on the touch test page
   ROOM_NAME: ""                                    # top left until ESP Screens sends the screen name
@@ -120,6 +120,7 @@ esphome:
           runtime_tiles::watch_icon_font = id(watch_icon)->get_lv_font();
           runtime_tiles::clock_font = id(clock_digits)->get_lv_font();
           runtime_tiles::bedside_font = id(bedside_digits)->get_lv_font();
+          runtime_tiles::display_font = id(display_digits)->get_lv_font();
           runtime_tiles::brand_font = id(brand_wordmark)->get_lv_font();
           runtime_tiles::brand_mark = id(tessera_mark)->get_lv_image_dsc();
           runtime_tiles::firmware_version = "${SCREEN_FIRMWARE_VERSION}";
@@ -563,9 +564,22 @@ api:
                     root["tile_keys"] = 1;
                     // One entity on several tiles (firmware 0.16.0+, app 0.4.26+).
                     root["tile_repeats"] = 1;
+                    // Eight pages on every grid, at most 64 tiles over all of them (firmware 0.18.0+, app 0.4.30+).
+                    root["free_pages"] = 1;
+                    // What this firmware takes beyond the flags above, as a list (firmware 0.19.0+, app 0.4.32+): a newer
+                    // option adds its name here. climate_range: a thermostat's range on its -/+, with the chip for its end.
+                    auto features = root["features"].to<JsonArray>();
+                    features.add("climate_range");
                     auto sizes = root["tile_sizes"].to<JsonArray>();
                     for (const auto &size : page_protocol::TILE_SIZES)
                       if (size.fits(runtime_tiles::grid.columns, runtime_tiles::grid.rows)) sizes.add(size.name);
+                    // Every other rectangle smaller than the grid, as "CxR" (firmware 0.19.0, app 0.4.32+).
+                    for (unsigned c = 1; c <= runtime_tiles::grid.columns; ++c)
+                      for (unsigned r = 1; r <= runtime_tiles::grid.rows; ++r)
+                        if (page_protocol::span_offered(c, r, runtime_tiles::grid.columns, runtime_tiles::grid.rows)) {
+                          const char span[4] = {static_cast<char>('0' + c), 'x', static_cast<char>('0' + r), 0};
+                          sizes.add(std::string(span));  // copied: the array is gone after this line
+                        }
                     root["request"] = runtime_tiles::protocol_key(runtime_tiles::transfer.hello_id);
                     root["session"] = runtime_tiles::protocol_key(runtime_tiles::transfer.lease);
                     root["seq"] = runtime_tiles::transfer.sequence;
@@ -728,12 +742,6 @@ image:
 
 font:
   - file: "${FONT_DIR}/Roboto-500.ttf"
-    id: time_label
-    size: ${FONT_TIME_SIZE}
-    bpp: 4
-    glyphs: ['0','1','2','3','4','5','6','7','8','9',':',' ', 'A', 'M', 'P']
-
-  - file: "${FONT_DIR}/Roboto-500.ttf"
     id: headline
     size: ${FONT_HEADLINE_SIZE}
     bpp: 4
@@ -774,8 +782,16 @@ font:
     bpp: 4
     glyphs: [':','-','0','1','2','3','4','5','6','7','8','9']
 
-  # The bedside clock's digits (firmware 0.8.0+): the largest the board's page takes in both orientations
-  # (FONT_BEDSIDE_SIZE, packages/looks/shared/bedside.yaml); only the digits and the colon.
+  # The display step (firmware 0.17.0+): half a page's width, the flip clock's blocks and the bedside clock
+  # (FONT_DISPLAY_SIZE, packages/looks/shared/digits.yaml); only the digits and the colon.
+  - file: "${FONT_DIR}/Roboto-400.ttf"
+    id: display_digits
+    size: ${FONT_DISPLAY_SIZE}
+    bpp: 4
+    glyphs: [':','0','1','2','3','4','5','6','7','8','9']
+
+  # The bedside clock's own step (firmware 0.8.0+), only where the whole page takes a fifth larger digits than the display
+  # step; elsewhere it stays at 8 px and the clock takes the display step (packages/looks/shared/digits.yaml).
   - file: "${FONT_DIR}/Roboto-400.ttf"
     id: bedside_digits
     size: ${FONT_BEDSIDE_SIZE}
@@ -1228,6 +1244,7 @@ font:
       - "\U000F059C" # weather-sunset-up
       - "\U000F059B" # weather-sunset-down
 
+
   - file: "${FONT_DIR}/materialdesignicons-webfont.ttf"
     id: watch_icon
     size: ${FONT_WATCH_ICON_SIZE}
@@ -1645,7 +1662,8 @@ lvgl:
       text_opa: 100%
 
     - id: style_time
-      text_font: time_label
+      # The top bar's clock anchor is never shown (page_header.h draws the bar); it keeps the headline's letters.
+      text_font: headline
       text_opa: 100%
 
     - id: style_title

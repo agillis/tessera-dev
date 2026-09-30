@@ -3,13 +3,14 @@ or with the tap option `run` the other way round. tests/test_tile_controls.cpp c
 these keep the app, the firmware and the editor in step with each other and with Home Assistant (its 2026.9 core and
 frontend: automation/icons.json, state_color.ts, DOMAINS_TOGGLE and more-info-automation.ts).
 """
-from firmware_sources import runtime_source
+from firmware_sources import firmware_domains, runtime_source
 import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'screen_manager/app'))
+import catalogue  # noqa: E402
 import core  # noqa: E402
 import ha_catalogue  # noqa: E402
 import header_bar  # noqa: E402
@@ -44,7 +45,7 @@ class TheApp(unittest.TestCase):
         self.assertEqual(core.min_firmware(layout('automation.a')), (0, 7, 0))
         self.assertLessEqual(core.AUTOMATION_MIN_FIRMWARE, tuple(int(n) for n in core.FIRMWARE_VERSION.split('.')))
         # Older firmware refuses the domain; this one takes it.
-        self.assertIn('"input_button", "automation", "sun"', MODEL)
+        self.assertIn('automation', firmware_domains())
 
     def test_run_is_a_tap_choice_of_an_automation_alone(self):
         self.assertEqual(core.validate_layout(layout('automation.a', tap='run'))['tiles'][0]['options'], {'tap': 'run'})
@@ -54,7 +55,8 @@ class TheApp(unittest.TestCase):
             with self.assertRaises(ValueError):
                 core.validate_layout(layout(entity, tap='run'))
         # The editor offers and validates the same choice, and the firmware reads the tap option as it is.
-        self.assertIn("...(domain === 'automation' ? ['run'] : [])", VALIDATION)
+        self.assertEqual(catalogue.taps('automation'), [*catalogue.TILE['taps'], 'run'])
+        self.assertIn('[i.tap, catalogueTaps(domain)]', VALIDATION)
         self.assertIn('const keys = ["auto", "run", "none", "action"];', INSPECTOR)
         self.assertIn('tile.tap = string(options["tap"]);', RECEIVER)
         self.assertEqual(core.screen_options({'entity': 'automation.a', 'options': {'tap': 'run'}}, {})['tap'], 'run')

@@ -257,8 +257,9 @@ def plan(reach, new=frozenset(), read_base=read_now):
                          'them: ' + ', '.join(f'{key} ({version})' for key, version in sorted(ahead.items())) + '.')
         lines += ['- tools/generate_board_shapes.py, then bump screen_manager/config.yaml with the CHANGELOG entry',
                   f'  "## <app> (firmware {shared_next})".',
-                  '- Run tools/check.sh and tools/check.sh --firmware (every board, the CYD flash budget).']
-        lines += oldest('--firmware')
+                  '- Run tools/check.sh and tools/check.sh --firmware --sample (the four boards of tools/profiles.py SAMPLE,',
+                  '  the CYD flash budget); --firmware --all builds every board when a change needs that.']
+        lines += oldest('--firmware --sample')
     else:
         done = all(built_now[key] == for_boards for key in boards)
         lines += [f'Firmware for {", ".join(sorted(boards))} alone: every other screen is left alone. The core stays, '

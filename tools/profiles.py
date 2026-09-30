@@ -31,6 +31,14 @@ BOARDS = {board: ROOT / 'packages/boards' / file for board, file, _ in BOARD_TAB
 PROFILES = tuple(profile for _, _, profile in BOARD_TABLE)
 PACKAGES = tuple(f'packages/{board}.yaml' for board, _, _ in BOARD_TABLE)
 NAMES = PROFILES + PACKAGES
+
+# The boards a check builds instead of all of them (app 0.4.32): the list keeps growing, and most boards share the same
+# code. Four that differ where a build can break: the CYD (ESP32, 4 MB without a hotspot, SPI glass and the tightest
+# flash budget) and the Guition 4848S040 (ESP32-S3, square RGB glass, the bench board) always, then the 10.1-inch Guition
+# (ESP32-P4, MIPI-DSI, the largest glass and grid) and the 7-inch Waveshare (ESP32-S3 with a 4 MB app slot, 800 x 480).
+SAMPLE = ('cyd', 'guition', 'jc8012p4a1', 'waveshare7')
+# The boards a render check draws the UI on: the smallest glass, one in the middle and the largest.
+RENDER_SAMPLE = ('cyd', 'guition', 'jc8012p4a1')
 ENTRIES = {**{profile: board for board, _, profile in BOARD_TABLE},
            **{f'packages/{board}.yaml': board for board, _, _ in BOARD_TABLE}}
 
@@ -44,7 +52,13 @@ def packages_of(path):
     block = re.search(r'^packages:\n(.*?)(?=^[a-z_0-9]+:|\Z)', Path(path).read_text(), re.M | re.S)
     if not block:
         return []
-    return [(Path(path).parent / include).resolve() for include in re.findall(r'!include (\S+)', block[1])]
+    includes = re.findall(r'!include (\S+)', block[1])
+    if any('${' in include for include in includes):
+        # A path worked out from the file's own substitutions, as ESPHome does it (the Guition's cards follow its
+        # rows, GRID_CELLS): the board file's own values, which a screen's YAML may change when it is built.
+        values = evaluate(substitutions_of(path))
+        includes = [_render(include, values, strict=False) for include in includes]
+    return [(Path(path).parent / include).resolve() for include in includes]
 
 
 def chain(path):

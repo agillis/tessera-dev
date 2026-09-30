@@ -1,0 +1,10 @@
+# Script. Home Assistant: homeassistant/components/script.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: script
+displays:
+  standard: {}
+  watch: {}
+controls:
+  run:
+    needs: {actions: [script.turn_on]}

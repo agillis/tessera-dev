@@ -79,9 +79,10 @@ show: a CYD six, a 4 x 4 board sixteen. `tools/check.sh` fails when a file is ou
   and the Guition the scale is exactly 100.
 - `ui::large()`: the class of cards and pages is the look's, never a cell's momentary height. (A class
   that flipped when the rows grew reused a clock's numeral labels as tick lines: the lab's crash.)
-- `GRID_COLS`/`GRID_ROWS` reach the C++ as build flags; `SLOTS_PER_PAGE` follows, `MAX_PAGES` is
-  capped so a screen never holds more than 64 tiles (one dirty bit each: seven pages of nine, four of
-  sixteen), and `runtime_tiles::widgets` holds exactly one entry per cell. The add-on (`core.Grid`) and
+- `GRID_COLS`/`GRID_ROWS` reach the C++ as build flags; `SLOTS_PER_PAGE` follows. Every grid has eight pages
+  (firmware 0.18.0+) and a screen never holds more than 64 tiles over them (one dirty bit each), so a page need not
+  be full; before, the pages were capped at as many as 64 tiles fill (seven of nine, four of sixteen), and a grid
+  that grew lost the pages of a saved layout. `runtime_tiles::widgets` holds exactly one entry per cell. The add-on (`core.Grid`) and
   the editor (`setGrid`) count with the same rule, so a page, a slot and a tile limit mean the same in
   all three.
 - A card's head (the icon circle, the name and the state beside it) is one computed row on every board

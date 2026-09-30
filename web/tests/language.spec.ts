@@ -124,9 +124,9 @@ describe("the update a new language takes", () => {
   it("says the new language when the firmware stays the same", async () => {
     state.inventory.screens = [screen({ language: true, target: "0.2.80", profile: "living.yaml", host: "10.0.0.2" })];
     const sidebar = mount(Sidebar);
-    expect(sidebar.find(".led").classes()).toContain("update");
-    expect(sidebar.find(".sub").text()).toBe("New language: Nederlands");
+    expect(sidebar.find(".update-pill").attributes("title")).toContain("New language: Nederlands");
     await sidebar.find("#screens .nav-item").trigger("click");
+    await sidebar.find(".details-toggle").trigger("click");
     expect(sidebar.find(".screen-details .facts").text()).toBe("Firmware0.2.80");
     expect(sidebar.find(".whatsnew").exists()).toBe(false);
   });
@@ -135,8 +135,9 @@ describe("the update a new language takes", () => {
     state.inventory.updates = { target: "0.2.81", pending: 1 };
     state.inventory.changelog = [{ app: "0.2.91", firmware: "0.2.81", lines: ["Faster."] }];
     const sidebar = mount(Sidebar);
-    expect(sidebar.find(".sub").text()).toBe("Update 0.2.81");
+    expect(sidebar.find(".update-pill").attributes("title")).toContain("Update 0.2.81");
     await sidebar.find("#screens .nav-item").trigger("click");
+    await sidebar.find(".details-toggle").trigger("click");
     expect(sidebar.find(".screen-details .facts dd").text()).toBe("0.2.80 → 0.2.81");
     expect(sidebar.findAll(".whatsnew li").map((li) => li.text())).toEqual(["New language: Nederlands", "Faster."]);
   });

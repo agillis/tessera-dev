@@ -7,10 +7,10 @@ it does not import the server or keep another copy of a page document.
 import time
 import camera_feed
 import page_delivery
-from core import BUILTIN, CAMERA_DOMAINS, board_of, firmware_features, page_target, state_message
+from core import BUILTIN, CAMERA_DOMAINS, FREE_PAGES_MIN_FIRMWARE, board_of, firmware_features, page_target, state_message, version_text
 from i18n import t, shown, english
 from page_layout import (FORMAT as PAGE_FORMAT, LayoutError, bar_items, compile_tiles,
-                         grid_of_record, legacy_projection, validate_document)
+                         grid_of_record, grown, legacy_projection, validate_document)
 
 
 def preflight_update(manager, inbox):
@@ -76,13 +76,18 @@ def save_pages(manager, inbox, data):
             except LayoutError:
                 raise LayoutError(t('editor.pages.update_notice')) from None
     flat = legacy_projection(candidate, require_representable=False)
-    required_sizes = {tile.get('options', {}).get('size', 'single') for tile in flat['tiles']} & {'tall', 'square'}
+    # Every size but the three every screen takes needs the screen to have said it takes it: tall and square (0.3.1),
+    # a span such as 3x2 (firmware 0.19.0).
+    required_sizes = {tile.get('options', {}).get('size', 'single') for tile in flat['tiles']} - {'single', 'wide', 'full'}
     supported_sizes = getattr(sender, 'tile_sizes' if sender.protocol is not None else 'last_tile_sizes', set()) if sender else set()
     if required_sizes and not required_sizes <= supported_sizes:
         raise LayoutError(t('addon.errors.pages.update_tall'))
-    limit = firmware_features(manager.firmware_version(inbox, screen), grid)['tile_limit']
-    if len(flat['tiles']) > limit:
-        raise LayoutError(t('addon.errors.layout.tiles_max', n=limit))
+    features = firmware_features(manager.firmware_version(inbox, screen), grid)
+    if len(flat['tiles']) > features['tile_limit']:
+        raise LayoutError(t('addon.errors.layout.tiles_max', n=features['tile_limit']))
+    # More pages than 64 tiles fill needs firmware 0.18.0, and a screen that said so in its hello has it.
+    if len(document['pages']) > features['page_limit'] and not (sender and sender.free_pages):
+        raise LayoutError(t('addon.errors.layout.firmware_first', version=version_text(FREE_PAGES_MIN_FIRMWARE)))
     if any(tile['entity'].split('.')[0] in CAMERA_DOMAINS for tile in flat['tiles']) and board_of(screen) not in camera_feed.BOXES:
         raise LayoutError(t('addon.errors.layout.camera_unsupported'))
     needed = manager.needs_firmware(inbox, flat, screen)
@@ -112,7 +117,26 @@ def save_pages(manager, inbox, data):
     return record
 
 
+def grow_record(manager, inbox, record):
+    """The saved layout on the grid the screen now reports, when that grid only grew; else the record as it was.
+
+    Only the screen's own report counts: a board's catalog grid may be newer than the firmware still on the screen."""
+    grid = manager.reported_grid(inbox)
+    if grid is None or grid == grid_of_record(record):
+        return record
+    try:
+        layout = grown(record['layout'], grid_of_record(record), grid)
+        if layout is None: return record
+        record = manager.store.save(inbox, layout, record['revision'], adapt_grid=True)
+    except LayoutError:
+        return record
+    manager.sent.pop(inbox, None)
+    manager.notify()
+    return record
+
+
 async def sync_pages(manager, inbox, record, screen, dirty=None, force=False, context=None):
+    record = grow_record(manager, inbox, record)
     grid = manager.verified_grid(inbox)
     if grid is None or grid != grid_of_record(record):
         manager.status[inbox] = english('addon.errors.pages.adaptation')
@@ -122,8 +146,10 @@ async def sync_pages(manager, inbox, record, screen, dirty=None, force=False, co
     cached = manager.page_values.get(inbox)
     # A light group's lamps go to a screen that said it takes them (firmware 0.3.9+); the first hello can change that.
     lamps = getattr(sender, 'group_lamps', False)
+    # What else its hello said it takes (app 0.4.32): a thermostat's range on its -/+ (firmware 0.19.0+).
+    features = frozenset(getattr(sender, 'features', ()) or ())
     full = (force or dirty is None or not cached or cached['revision'] != record['revision'] or cached['context'] != context
-            or cached.get('lamps') != lamps)
+            or cached.get('lamps') != lamps or cached.get('features') != features)
     if full:
         dependencies = [{item['entity'] for item in bar_items(page) if item['type'] == 'entity'} for page in record['layout']['pages']]
     else:
@@ -132,7 +158,7 @@ async def sync_pages(manager, inbox, record, screen, dirty=None, force=False, co
     for i, tile in enumerate(flat['tiles']):
         reuse = not full and tile['entity'] not in dirty and dirty.isdisjoint(manager.related_entities(tile))
         if reuse and tile['entity'].startswith('weather.') and manager.forecast_due(tile['entity']): reuse = False
-        values.append(cached['values'][i] if reuse else await manager.tile_message(i, tile, lamps=lamps))
+        values.append(cached['values'][i] if reuse else await manager.tile_message(i, tile, lamps=lamps, features=features))
     bars = [cached['bars'][i] if not full and dirty.isdisjoint(dependencies[i]) else
             manager.header_message({'header': {'items': bar_items(page)}})['items'] for i, page in enumerate(record['layout']['pages'])]
     expected = record['revision']
@@ -156,9 +182,10 @@ async def sync_pages(manager, inbox, record, screen, dirty=None, force=False, co
         return True
     manager.sent[inbox] = {'protocol': 2, 'rev': rev, 'saved_revision': expected}
     manager.page_values[inbox] = {'revision': expected, 'context': context, 'dependencies': dependencies, 'values': values, 'bars': bars,
-                                  'lamps': lamps}
-    # The hello of this delivery told us the screen takes lamps: the next round sends them.
-    if getattr(sender, 'group_lamps', False) != lamps: manager.ha.changed.set()
+                                  'lamps': lamps, 'features': features}
+    # The hello of this delivery told us the screen takes lamps, or anything else new: the next round sends them.
+    if getattr(sender, 'group_lamps', False) != lamps or frozenset(getattr(sender, 'features', ()) or ()) != features:
+        manager.ha.changed.set()
     manager.status[inbox] = 'Applied'
     manager.last[inbox] = time.monotonic()
     if before != rev: manager.pinged[inbox] = manager.last[inbox]

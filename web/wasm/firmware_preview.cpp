@@ -150,6 +150,67 @@ void preview_render() {
 }
 const uint32_t *preview_frame() { return framebuffer.data(); }
 int preview_page() { return page; }
+// The layout as the firmware laid it out (app 0.4.32), for the geometry tests (tests/test_layout_audit.py): every
+// visible object with its box, its parent and, for a label, how its text fits. Nothing here draws; the tests read
+// whether anything leaves its card, overlaps what it may not, or runs past its line without dots or a marquee.
+const char *preview_layout() {
+  JsonDocument doc;
+  doc["width"] = lv_display_get_horizontal_resolution(nullptr);
+  doc["height"] = lv_display_get_vertical_resolution(nullptr);
+  doc["columns"] = runtime_tiles::grid.columns;
+  doc["rows"] = runtime_tiles::grid.rows;
+  auto cards = doc["cards"].to<JsonArray>();
+  auto objects = doc["objects"].to<JsonArray>();
+  int next = 0;
+  std::function<void(lv_obj_t *, int, int)> walk = [&](lv_obj_t *object, int parent, int card) {
+    if (!lv_obj_is_visible(object) || lv_obj_has_flag(object, LV_OBJ_FLAG_HIDDEN)) return;
+    const int id = next++;
+    for (size_t i = 0; i < runtime_tiles::widgets.size(); ++i) {
+      const auto &w = runtime_tiles::widgets[i];
+      if (w.tile == object && w.index < runtime_tiles::model.count) {
+        card = static_cast<int>(cards.size());
+        const auto &t = runtime_tiles::model.tiles[w.index];
+        auto c = cards.add<JsonObject>();
+        c["object"] = id; c["entity"] = t.entity; c["display"] = t.display;
+        c["columns"] = t.column_span(); c["rows"] = t.row_span(); c["full"] = t.full; c["mode"] = w.extra_mode;
+      }
+    }
+    lv_area_t box; lv_obj_get_coords(object, &box);
+    auto o = objects.add<JsonObject>();
+    o["id"] = id; o["parent"] = parent; o["card"] = card;
+    o["x1"] = box.x1; o["y1"] = box.y1; o["x2"] = box.x2; o["y2"] = box.y2;
+    o["clickable"] = lv_obj_has_flag(object, LV_OBJ_FLAG_CLICKABLE);
+    o["clips"] = !lv_obj_has_flag(object, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
+    o["radius"] = lv_obj_get_style_radius(object, LV_PART_MAIN);
+    o["opa"] = lv_obj_get_style_opa(object, LV_PART_MAIN);
+    if (lv_obj_check_type(object, &lv_label_class)) {
+      const char *text = lv_label_get_text(object);
+      const lv_font_t *font = lv_obj_get_style_text_font(object, LV_PART_MAIN);
+      const int32_t letters = lv_obj_get_style_text_letter_space(object, LV_PART_MAIN), lines = lv_obj_get_style_text_line_space(object, LV_PART_MAIN);
+      const auto mode = lv_label_get_long_mode(object);
+      const int32_t width = lv_obj_get_content_width(object);
+      lv_point_t one, wrapped;
+      lv_text_get_size(&one, text, font, letters, lines, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+      lv_text_get_size(&wrapped, text, font, letters, lines, width, LV_TEXT_FLAG_NONE);
+      o["type"] = "label"; o["text"] = text;
+      o["mode"] = mode == LV_LABEL_LONG_DOT ? "dots" : mode == LV_LABEL_LONG_SCROLL_CIRCULAR || mode == LV_LABEL_LONG_SCROLL ? "marquee"
+                : mode == LV_LABEL_LONG_CLIP ? "clip" : "wrap";
+      o["text_width"] = one.x; o["text_height"] = one.y; o["wrapped_height"] = wrapped.y;
+      o["line_height"] = font ? lv_font_get_line_height(font) : 0;
+      o["content_width"] = width; o["content_height"] = lv_obj_get_content_height(object);
+      const size_t n = std::strlen(text);
+      o["dots"] = mode == LV_LABEL_LONG_DOT && n >= 3 && std::strcmp(text + n - 3, "...") == 0;
+      o["icon"] = n >= 4 && static_cast<unsigned char>(text[0]) == 0xF3;
+    } else {
+      o["type"] = lv_obj_check_type(object, &lv_image_class) ? "image" : lv_obj_check_type(object, &lv_slider_class) ? "slider"
+                : lv_obj_check_type(object, &lv_arc_class) ? "arc" : lv_obj_check_type(object, &lv_button_class) ? "button" : "object";
+    }
+    for (uint32_t i = 0; i < lv_obj_get_child_count(object); ++i) walk(lv_obj_get_child(object, i), id, card);
+  };
+  walk(lv_screen_active(), -1, -1);
+  diagnostics.clear(); serializeJson(doc, diagnostics);
+  return diagnostics.c_str();
+}
 const char *preview_diagnostics() {
   JsonDocument doc;
   doc["page"] = page;

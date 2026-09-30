@@ -77,27 +77,6 @@
     "active"
   ],
   "displays": {
-    "weather": [
-      "standard",
-      "watch",
-      "forecast"
-    ],
-    "sensor": [
-      "standard",
-      "watch",
-      "graph"
-    ],
-    "screen": [
-      "digital",
-      "analog",
-      "dial",
-      "flip"
-    ],
-    "sun": [
-      "standard",
-      "watch",
-      "sunpath"
-    ],
     "camera": [
       "standard",
       "live"
@@ -110,6 +89,27 @@
       "standard",
       "watch",
       "cover"
+    ],
+    "screen": [
+      "digital",
+      "analog",
+      "dial",
+      "flip"
+    ],
+    "sensor": [
+      "standard",
+      "watch",
+      "graph"
+    ],
+    "sun": [
+      "standard",
+      "watch",
+      "sunpath"
+    ],
+    "weather": [
+      "standard",
+      "watch",
+      "forecast"
     ]
   },
   "wideOnly": [
@@ -117,31 +117,17 @@
     "sunpath"
   ],
   "controls": {
-    "climate": [
-      "setpoint",
-      "mode",
-      "setpoint_mode"
-    ],
-    "switch": [
-      "toggle"
-    ],
-    "input_boolean": [
-      "toggle"
-    ],
     "automation": [
       "toggle",
       "run"
     ],
-    "light": [
-      "toggle",
-      "brightness"
+    "button": [
+      "run"
     ],
-    "fan": [
-      "toggle",
-      "speed"
-    ],
-    "vacuum": [
-      "buttons"
+    "climate": [
+      "setpoint",
+      "mode",
+      "setpoint_mode"
     ],
     "cover": [
       "buttons",
@@ -149,6 +135,27 @@
       "tilt",
       "buttons_tilt",
       "position_tilt"
+    ],
+    "fan": [
+      "toggle",
+      "speed"
+    ],
+    "input_boolean": [
+      "toggle"
+    ],
+    "input_button": [
+      "run"
+    ],
+    "input_number": [
+      "stepper",
+      "slider"
+    ],
+    "input_select": [
+      "stepper"
+    ],
+    "light": [
+      "toggle",
+      "brightness"
     ],
     "media_player": [
       "volume",
@@ -158,30 +165,23 @@
       "stepper",
       "slider"
     ],
-    "input_number": [
-      "stepper",
-      "slider"
-    ],
-    "select": [
-      "stepper"
-    ],
-    "input_select": [
-      "stepper"
-    ],
-    "timer": [
-      "buttons"
-    ],
     "scene": [
       "run"
     ],
     "script": [
       "run"
     ],
-    "button": [
-      "run"
+    "select": [
+      "stepper"
     ],
-    "input_button": [
-      "run"
+    "switch": [
+      "toggle"
+    ],
+    "timer": [
+      "buttons"
+    ],
+    "vacuum": [
+      "buttons"
     ]
   },
   "backgrounds": [

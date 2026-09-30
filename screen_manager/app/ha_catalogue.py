@@ -6,56 +6,21 @@ one entity. ESP Screens asks it instead of keeping lists of its own, so a device
 works without an update: a cover gets On / off because Home Assistant lists `cover.toggle` for it, a speaker that cannot
 turn on and off doesn't. `local_actions` gives the same answer from the action descriptions for an older Home Assistant.
 
-What stays ours is which action each of our widgets sends (INLINE, CONTROLS): a small slider on a light is `light.turn_on` with a
-brightness, so it only fits a light for which Home Assistant offers that field.
+What stays ours is which action each of our widgets sends, the tile catalogue (catalogue/*.yaml, catalogue.py): a small slider
+on a light is `light.turn_on` with a brightness, so it only fits a light for which Home Assistant offers that field.
 """
 import re
 
+import catalogue
 import core
 from core import attribute_word, state_word
 import header_bar
 import history_card
 from i18n import t
 
-# Screen widgets and the Home Assistant action behind them: (action, field or None). A widget fits an entity when Home
-# Assistant lists one of its actions for it, and, where a field is named, offers that field for the entity.
-TOGGLE = '{domain}.toggle'
-INLINE = {
-    'light': (('light.turn_on', 'brightness_pct'),),
-    'fan': (('fan.set_percentage', None),),
-    'cover': (('cover.set_cover_position', None),),
-    'media_player': (('media_player.volume_set', None),),
-    'number': (('number.set_value', None),),
-    'input_number': (('input_number.set_value', None),),
-}
-CONTROLS = {
-    'climate': {'setpoint': (('climate.set_temperature', None),), 'mode': (('climate.set_hvac_mode', None),)},
-    'switch': {'toggle': (('switch.toggle', None),)},
-    'input_boolean': {'toggle': (('input_boolean.toggle', None),)},
-    'automation': {'toggle': (('automation.toggle', None),), 'run': (('automation.trigger', None),)},
-    'light': {'toggle': (('light.toggle', None),), 'brightness': INLINE['light']},
-    'fan': {'toggle': (('fan.toggle', None),), 'speed': INLINE['fan']},
-    'vacuum': {'buttons': tuple((action, None) for action in ('vacuum.start', 'vacuum.pause', 'vacuum.stop', 'vacuum.return_to_base', 'vacuum.turn_on'))},
-    'cover': {'buttons': tuple((action, None) for action in ('cover.open_cover', 'cover.close_cover', 'cover.stop_cover')),
-              'position': INLINE['cover'],
-              'tilt': tuple((action, None) for action in ('cover.set_cover_tilt_position', 'cover.open_cover_tilt',
-                                                         'cover.close_cover_tilt', 'cover.stop_cover_tilt'))},
-    'media_player': {'volume': (('media_player.volume_set', None), ('media_player.volume_mute', None)),
-                     'playback': tuple((action, None) for action in ('media_player.media_play_pause', 'media_player.media_play',
-                                                                     'media_player.media_pause', 'media_player.media_next_track',
-                                                                     'media_player.media_previous_track'))},
-    'number': {'stepper': INLINE['number'], 'slider': INLINE['number']},
-    'input_number': {'stepper': INLINE['input_number'], 'slider': INLINE['input_number']},
-    'select': {'stepper': (('select.select_option', None),)},
-    'input_select': {'stepper': (('input_select.select_option', None),)},
-    'timer': {'buttons': (('timer.start', None), ('timer.cancel', None))},
-    'scene': {'run': (('scene.turn_on', None),)},
-    'script': {'run': (('script.turn_on', None),)},
-    'button': {'run': (('button.press', None),)},
-    'input_button': {'run': (('input_button.press', None),)},
-}
-# Weather forecast bits (WeatherEntityFeature): the forecast card draws days.
-WEATHER_DAILY = 1
+# Which action each of our widgets sends, and what else it needs of an entity, is the tile catalogue's
+# (catalogue/*.yaml, catalogue.py); this module is Home Assistant's side of it: the actions it lists for an entity, their
+# fields, and its words.
 
 
 def _as_list(value):
@@ -159,44 +124,15 @@ def _fits(requirements, actions, attributes, services):
 
 def capabilities(entity_id, actions, state, services):
     """What the editor may offer for this entity, in Home Assistant's own terms: On / off, a small slider, which direct
-    controls and which displays. `actions` are the actions Home Assistant lists for the entity."""
-    domain = entity_id.split('.', 1)[0]
+    controls and which displays (catalogue.offers). `actions` are the actions Home Assistant lists for the entity."""
     attributes = (state or {}).get('attributes') or {}
-    actions = set(actions or ())
-    displays = ['standard', 'watch']
-    if domain == 'sensor':
-        # The graph draws numbers; a status sensor (a washing machine's programme) has none.
-        if history_card.kind(entity_id, state) == 'line':
-            displays.append('graph')
-    elif domain == 'weather':
-        features = attributes.get('supported_features')
-        # An entity that reports no features yet (unavailable) keeps the forecast, as forecast_kinds does.
-        if not isinstance(features, int) or isinstance(features, bool) or features & WEATHER_DAILY:
-            displays.append('forecast')
-    elif domain == 'sun':
-        displays.append('sunpath')
-    elif domain in ('camera', 'image'):
-        # A live picture on the tile (app 0.2.91): the editor offers it on a board that draws images. A camera's state
-        # ("Idle") makes no large value, and the layout refuses one (core.DISPLAYS, app 0.3.8).
-        displays = ['standard', 'live']
-    elif domain == 'media_player':
-        # The album cover in the icon's place (app 0.2.92), a Guition again.
-        displays.append('cover')
-    controls = [key for key, requirements in CONTROLS.get(domain, {}).items()
-                if _fits(requirements, actions, attributes, services)
-                and not (domain == 'climate' and key == 'setpoint'
-                         and isinstance(attributes.get('supported_features'), int)
-                         and not attributes['supported_features'] & 1)]
-    if domain == 'cover' and 'tilt' in controls:
-        controls += [key + '_tilt' for key in ('buttons', 'position') if key in controls]
-    if domain == 'climate' and 'setpoint' in controls and 'mode' in controls:
-        controls.append('setpoint_mode')
-    return {
-        'toggle': TOGGLE.format(domain=domain) in actions,
-        'inline': domain in INLINE and _fits(INLINE[domain], actions, attributes, services),
-        'controls': controls,
-        'displays': displays,
-    }
+
+    def offers_field(action, field):
+        domain, name = action.split('.', 1)
+        found = find_field(((services or {}).get(domain) or {}).get(name), field)
+        return found is not None and field_matches(found, attributes)
+
+    return catalogue.offers(entity_id, state, actions, services, fields=offers_field, history=history_card.kind)
 
 
 def fields_for(description, attributes):

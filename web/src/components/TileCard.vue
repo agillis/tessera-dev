@@ -9,13 +9,16 @@ import { vDrag } from "../drag";
 import { numberText, t, te } from "../i18n";
 import { dimensions, sizeOf, inlineControlKind, displayName, effectiveControls, isFull, isWide, keysOf, pageTarget } from "../model/layout";
 import { clockText, glyph } from "../model/topbar";
-import { clock24, entityName, isSelected, liveOf, numberMarks, openTile, placeTile, removeTile, screenBuiltinName, screenText, state, tileIconCp, toast, unitSuffix } from "../store";
-import { tilePalette, tileActive } from "../model/tile-palette";
+import { clock24, currentScreen, deviceStyle, screenShape, isCompact, supports, entityName, isSelected, liveOf, numberMarks, openTile, placeTile, removeTile, screenBuiltinName, screenText, state, tileIconCp, toast, unitSuffix } from "../store";
+import { modeColor, tilePalette, tileActive } from "../model/tile-palette";
+import { textEms, wideChip, widestSetpoint } from "../model/ui-scale";
+import { drawable } from "../model/catalogue";
 import type { Tile } from "../types";
 import TileResize from "./TileResize.vue";
 import { availableControl, controlKeys } from "../model/tall-controls";
 import { coverPrimary, hasCoverTilt } from "../model/tall-controls";
 import CoverTilePreview from "./CoverTilePreview.vue";
+import ModeBar from "./ModeBar.vue";
 import MarqueeText from "./MarqueeText.vue";
 import SensorHistory from './SensorHistory.vue';
 import rules from "../model/page-rules.json";
@@ -62,8 +65,14 @@ function markKey(key: number) {
 const roundValue = computed(() => ["sensor", "number", "input_number"].includes(domain.value) && current.value && !gone.value ? bigValue.value + ((unit.value || "").startsWith("°") ? "°" : unit.value === "%" ? "%" : "") : "");
 const display = computed(() => props.tile.entity === "screen.settings" ? "standard" : props.tile.options?.display || "standard");
 const note = computed(() => (display.value !== "standard" ? displayName(display.value) : ""));
+// The screen draws a thermostat's range on its -/+ (firmware 0.19.0+); an older one gets such a thermostat without them.
+const rangeReady = computed(() => currentScreen.value?.climate_range !== false);
 const controls = computed(() => {
-  const selected = effectiveControls(props.tile, state.inventory);
+  // What the screen draws for this entity (model/catalogue.ts drawable, as the add-on sends it): an older screen gets a
+  // thermostat with only a range without its -/+, one without a temperature to set never has them.
+  const chosen = effectiveControls(props.tile, state.inventory);
+  const drawn = chosen ? drawable(domain.value, chosen, current.value?.a || {}, rangeReady.value ? null : new Set<string>()) : null;
+  const selected = drawn === 'none' ? null : drawn;
   // A card one row high draws the setpoint alone, as the screen does (resolve_controls).
   if (selected === 'setpoint_mode' && shape.value.rows < 2) return 'setpoint';
   if (domain.value !== 'cover') return selected;
@@ -73,12 +82,62 @@ const controls = computed(() => {
 const coverExtended = computed(() => domain.value === 'cover' && hasCoverTilt(effectiveControls(props.tile, state.inventory)) && shape.value.rows > 1);
 const tallControls = computed(() => availableControl(domain.value,
   props.tile.options?.inline === 'slider' ? inlineControlKind(domain.value) : controls.value,
-  current.value?.state || '', current.value?.a || {}));
+  current.value?.state || '', current.value?.a || {}, rangeReady.value));
 const tallKeys = computed(() => controlKeys(domain.value, tallControls.value, current.value?.state || '', current.value?.a || {}));
+// The keys of a wide or full-page card's control, as the screen draws them for this entity (tile_controls::keys_for):
+// only what it supports, in its state, never a fixed set.
+const panelKeys = computed(() => controls.value && !['toggle', 'setpoint', 'volume', 'run', 'stepper', 'slider', 'brightness', 'speed', 'position'].includes(controls.value)
+  ? controlKeys(domain.value, controls.value, current.value?.state || '', current.value?.a || {}) : []);
 // As many mode keys as the screen fits: a wider card holds more (firmware 0.3.1 render_tall).
-const modeKeys = computed(() => tallControls.value === 'setpoint_mode' ? controlKeys('climate', 'mode', current.value?.state || '', current.value?.a || {}, shape.value.columns > 1 ? 5 : 3) : []);
+// A range's chip as the screen draws it (runtime_tiles range_chip, firmware 0.19.0): its number as large as the widest
+// temperature allows on its own, and its heat or cool icon beside it only where that fits at the same size; otherwise
+// the number alone in its end's colour. Measured whenever the chip changes size or text.
+const chipObservers = new WeakMap<HTMLElement, ResizeObserver>();
+function fitChip(el: HTMLElement) {
+  const number = el.querySelector("b");
+  if (!number || !el.clientWidth) return;
+  // The glass's rule in the mockup's pixels: icon + half a gap + the widest number + a gap within the chip.
+  const style = getComputedStyle(el), icon = parseFloat(style.getPropertyValue("--chip-icon")) || 0;
+  const pad = parseFloat(style.getPropertyValue("--chip-pad")) || 0, ems = parseFloat(el.style.getPropertyValue("--chip-ems")) || 2;
+  el.classList.toggle("lone", icon + 1.5 * pad + ems * parseFloat(getComputedStyle(number).fontSize) > el.clientWidth);
+}
+const vChipFit = {
+  mounted(el: HTMLElement) {
+    fitChip(el);
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => fitChip(el));
+    observer.observe(el);
+    chipObservers.set(el, observer);
+  },
+  updated: fitChip,
+  unmounted(el: HTMLElement) { chipObservers.get(el)?.disconnect(); },
+};
+// A wide card's chip as the glass works it out (ui-scale wideChip): its face and whether its icon fits.
+const glassScale = computed(() => Number(deviceStyle.value["--glass"]) || 1);
+const wideFit = computed(() => rangeChip.value && wide.value
+  ? wideChip(screenShape.value, state.documentGrid?.columns ?? screenShape.value.columns, widestSetpoint(current.value?.a || {})) : null);
+// A thermostat's modes on a card of one row or the whole page: its mode bar (ModeBar), as the screen draws it.
+const modeBar = computed(() => domain.value === 'climate' && controls.value === 'mode');
 // An on/off card stands as one centred stack, like the built-in action cards (firmware 0.3.1 render_tall).
 const tallStack = computed(() => tall.value && tallControls.value === 'toggle');
+// A card that only switches or only runs, two rows tall, is one big key (firmware 0.17.0 big_key): a large circle, the
+// name and the state, and the whole card is the key. A slider or another control keeps the head and its controls.
+const BIG_KEY_DOMAINS = ["light", "switch", "input_boolean", "fan", "script", "scene", "button", "input_button"];
+const bigKey = computed(() => tall.value && !full.value && supports(0, 17, 0) && BIG_KEY_DOMAINS.includes(domain.value)
+  && props.tile.options?.inline !== "slider" && (!tallControls.value || tallControls.value === "toggle" || tallControls.value === "run"));
+// The flip clock on a card two columns wide and two rows tall, or a whole page (firmware 0.17.0): the blocks share the
+// width and the day and AM or PM stand on one line under them.
+const flipWide = computed(() => (full.value || (shape.value.columns > 1 && shape.value.rows > 1)) && supports(0, 17, 0));
+// The day under the wide flip clock, as the screen writes it: "Tuesday 29 Sep".
+const flipDay = computed(() => `${screenText(`screen.date.weekdays.${now.value.getDay()}`)} ${screenText("screen.date.day_month", {
+  day: now.value.getDate(), month: screenText(`screen.date.months_short.${now.value.getMonth()}`) })}`);
+// The line under a big key's name, as the screen draws it: a lamp that is on says how bright, a script or scene when it
+// last ran, anything else its state.
+const bigKeyLine = computed(() => {
+  if (domain.value === "light" && isOn.value && !gone.value) return `${fill.value}%`;
+  if (NO_STATUS.includes(domain.value)) return current.value && !current.value.a?.last_triggered && ["script", "automation"].includes(domain.value) ? screenText("screen.script.never_run") : line.value;
+  return line.value;
+});
 // The value the body shows large; the same words are not repeated under the name (a second line of your own stays).
 const bodyText = computed(() => {
   if (!tall.value || tallAction.value || tallStack.value || gone.value || coverExtended.value) return '';
@@ -145,6 +204,26 @@ function haWord(c: { state: string; a: Record<string, any> }) {
   if (HA_WORDS[domain.value]) return key(`${HA_WORDS[domain.value]}.${value}`) || (["on", "off"].includes(value) ? key(value) : "");
   return ["on", "off"].includes(value) ? key(value) : "";
 }
+// A thermostat set to a range (firmware 0.19.0), decided as Home Assistant's thermostat card decides it: a single target
+// it supports and reports comes first, else a range it supports with both ends. The screen puts a chip between its -
+// and +: the end they move, heat or cool, with its icon in that mode's colour; the low end first, as the screen does.
+const rangeChip = computed(() => {
+  const a = current.value?.a || {}, f = Number(a.supported_features || 0);
+  if (domain.value !== "climate" || !rangeReady.value || (f & 1 && a.temperature != null) || !(f & 2) || a.target_temp_low == null || a.target_temp_high == null) return null;
+  const digits = Number(a.target_temp_step || 0.5) >= 1 ? 0 : 1;
+  return { icon: "fire", color: modeColor("heat"), text: `${num(Number(a.target_temp_low).toFixed(digits))}°`, ems: textEms(widestSetpoint(a)) };
+});
+// A thermostat's line as the screen writes it: with a control on the tile, what it is doing and the room's temperature
+// (tile_controls::status_text); without one the temperature it is set to, and otherwise Home Assistant's own tile line,
+// its state and the room's temperature (runtime_tiles' value line). Both temperatures as Home Assistant sends them.
+function climateLine(c: { state: string; a?: Record<string, any> }, word: string) {
+  const a = c.a || {};
+  const now = a.current_temperature != null ? ` · ${num(String(a.current_temperature))}°` : "";
+  const doing = te(`screen.ha.hvac_action.${a.hvac_action}`) ? screenText(`screen.ha.hvac_action.${a.hvac_action}`) : "";
+  if (controls.value && controls.value !== "none") return `${doing || word}${now}`;
+  if (c.state !== "off" && a.temperature != null) return `${num(String(a.temperature))}°`;
+  return `${word}${now}`;
+}
 // A scene, script or button has no state worth a word: its state is the moment it last ran.
 const NO_STATUS = ["scene", "script", "button", "input_button"];
 // The text under the name: Home Assistant's word where it has one, the value with its unit for a sensor.
@@ -156,7 +235,7 @@ const status = computed(() => {
   if (gone.value) return screenText(c.state === "unknown" ? "editor.mockup.unknown" : "screen.ha.unavailable");
   const a = c.a || {};
   const word = c.word || haWord(c) || capital(c.state);
-  if (domain.value === "climate") return `${a.current_temperature !== undefined ? `${num(a.current_temperature)}° · ` : ""}${word}`;
+  if (domain.value === "climate") return climateLine(c, word);
   if (domain.value === "weather") return `${word}${a.temperature !== undefined ? ` · ${num(a.temperature)}°` : ""}`;
   if (domain.value === "cover" && a.current_position !== undefined && a.current_position > 0 && a.current_position < 100) return `${word} · ${a.current_position}${unitSuffix("%")}`;
   if (domain.value === "media_player" && a.media_title) return `${word} · ${a.media_title}`;
@@ -202,9 +281,10 @@ const features = computed(() => Number(current.value?.a?.supported_features || 0
 // The screens give a control that fills its room the content width of one cell, so its edges stand where the
 // cards above and below have theirs (runtime_tiles::cell_content_width); keys, a switch and a run key keep their
 // own size. A double-width card is two cells, so that is half its room minus the gap and the paddings.
-const FILLS_CELL = ["brightness", "speed", "position", "slider", "volume", "setpoint"];
+const FILLS_CELL = ["brightness", "speed", "position", "slider", "volume", "setpoint", "mode"];
 const fillsCell = computed(() => FILLS_CELL.includes(controls.value || "") || (controls.value === "stepper" && !domain.value.endsWith("select")));
 const setpoint = computed(() => {
+  if (rangeChip.value) return rangeChip.value.text;
   const temperature = current.value?.a?.temperature;
   return temperature !== undefined && temperature !== null ? `${num(temperature)}°` : "—";
 });
@@ -212,6 +292,8 @@ const setpoint = computed(() => {
 async function onKey(e: KeyboardEvent) {
   if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); return; }
   if (props.preview) return;
+  // Delete or Backspace removes the focused card (app 0.4.32); Undo brings it back.
+  if ((e.key === "Delete" || e.key === "Backspace") && live.value) { e.preventDefault(); removeTile(props.tile); return; }
   // Up and down are a row of the screen's grid, whatever its columns; left and right one cell.
   const step = ({ ArrowLeft: -1, ArrowRight: 1, ArrowUp: -grid.value.columns, ArrowDown: grid.value.columns } as Record<string, number>)[e.key];
   if (!step) return;
@@ -236,20 +318,20 @@ async function onKey(e: KeyboardEvent) {
     <button type="button" class="round-key" :aria-label="name" :disabled="preview && !live"
       v-drag="preview || foreign ? null : { kind: 'tile', tile }" @click.stop="activate">
       <span class="disc" :class="{ lit: isOn }"><span v-if="roundValue" class="value">{{ roundValue }}</span><span v-else class="mdi">{{ glyph(tileIconCp(tile)) }}</span></span>
-      <span class="kn">{{ name }}</span>
+      <span v-if="tile.options?.overlay !== 'none' && !isCompact" class="kn">{{ name }}</span>
     </button>
     <!-- The same remove key as on a tile, at the circle's corner. -->
     <button v-if="live && !preview" type="button" class="remove" :title="t('editor.tile_card.remove')" :aria-label="t('editor.tile_card.remove_named', { name })" @click.stop="removeTile(tile)">✕</button>
   </span>
-  <div v-else class="tile" :class="{ wide, full, tall, 'tall-action': tallAction || tallStack, photo: artworkLoaded && !!artwork, camera: cameraCard && cameraLoaded, bare, placeholder: placeholder || (!live && !foreign), chosen }" :data-slot="slot" :data-tile-id="tile.id" :data-columns="shape.columns" :data-rows="shape.rows"
+  <div v-else class="tile" :class="{ wide, full, tall, 'tall-action': tallAction || tallStack, 'big-key': bigKey, photo: artworkLoaded && !!artwork, camera: cameraCard && cameraLoaded, bare, placeholder: placeholder || (!live && !foreign), chosen }" :data-slot="slot" :data-tile-id="tile.id" :data-columns="shape.columns" :data-rows="shape.rows"
     :style="{ gridColumn: `${slot % grid.columns + 1} / span ${shape.columns}`, gridRow: `${Math.floor(slot % grid.slots / grid.columns) + 1} / span ${shape.rows}`, ...(background && !bare ? { backgroundColor: background } : {}), '--tile-icon': palette.icon, '--tile-circle': palette.circle, '--tile-accent': palette.accent }"
     :tabindex="!foreign && (preview ? goesTo : live) ? 0 : -1" :role="!foreign && (preview ? goesTo : live) ? 'button' : undefined" :aria-label="live ? label : undefined"
     v-drag="preview || foreign ? null : { kind: 'tile', tile }" @click="activate" @keydown="live && onKey($event)">
     <template v-if="bedside">
-      <span class="bedside-clock">
-        <span class="big">{{ clockText(clock24, now) }}</span>
+      <span class="bedside-clock" :class="{ compact: isCompact }">
+        <span class="time"><span class="bedside-time">{{ clockText(clock24, now) }}</span><small v-if="!clock24 && supports(0, 17, 0)" class="am-pm">{{ amPm }}</small></span>
         <span v-if="keyPlaces.length" class="keys">
-          <span v-for="place in keyPlaces" :key="place.key" class="key-place" :data-key="preview ? undefined : place.key" :data-holder="preview ? undefined : tile.id"
+          <span v-for="place in keyPlaces" :key="place.key" class="key-place" :data-key="preview || placeholder ? undefined : place.key" :data-holder="preview || placeholder ? undefined : tile.id"
             :class="{ 'insert-here': state.insertKey?.holder === tile.id && state.insertKey?.key === place.key, over: state.drag.key?.holder === tile.id && state.drag.key?.key === place.key }">
             <TileCard v-if="place.tile" :tile="place.tile" :slot="-1" round :preview="preview" />
             <button v-else type="button" class="key-empty" :title="t('editor.page.cell.title')" @click.stop="markKey(place.key)"><span>+</span></button>
@@ -278,6 +360,12 @@ async function onKey(e: KeyboardEvent) {
           <circle cx="30" cy="30" r="3.6" fill="#2196f3" />
         </svg>
         <span v-if="wide || tall || full" class="face-text"><span class="big">{{ clockText(clock24, now) }}</span><span class="st">{{ clockDate }}</span></span>
+      </span>
+    </template>
+    <template v-else-if="display === 'flip' && domain === 'screen' && flipWide">
+      <span class="flip-wide">
+        <span class="blocks"><span class="block">{{ flipHours }}</span><span class="block">{{ flipMinutes }}</span></span>
+        <span class="under"><span>{{ flipDay }}</span><span v-if="!clock24">{{ amPm }}</span></span>
       </span>
     </template>
     <template v-else-if="display === 'flip' && domain === 'screen'">
@@ -309,13 +397,17 @@ async function onKey(e: KeyboardEvent) {
       <span v-if="tile.options?.inline === 'slider'" class="mini-slider" :style="sliderStyle"></span>
       <span v-if="controls" class="ctl">
         <span v-if="controls === 'toggle'" class="tog" :class="{ off: !on }"></span>
-        <span v-else-if="controls === 'setpoint'" class="stp"><span class="mdi">{{ key("minus") || "−" }}</span><b>{{ setpoint }}</b><span class="mdi">{{ key("plus") || "+" }}</span></span>
+        <span v-else-if="controls === 'setpoint'" class="stp"><span class="mdi">{{ key("minus") || "−" }}</span><span v-if="rangeChip" v-chip-fit class="range-chip" :style="{ '--end': rangeChip.color, '--chip-ems': rangeChip.ems }"><span class="mdi end-icon">{{ key(rangeChip.icon) }}</span><b>{{ rangeChip.text }}</b></span><b v-else :style="{ '--pill-ems': textEms(setpoint + '8') }">{{ setpoint }}</b><span class="mdi">{{ key("plus") || "+" }}</span></span>
         <template v-else-if="controls === 'volume'"><span class="range" :style="volumeStyle"></span><span class="key mdi">{{ key("volume-high") }}</span></template>
-        <template v-else-if="controls === 'playback'"><span class="key mdi">{{ key("skip-previous") }}</span><span class="key mdi">{{ key(on ? "pause" : "play") || key("play") }}</span><span class="key mdi">{{ key("skip-next") }}</span></template>
-        <template v-else-if="controls === 'buttons' && domain === 'cover'"><span class="key mdi">{{ key("arrow-expand-horizontal") }}</span><span class="key mdi">{{ key("stop") }}</span><span class="key mdi">{{ key("arrow-collapse-horizontal") }}</span></template>
+        <ModeBar v-else-if="modeBar" :a="current?.a || {}" :mode="current?.state || ''" place="full" :columns="shape.columns" /><template v-else-if="panelKeys.length"><span v-for="(control, i) in panelKeys" :key="i" class="key mdi" :class="{ primary: control.primary, disabled: control.disabled, active: control.mode === current?.state }">{{ key(control.icon) }}</span></template>
         <span v-else-if="controls === 'run'" class="run">{{ runText }}</span>
         <span v-else class="range" :style="sliderStyle"></span>
       </span>
+    </template>
+    <template v-else-if="bigKey">
+      <span class="ic mdi" :class="{ lit: isOn }">{{ glyph(tileIconCp(tile)) }}</span>
+      <span class="nm">{{ name }}</span>
+      <span v-if="bigKeyLine" class="st" :class="{ off: gone }">{{ bigKeyLine }}</span>
     </template>
     <template v-else-if="tall">
       <img v-if="artwork" :key="artwork" class="tall-art" :src="artwork" alt="" @load="artworkLoaded = true" @error="artworkLoaded = false" />
@@ -325,9 +417,9 @@ async function onKey(e: KeyboardEvent) {
       </span>
       <CoverTilePreview v-if="coverExtended" :primary="tallControls" :entity-state="current?.state || ''" :attributes="current?.a || {}" />
       <span v-else-if="domain === 'climate' && (tallControls === 'setpoint' || tallControls === 'setpoint_mode')" class="tall-setpoint">
-        <span class="target"><span class="key mdi">{{ key('minus') || '−' }}</span><b>{{ setpoint }}</b><span class="key mdi">{{ key('plus') || '+' }}</span></span>
+        <span class="target"><span class="key mdi">{{ key('minus') || '−' }}</span><span v-if="rangeChip" v-chip-fit class="range-chip" :style="{ '--end': rangeChip.color, '--chip-ems': rangeChip.ems }"><span class="mdi end-icon">{{ key(rangeChip.icon) }}</span><b>{{ rangeChip.text }}</b></span><b v-else>{{ setpoint }}</b><span class="key mdi">{{ key('plus') || '+' }}</span></span>
         <span class="st">{{ current?.a?.current_temperature !== undefined ? screenText('screen.climate.now', { value: `${num(current.a.current_temperature)}°` }) : status }}</span>
-        <span v-if="modeKeys.length" class="ctl modes"><span v-for="(control, i) in modeKeys" :key="i" class="key mdi" :class="{ active: control.mode === current?.state }">{{ key(control.icon) }}</span></span>
+        <ModeBar v-if="tallControls === 'setpoint_mode'" class="ctl modes" :a="current?.a || {}" :mode="current?.state || ''" place="tall" :columns="shape.columns" />
       </span>
       <template v-else>
         <span v-if="!tallAction" class="tall-body">
@@ -339,7 +431,8 @@ async function onKey(e: KeyboardEvent) {
         </span>
       <span v-if="tallControls" class="ctl" :class="{ playback: tallControls === 'playback' }">
         <span v-if="tallControls === 'toggle'" class="tog" :class="{ off: !on }"></span>
-        <span v-else-if="tallControls === 'setpoint'" class="stp"><span class="mdi">{{ key("minus") || "−" }}</span><b>{{ setpoint }}</b><span class="mdi">{{ key("plus") || "+" }}</span></span>
+        <span v-else-if="tallControls === 'setpoint'" class="stp"><span class="mdi">{{ key("minus") || "−" }}</span><span v-if="rangeChip" v-chip-fit class="range-chip" :style="{ '--end': rangeChip.color, '--chip-ems': rangeChip.ems }"><span class="mdi end-icon">{{ key(rangeChip.icon) }}</span><b>{{ rangeChip.text }}</b></span><b v-else :style="{ '--pill-ems': textEms(setpoint + '8') }">{{ setpoint }}</b><span class="mdi">{{ key("plus") || "+" }}</span></span>
+        <ModeBar v-else-if="tallControls === 'mode' && domain === 'climate'" :a="current?.a || {}" :mode="current?.state || ''" place="tall" :columns="shape.columns" />
         <template v-else-if="tallKeys.length"><span v-for="(control, i) in tallKeys" :key="i" class="key mdi" :class="{ primary: control.primary, disabled: control.disabled, active: control.mode === current?.state }">{{ key(control.icon) }}</span></template>
         <span v-else-if="tallControls === 'stepper'" class="stp"><span class="mdi">{{ key("minus") || "−" }}</span><b>{{ bigValue }}</b><span class="mdi">{{ key("plus") || "+" }}</span></span>
         <template v-else-if="tallControls === 'volume'"><span v-if="features & 4" class="range" :style="volumeStyle"></span><span v-if="features & 8" class="key mdi">{{ key(current?.a?.is_volume_muted ? 'volume-off' : 'volume-high') }}</span></template>
@@ -361,15 +454,11 @@ async function onKey(e: KeyboardEvent) {
       <span v-if="tile.options?.inline === 'slider'" class="mini-slider" :style="sliderStyle"></span>
       <span v-if="controls" class="ctl" :class="{ fill: fillsCell }">
         <span v-if="controls === 'toggle'" class="tog" :class="{ off: !on }"></span>
-        <span v-else-if="controls === 'setpoint'" class="stp"><span class="mdi">{{ key("minus") || "−" }}</span><b>{{ setpoint }}</b><span class="mdi">{{ key("plus") || "+" }}</span></span>
+        <span v-else-if="controls === 'setpoint'" class="stp"><span class="mdi">{{ key("minus") || "−" }}</span><span v-if="rangeChip" class="range-chip" :class="{ lone: wideFit && !wideFit.icon }" :style="{ '--end': rangeChip.color, '--chip-ems': rangeChip.ems, ...(wideFit ? { '--chip-face': `${(wideFit.face * glassScale).toFixed(2)}px` } : {}) }"><span class="mdi end-icon">{{ key(rangeChip.icon) }}</span><b>{{ rangeChip.text }}</b></span><b v-else :style="{ '--pill-ems': textEms(setpoint + '8') }">{{ setpoint }}</b><span class="mdi">{{ key("plus") || "+" }}</span></span>
         <template v-else-if="controls === 'stepper' && domain.endsWith('select')"><span class="key mdi">{{ key("chevron-left") }}</span><span class="key mdi">{{ key("chevron-right") }}</span></template>
         <span v-else-if="controls === 'stepper'" class="stp"><span class="mdi">{{ key("minus") || "−" }}</span><b>{{ bigValue }}</b><span class="mdi">{{ key("plus") || "+" }}</span></span>
-        <template v-else-if="controls === 'mode'"><span class="key mdi">{{ key("power") }}</span><span class="key mdi">{{ key("fire") }}</span><span class="key mdi">{{ key("snowflake") }}</span></template>
+        <ModeBar v-else-if="modeBar" :a="current?.a || {}" :mode="current?.state || ''" place="row" :columns="shape.columns" /><template v-else-if="panelKeys.length"><span v-for="(control, i) in panelKeys" :key="i" class="key mdi" :class="{ primary: control.primary, disabled: control.disabled, active: control.mode === current?.state }">{{ key(control.icon) }}</span></template>
         <template v-else-if="controls === 'volume'"><span class="range" :style="volumeStyle"></span><span class="key mdi">{{ key("volume-high") }}</span></template>
-        <template v-else-if="controls === 'playback'"><span class="key mdi">{{ key("skip-previous") }}</span><span class="key mdi">{{ key(on ? "pause" : "play") || key("play") }}</span><span class="key mdi">{{ key("skip-next") }}</span></template>
-        <template v-else-if="controls === 'buttons' && domain === 'cover'"><span class="key mdi">{{ key("arrow-expand-horizontal") }}</span><span class="key mdi">{{ key("stop") }}</span><span class="key mdi">{{ key("arrow-collapse-horizontal") }}</span></template>
-        <template v-else-if="controls === 'buttons' && domain === 'vacuum'"><span class="key mdi">{{ key("play") }}</span><span class="key mdi">{{ key("stop") }}</span><span class="key mdi">{{ key("home-map-marker") }}</span></template>
-        <template v-else-if="controls === 'buttons' && domain === 'timer'"><span class="key mdi">{{ key("play") }}</span><span class="key mdi">{{ key("close") }}</span></template>
         <span v-else-if="controls === 'run'" class="run">{{ runText }}</span>
         <span v-else class="range" :style="sliderStyle"></span>
       </span>
@@ -408,8 +497,27 @@ async function onKey(e: KeyboardEvent) {
 .face-clock .blocks { display: flex; align-items: baseline; gap: 3px; }
 .face-clock .block { background: #f1f1f1; border-radius: 4px; padding: 1px 5px; font-size: 24px; font-weight: 500; line-height: 1.25; background-image: linear-gradient(transparent calc(50% - .5px), #fff calc(50% - .5px), #fff calc(50% + .5px), transparent calc(50% + .5px)); }
 .face-clock .blocks small { font-size: 9px; margin-left: 2px; }
-.bedside-clock { display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; width: 100%; height: 100%; min-width: 0; }
-.bedside-clock .big { font-size: 64px; font-weight: 400; line-height: 1; letter-spacing: -1px; }
+.bedside-clock { display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; width: 100%; height: 100%; min-width: 0; container-type: inline-size; }
+/* As the screen draws it: the time about as wide as the card, the keys a quarter of its height. */
+.bedside-clock .bedside-time { font-size: 32cqw; font-weight: 400; line-height: 1; letter-spacing: -1px; }
+/* The compact look (a CYD) draws its display step smaller against the card. */
+.bedside-clock.compact .bedside-time { font-size: 24cqw; }
+.bedside-clock .round-tile .disc { width: 16cqw; height: 16cqw; font-size: 8cqw; }
+.bedside-clock .round-tile .disc .value { font-size: 4cqw; }
+.bedside-clock .key-place { width: auto; min-width: min(20cqw, 64px); }
+.bedside-clock .round-tile, .bedside-clock .round-key { max-width: none; }
+.bedside-clock .time { display: grid; justify-items: end; }
+.bedside-clock .am-pm { font-size: min(4cqw, 12px); opacity: .6; margin-top: 4px; }
+.flip-wide { display: flex; flex-direction: column; justify-content: center; gap: 6px; width: 100%; height: 100%; min-width: 0; container-type: size; }
+/* As the screen draws it: two blocks sharing the width, each about as tall as wide, the digits filling them. */
+.flip-wide .blocks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3%; height: min(calc(100cqh - 34px), 44cqw); }
+.flip-wide .block { display: grid; place-items: center; background: #f1f1f1; border-radius: 8px; font-size: min(36cqw, calc((100cqh - 34px) * .78)); font-weight: 400; line-height: 1;
+  background-image: linear-gradient(transparent calc(50% - .5px), #fff calc(50% - .5px), #fff calc(50% + .5px), transparent calc(50% + .5px)); }
+.flip-wide .under { display: flex; justify-content: space-between; font-size: 10px; opacity: .7; }
+.tile.tall.big-key { flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 4px; container-type: size; }
+.tile.tall.big-key .ic { width: 44cqmin; height: 44cqmin; display: grid; place-items: center; font-size: 24cqmin; padding: 0; }
+.tile.tall.big-key .nm { font-size: clamp(12px, 13cqmin, 26px); font-weight: 500; color: #1b1b1b; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile.tall.big-key .st { font-size: 10px; }
 .bedside-clock .keys { display: flex; gap: 14px; }
 .key-place { display: grid; place-items: center; width: 64px; min-height: 52px; border-radius: 12px; }
 .key-place.over, .key-place.insert-here { outline: 2px dashed var(--accent, #2196f3); outline-offset: 2px; }
@@ -444,6 +552,17 @@ async function onKey(e: KeyboardEvent) {
 .tile.tall .key { width: clamp(22px, 18cqh, 36px); height: clamp(22px, 18cqh, 36px); min-width: 0; padding: 0; border-radius: 50%; }
 .tile.tall .playback .key.primary, .tile.tall .key.active { background: var(--tile-accent); color: white; }
 .tall-setpoint { flex: 1; display: flex; flex-direction: column; min-height: 0; justify-content: center; gap: 5px; text-align: center; }
+/* A thermostat's range (firmware 0.19.0, runtime_tiles range_chip): the end the -/+ move as a white chip between them,
+   its heat or cool icon in that mode's colour; too narrow for the icon, the number alone in that colour. */
+.range-chip { container-type: inline-size; flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; justify-content: center; gap: 3px; margin: 2px 0; padding: 0 6px; border-radius: 999px; }
+.range-chip .end-icon { color: var(--end); font-size: 12px; }
+.range-chip b { font-weight: 600; white-space: nowrap; }
+.target .range-chip { margin: 0; }
+.target .range-chip b { font-size: clamp(16px, 18cqh, 42px); font-weight: 400; }
+.target .range-chip .end-icon { font-size: clamp(12px, 10cqh, 24px); }
+/* No room for the icon beside the widest number (vChipFit): the number alone, in its end's colour. */
+.range-chip.lone .end-icon { display: none; }
+.range-chip.lone b { color: var(--end); }
 .target { flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
 .target b, .target-value { font-size: clamp(16px, 18cqh, 42px); font-weight: 400; text-align: center; }
 .tile.tall .tall-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; opacity: 0; filter: brightness(.333); pointer-events: none; }

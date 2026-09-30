@@ -110,7 +110,10 @@
       "home": "Casa",
       "no_network": "Sin red",
       "configuration_problem": "Problema de configuración.\nActualiza el complemento.",
-      "configuration_version": "Problema de configuración.\nComprueba las versiones de pantalla y complemento."
+      "configuration_version": "Problema de configuración.\nComprueba las versiones de pantalla y complemento.",
+      "wifi_problem": "Problema de conexión Wi-Fi",
+      "wifi_hotspot": "Conéctate al punto de acceso {name} para solucionarlo.\nContraseña: {password}",
+      "wifi_usb": "Comprueba el nombre y la contraseña del Wi-Fi y vuelve a instalar esta pantalla por USB."
     },
     "preparing": {
       "default": "Ordenando tus mosaicos",
@@ -594,6 +597,7 @@
         "column_range": "Elige una columna entre 1 y {last}; left y right son la primera y la última.",
         "full_page_alone": "Un mosaico de página completa ocupa toda la página {page}; ahí no cabe nada más.",
         "does_not_fit": "Eso no cabe en la página {page}; un mosaico de doble ancho ocupa dos huecos.",
+        "size": "Esta pantalla no tiene tarjetas de {size}. Admite: {sizes}.",
         "order_needed": "Indica las entidades en el orden que quieras.",
         "order_not_on_screen": "No están en esta pantalla: {entities}.",
         "order_not_on_page": "No están en la página {page}: {entities}. Muévelas antes allí.",
@@ -716,7 +720,7 @@
         "ambiguous_tile": "El evento de tarjeta tiene un origen ambiguo; especifica su página",
         "save_first": "Guarda la distribución de páginas antes de guardar sus ajustes",
         "destination_exists": "La pantalla de destino ya tiene una distribución guardada",
-        "update_tall": "Actualiza la pantalla para usar tarjetas más altas",
+        "update_tall": "Actualiza la pantalla para usar estos tamaños de tarjeta",
         "memory": "La pantalla no tiene suficiente memoria libre para este diseño. Usa menos tarjetas."
       },
       "feedback": {
@@ -1237,7 +1241,6 @@
       },
       "search": "Buscar",
       "screens": "Pantallas",
-      "more": "Más",
       "refresh": "Recargar",
       "update": {
         "button": "Actualizar",
@@ -1245,7 +1248,8 @@
         "available": "Actualización a {version}",
         "no_profile": "No se ha encontrado ningún perfil de ESPHome con este nombre de dispositivo.",
         "whats_new": "Novedades",
-        "full_log": "Registro completo"
+        "full_log": "Registro completo",
+        "short": "Actualización"
       },
       "host": {
         "hint": "La dirección IP, solo esta vez; el firmware nuevo la comunica por sí mismo.",
@@ -1259,6 +1263,8 @@
         "not_flashed": "Aún no está en Home Assistant. ¿Ya has instalado el firmware? Añade el dispositivo ESPHome en Configuración → Dispositivos y servicios y luego permite las acciones de Home Assistant en Configurar. ¿Todavía no? Firmware y USB → {file}."
       },
       "copy_api_key": "Copiar clave API",
+      "files": "Descargar archivos de la pantalla",
+      "files_hint": "El YAML de ESPHome de la pantalla con sus claves, su Override YAML y un secrets.yaml con el Wi-Fi, para compilarla con ESPHome en tu ordenador.",
       "details": {
         "room": "Habitación",
         "firmware": "Firmware",
@@ -1432,10 +1438,7 @@
         "alarm_control_panel": "Alarma",
         "lock": "Cerraduras"
       },
-      "more": "Más ({n})",
-      "fewer": "Menos",
       "room": "Habitación",
-      "all_rooms": "Todas las habitaciones",
       "hide_placed": "Ocultar añadidas",
       "hide_placed_title": "Ocultar lo que ya está en esta pantalla",
       "again": "Ya está en esta pantalla; añádelo de nuevo para otro mosaico",
@@ -1443,7 +1446,10 @@
       "none_found": "No se han encontrado entidades. Prueba con otro nombre, habitación o filtro.",
       "full": "En esta pantalla cabe 1 mosaico. | En esta pantalla caben {n} mosaicos.",
       "full_update": "En esta pantalla cabe 1 mosaico; actualiza su firmware para tener 48. | En esta pantalla caben {n} mosaicos; actualiza su firmware para tener 48.",
-      "hint": "Arrastra a una página o toca + para añadir al primer hueco libre. ⌘K busca en todo."
+      "hint": "Arrastra a una página o toca + para añadir al primer hueco libre. ⌘K busca en todo.",
+      "resize": "Arrastra para cambiar el tamaño de la biblioteca",
+      "filter_label": "Filtrar por tipo",
+      "no_room": "Sin estancia"
     },
     "domains": {
       "light": "Luz",
@@ -1547,21 +1553,6 @@
           "none": "Nada"
         }
       },
-      "size": {
-        "label": "Tamaño",
-        "single": "Normal",
-        "wide": "Doble ancho",
-        "full": "Página completa",
-        "full_hint": "Página completa: un botón grande en el color del propio mosaico; en la parte inferior va un control deslizante, unos controles o un gráfico.",
-        "needs_firmware": "Un mosaico de página completa necesita el firmware 0.2.62: pulsa antes Actualizar en la lista de pantallas.",
-        "tall": "1 × 2",
-        "square": "2 × 2",
-        "rectangle_hint": "Ancho × alto en celdas. Usa el diseño actual de la tarjeta."
-      },
-      "page": {
-        "label": "Página",
-        "new": "Página nueva"
-      },
       "controls": {
         "label": "Control directo en el mosaico",
         "not_offered": "Home Assistant no ofrece este control para esta entidad, así que en la pantalla queda vacío. Elige otro.",
@@ -1630,15 +1621,15 @@
         "rows": "Cambiar altura (flechas arriba/abajo)"
       },
       "sections": {
-        "text": "Texto",
         "look": "Aspecto",
-        "place": "Tamaño y lugar",
         "controls": "Controles",
         "style": "Icono y color"
       },
       "keys": {
         "hint": "Arrastra una lámpara, una temperatura o una cerradura a los huecos redondos bajo la hora, o toca un hueco y elige. Son mosaicos: toca uno para configurarlo.",
-        "under": "Bajo el reloj de mesita: un mosaico en su forma redonda. Un toque hace lo mismo que en un mosaico, y mantenerlo pulsado abre su tarjeta."
+        "under": "Bajo el reloj de mesita: un mosaico en su forma redonda. Un toque hace lo mismo que en un mosaico, y mantenerlo pulsado abre su tarjeta.",
+        "name_shown": "Nombre bajo la tecla",
+        "name_shown_hint": "Desactivado muestra solo el círculo."
       }
     },
     "tile_card": {
@@ -1695,6 +1686,7 @@
       "name_placeholder": "Por ejemplo: Salón",
       "screen_name": "Título de la pantalla",
       "screen_name_hint": "Cada página sin título propio muestra este.",
+      "no_title_hint": "Déjalo vacío para mostrar solo el logotipo.",
       "right": "Derecha: hora, sensores o un reloj",
       "item_label": "{name}, hueco {slot}. Enter: configurar; flechas: mover",
       "remove_named": "Eliminar {name} de la barra superior",
@@ -1902,7 +1894,6 @@
     },
     "installer": {
       "title": {
-        "setup": "Conectar e instalar.",
         "saved": "Perfil guardado.",
         "running": "Un momento…",
         "ready": "Listo para descargar.",
@@ -1910,7 +1901,6 @@
         "stopped": "Detenido.",
         "failed": "No ha funcionado."
       },
-      "intro": "Tessera crea el perfil propio de la pantalla con claves únicas y compila el firmware. Conecta la pantalla con un cable USB de datos al equipo donde se ejecuta Home Assistant, o al ordenador que estás usando ahora.",
       "board": "¿Qué pantalla tienes?",
       "board_title": "{name} · {inch} pulgadas",
       "status": {
@@ -1931,10 +1921,12 @@
         "calibration": "Calibración táctil al primer arranque"
       },
       "choice": {
-        "DISPLAY_MODEL": "Controlador de pantalla"
+        "DISPLAY_MODEL": "Controlador de pantalla",
+        "GRID_ROWS": "Mosaicos por página"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "La mayoría de estas placas llevan el primero. Elige el otro si la pantalla muestra ruido o una imagen distorsionada."
+        "DISPLAY_MODEL": "La mayoría de estas placas llevan el primero. Elige el otro si la pantalla muestra ruido o una imagen distorsionada.",
+        "GRID_ROWS": "Cuatro filas caben ocho mosaicos más pequeños en una página, para una pantalla con muchos interruptores. Tres filas mantienen los mosaicos más grandes y fáciles de leer."
       },
       "choice_usual": "la mayoría",
       "orientation": "¿Cómo la vas a colgar?",
@@ -1945,7 +1937,6 @@
       "name": "Nombre",
       "name_placeholder": "Pantalla del salón",
       "device_name": "Nombre del dispositivo",
-      "customize": "personalizar",
       "name_hint": "Cada pantalla tiene su propio perfil con sus propias claves. ¿Cuatro pantallas? Haz esto cuatro veces con un nombre distinto.",
       "name_taken": "Otra pantalla ya se llama así. Home Assistant numeraría los nombres de las entidades de esta, y las automatizaciones apuntarían a la pantalla equivocada.",
       "device_name_hint": "Letras minúsculas, números y guiones. Un nombre distinto para cada pantalla.",
@@ -1957,12 +1948,13 @@
         "new": "Rellénalo una sola vez: Tessera lo guarda en el secrets.yaml de ESPHome y las siguientes pantallas lo usan automáticamente.",
         "missing": "A tu secrets.yaml de ESPHome aún le faltan los datos de la Wi-Fi. Tessera solo rellena las líneas que faltan.",
         "ready": "La Wi-Fi se toma de tu secrets.yaml de ESPHome.",
-        "invalid": "El secrets.yaml de la carpeta de ESPHome no es un YAML válido. Corrige antes el archivo; no se sobrescribirá."
+        "invalid": "El secrets.yaml de la carpeta de ESPHome no es un YAML válido. Corrige antes el archivo; no se sobrescribirá.",
+        "other": "Otra red",
+        "other_note": "Todas las pantallas se compilan con esta Wi-Fi; las que ya tienes la toman en su próxima actualización."
       },
       "install_via": "Instalar mediante",
-      "later": "Más tarde · solo guardar el perfil",
       "target": {
-        "usb": "Conecta la pantalla con un cable USB de datos al equipo de Home Assistant; la lista se actualiza sola. O elige Este ordenador para instalar desde este navegador.",
+        "usb": "Conecta la pantalla con un cable USB de datos al equipo de Home Assistant; aparece aquí sola. ¿Está conectada al ordenador que usas ahora? Elige Desde este ordenador.",
         "download": "Descarga el firmware e instálalo en la pantalla desde tu propio ordenador, con Chrome o Edge. Después, las actualizaciones van por Wi-Fi.",
         "later": "El perfil se guarda en la carpeta de ESPHome. Puedes instalarlo más tarde desde Firmware y USB o desde ESPHome Device Builder.",
         "several": "Hay más de una placa conectada: elige el puerto de esta pantalla.",
@@ -2014,12 +2006,75 @@
         "tiles": "{bold} De vuelta en Tessera, la pantalla aparece en la lista de la izquierda en unos treinta segundos; hasta entonces se muestra ahí como «aún no está en Home Assistant».",
         "tiles_bold": "Elige tus mosaicos."
       },
-      "log": "Registro de ESPHome",
       "retry": "Reintentar",
       "another": "Instalar otra pantalla",
       "start_over": "Empezar de nuevo",
       "done": "Hecho",
-      "key_more": "Mostrar la clave API"
+      "key_more": "Mostrar la clave API",
+      "steps": {
+        "board": "Pantalla",
+        "setup": "Configurar",
+        "install": "Instalar"
+      },
+      "pick_title": "¿Qué pantalla tienes?",
+      "pick_intro": "Elige tu placa. Busca por marca, tamaño o lo que lleva impreso.",
+      "search": "Buscar por marca, tamaño o modelo",
+      "sizes": {
+        "all": "Todas",
+        "small": "Hasta 4 pulgadas",
+        "medium": "De 4 a 6 pulgadas",
+        "large": "7 pulgadas o más"
+      },
+      "none_found": "Ninguna pantalla coincide con «{query}».",
+      "try_virtual": "¿Aún sin pantalla? Prueba una pantalla de vista previa",
+      "setup_title": "Hazla tuya",
+      "install_title": "¿Cómo quieres instalarla?",
+      "next": "Siguiente",
+      "advanced": "Avanzado",
+      "ways": {
+        "ha_title": "USB en Home Assistant",
+        "ha_found": "Encontrada: {port}",
+        "ha_waiting": "Conecta la pantalla al equipo donde funciona Home Assistant",
+        "browser_title": "Desde este ordenador",
+        "browser_detail": "Chrome o Edge, con la pantalla en el USB de este ordenador",
+        "download_title": "Descargar el archivo",
+        "download_detail": "Instálalo tú con ESPHome Web",
+        "later_title": "Más tarde",
+        "later_detail": "Guardar solo los ajustes"
+      },
+      "steps_done": {
+        "prepare": "Preparando",
+        "build": "Compilando el firmware",
+        "write": "Escribiendo en la pantalla",
+        "restart": "Arrancando",
+        "done": "Listo",
+        "download": "Listo para descargar"
+      },
+      "elapsed": "{time} en curso",
+      "show_log": "Mostrar detalles",
+      "hide_log": "Ocultar detalles",
+      "next_title": "Qué sigue",
+      "model": "¿Qué modelo es?",
+      "model_hint": "Está impreso en la parte trasera de la placa. Se parecen, pero cada uno necesita su propio firmware.",
+      "models": "{n} modelo | {n} modelos",
+      "arrive": {
+        "waiting": "Esperando a que {name} aparezca en tu Wi-Fi...",
+        "seen": "{name} está en tu Wi-Fi. Vincúlala ahora en Home Assistant.",
+        "paired": "{name} está vinculada con Home Assistant.",
+        "missing": "{name} aún no está en tu Wi-Fi",
+        "hotspot": "Mira la pantalla: muestra un punto de acceso y su contraseña. Conéctate con el móvil y elige ahí la Wi-Fi correcta. O pon aquí la Wi-Fi correcta e instala de nuevo.",
+        "no_hotspot": "Probablemente el nombre o la contraseña de la Wi-Fi no son correctos. Pon aquí la Wi-Fi correcta e instala de nuevo, con la pantalla aún conectada al cable.",
+        "change": "Cambiar Wi-Fi e instalar de nuevo"
+      },
+      "choice_option": {
+        "GRID_ROWS": {
+          "3": "3 filas",
+          "4": "4 filas, mosaicos más pequeños"
+        }
+      },
+      "choice_first": {
+        "GRID_ROWS": "el tamaño habitual"
+      }
     },
     "alerts": {
       "eyebrow": "Alertas · guía rápida",
@@ -2434,7 +2489,15 @@
       "saved": "Guardado en este navegador",
       "hint": "El propio firmware de la pantalla, dibujado a partir del diseño que estás editando. Toca, mantén pulsado y desliza como en la pantalla. No se guarda nada.",
       "control": "Los toques controlan dispositivos",
-      "control_hint": "Activado: un toque en un mosaico ejecuta su acción en Home Assistant, como en la pantalla. Desactivado: la vista previa solo muestra lo que hace un toque."
+      "control_hint": "Activado: un toque en un mosaico ejecuta su acción en Home Assistant, como en la pantalla. Desactivado: la vista previa solo muestra lo que hace un toque.",
+      "skipped": "No se pudo cargar la pantalla de vista previa {names} y se ha omitido."
+    },
+    "inspector": {
+      "kind": {
+        "tile": "Mosaico",
+        "page": "Página",
+        "bar": "Barra superior"
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 """Camera images on a Guition (app 0.2.66, firmware 0.2.57): the app fetches, sizes and serves the image on its own
 port; the screen asks with esphome.screen_camera and loads the link with ESPHome's online_image."""
-from firmware_sources import runtime_source
+from firmware_sources import firmware_domains, runtime_source
 from manager_fixtures import with_screen_grid, seed_layout
 import asyncio
 import contextlib
@@ -151,7 +151,7 @@ class Rules(unittest.TestCase):
         self.assertIn('request.service = esphome::StringRef("esphome.screen_camera");', TILES)
         self.assertIn("event_type='esphome.screen_camera'", (ROOT / 'screen_manager/app/server.py').read_text())
         self.assertIn('if (op == "camera") {', TILES)
-        self.assertIn('"camera", "image",', (ROOT / 'components/smart_display/runtime_model.h').read_text())
+        self.assertLessEqual({'camera', 'image'}, firmware_domains())
         # The profile loads both images and binds them; the CYD has none, so it never opens a camera.
         for needle in ('online_image:\n  - id: camera_image', '  - id: alert_image', 'runtime_tiles::camera_loaded(false, cached);',
                        'runtime_tiles::camera_loaded(true, cached);', 'runtime_tiles::camera_tick();', 'runtime_tiles::alert_prepare();',

@@ -15,7 +15,7 @@ export type TileOptions = {
 export type ChildTile = {
   id: string;
   content: { kind: "entity"; entityId: string };
-  appearance: { label: string; icon?: string };
+  appearance: { label: string; icon?: string; overlay?: string };
   interaction: { tap?: string; action?: TileOptions["action"]; guard?: string };
 };
 // A key of a bedside clock (app 0.4.12) is a tile like any other without a cell: it names the tile it stands under
@@ -30,7 +30,7 @@ export type PageTile = {
   // A footprint is a rectangle. The renderer's capabilities decide which
   // rectangles it supports; the page's grid is never user-overridable.
   placement: { row: number; column: number; columns: number; rows: number };
-  appearance: { label: string; presentation?: "single" | "wide" | "tall" | "square" | "full"; display?: string; icon?: string; background?: string; historyHours?: number; refresh?: number; subtitle?: string; fit?: string; overlay?: string };
+  appearance: { label: string; presentation?: "single" | "wide" | "tall" | "square" | "full" | `${number}x${number}`; display?: string; icon?: string; background?: string; historyHours?: number; refresh?: number; subtitle?: string; fit?: string; overlay?: string };
   interaction: { tap?: string; inline?: string; controls?: string; action?: TileOptions["action"]; guard?: string };
   children?: ChildTile[];
 };
@@ -90,6 +90,8 @@ export type BoardChoice = BoardCatalog & {
   width: number; height: number; dpi: number; look?: string; camera: boolean; dimmable: boolean; can_standby: boolean;
   // The chip its firmware is built for, as esptool names it ("ESP32-S3"): the browser flasher checks the board on the cable.
   chip?: string | null;
+  // Whether it opens a Wi-Fi hotspot when its network is gone (app 0.4.32; 4 MB boards have no room for it).
+  hotspot?: boolean;
 };
 // Does this screen work as you expect (app 0.3.10): what the add-on says about the board's shared answer. The key and
 // the revision never reach the page; the add-on keeps them.
@@ -126,12 +128,13 @@ export type Screen = {
   api_key?: string | null;
   // What the add-on reads from the firmware (app 0.2.78): its X.Y.Z (null when unknown), how many tiles it holds,
   // whether it draws full-page tiles, and whether it takes several tiles that go to the same page.
-  firmware_known?: string | null; tile_limit?: number; full_page?: boolean; page_tiles_repeat?: boolean; entity_tiles_repeat?: boolean;
+  firmware_known?: string | null; tile_limit?: number; page_limit?: number; full_page?: boolean; page_tiles_repeat?: boolean; entity_tiles_repeat?: boolean; no_title?: boolean; climate_range?: boolean;
   // The language its firmware was built in (app 0.2.90); null for older firmware, which is English.
   language?: string | null;
   // What the screen looks like (app 0.2.94): the glass it draws on, the cells of one page, its density and its look,
   // from the screen itself (firmware 0.2.80) or from the board it was built for (core.shape_of); the editor draws it.
-  shape?: { width: number; height: number; columns: number; rows: number; dpi?: number; look?: string; catalog?: BoardCatalog } | null;
+  shape?: { width: number; height: number; columns: number; rows: number; dpi?: number; look?: string; catalog?: BoardCatalog;
+    fonts?: { watch_value?: number; sublabel_big?: number; sublabel?: number; icon_mini?: number }; spacing?: { margin: number; gap: number; tile_pad: number } } | null;
   // Which way it was built to hang (app 0.2.107): a screen standing up has another canvas and another grid, and
   // while it is offline only the YAML of its own profile says so.
   orientation?: Orientation;
@@ -163,7 +166,8 @@ export type Inventory = {
   screens: Screen[];
   entities: Entity[];
   builtin?: Entity[];
-  pending?: { friendly: string; file: string; installed?: boolean; downloaded?: boolean; api_key?: string }[];
+  // `seen`: Home Assistant found it on the network, waiting to be paired (app 0.4.32).
+  pending?: { friendly: string; file: string; node?: string; installed?: boolean; downloaded?: boolean; api_key?: string; seen?: boolean }[];
   updates?: { target: string; busy?: boolean; pending?: number; auto?: boolean };
   // The CHANGELOG by release, newest first: only in the full inventory, not in the live payload (app 0.2.78).
   changelog?: ChangelogSection[];

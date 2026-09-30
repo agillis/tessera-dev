@@ -1,0 +1,30 @@
+# Cover (blind, curtain, garage door). Home Assistant: homeassistant/components/cover.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: cover
+displays:
+  standard: {}
+  watch: {}
+controls:
+  buttons:
+    needs: {actions: [cover.open_cover, cover.close_cover, cover.stop_cover]}
+  position:
+    needs: {actions: [cover.set_cover_position]}
+  # The slats of a blind; with the buttons or the position on a card with a second row for them (firmware 0.3.1).
+  tilt:
+    needs: {actions: [cover.set_cover_tilt_position, cover.open_cover_tilt, cover.close_cover_tilt, cover.stop_cover_tilt]}
+    rows: 2
+    screen: {firmware: 0.3.1}
+    one_row: none
+  buttons_tilt:
+    of: [buttons, tilt]
+    rows: 2
+    screen: {firmware: 0.3.1}
+    one_row: buttons
+  position_tilt:
+    of: [position, tilt]
+    rows: 2
+    screen: {firmware: 0.3.1}
+    one_row: position
+inline:
+  needs: {actions: [cover.set_cover_position]}

@@ -26,7 +26,7 @@ const entityItem = (id: string): HeaderItem => ({ type: "entity", entity: id, co
 </script>
 
 <template>
-  <InspectorHead :title="t('editor.topbar.add.title')" icon="plus"
+  <InspectorHead kind="bar" :title="t('editor.topbar.add.title')" icon="plus"
     :crumbs="[{ text: t('editor.topbar.title'), open: () => openBar(-1) }, { text: t('editor.topbar.add.slots', { used: topbarItems().length }, topbarMax()) }]" />
   <div class="dr-body">
     <div class="f">

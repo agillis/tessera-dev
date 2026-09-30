@@ -3,6 +3,7 @@
 // own entity rows. Pure logic only: which keys a card shows, what they send, how
 // a -/+ step lands on the entity's grid, and the status line beside them. The
 // LVGL drawing lives in runtime_tiles.h; tests/test_tile_controls.cpp covers this.
+#include "tile_catalogue.h"
 #include "alarm_panel.h"
 #include "lock_panel.h"
 #include "screen_input.h"
@@ -19,11 +20,20 @@
 
 namespace tile_controls {
 // Home Assistant supported_features bits.
+// Home Assistant's feature bits by the names this code knew them by, their values from Home Assistant's source through the
+// tile catalogue (tile_catalogue.h, catalogue/_ha.json): none is counted by hand here.
 namespace feature {
-constexpr uint32_t COVER_OPEN = 1, COVER_CLOSE = 2, COVER_POSITION = 4, COVER_STOP = 8;
-constexpr uint32_t COVER_OPEN_TILT = 16, COVER_CLOSE_TILT = 32, COVER_STOP_TILT = 64, COVER_TILT_POSITION = 128;
-constexpr uint32_t MEDIA_PAUSE = 1, MEDIA_VOLUME_SET = 4, MEDIA_VOLUME_MUTE = 8, MEDIA_PREVIOUS = 16, MEDIA_NEXT = 32, MEDIA_TURN_ON = 128, MEDIA_PLAY = 16384;
-constexpr uint32_t VACUUM_TURN_ON = 1, VACUUM_TURN_OFF = 2, VACUUM_PAUSE = 4, VACUUM_STOP = 8, VACUUM_RETURN = 16, VACUUM_START = 8192;
+namespace ha = tile_catalogue;
+constexpr uint32_t COVER_OPEN = ha::cover::OPEN, COVER_CLOSE = ha::cover::CLOSE, COVER_POSITION = ha::cover::SET_POSITION, COVER_STOP = ha::cover::STOP;
+constexpr uint32_t COVER_OPEN_TILT = ha::cover::OPEN_TILT, COVER_CLOSE_TILT = ha::cover::CLOSE_TILT, COVER_STOP_TILT = ha::cover::STOP_TILT,
+                   COVER_TILT_POSITION = ha::cover::SET_TILT_POSITION;
+constexpr uint32_t MEDIA_PAUSE = ha::media_player::PAUSE, MEDIA_VOLUME_SET = ha::media_player::VOLUME_SET, MEDIA_VOLUME_MUTE = ha::media_player::VOLUME_MUTE,
+                   MEDIA_PREVIOUS = ha::media_player::PREVIOUS_TRACK, MEDIA_NEXT = ha::media_player::NEXT_TRACK, MEDIA_TURN_ON = ha::media_player::TURN_ON,
+                   MEDIA_PLAY = ha::media_player::PLAY;
+constexpr uint32_t VACUUM_TURN_ON = ha::vacuum::TURN_ON, VACUUM_TURN_OFF = ha::vacuum::TURN_OFF, VACUUM_PAUSE = ha::vacuum::PAUSE, VACUUM_STOP = ha::vacuum::STOP,
+                   VACUUM_RETURN = ha::vacuum::RETURN_HOME, VACUUM_START = ha::vacuum::START, VACUUM_LOCATE = ha::vacuum::LOCATE;
+constexpr uint32_t CLIMATE_TEMPERATURE = ha::climate::TARGET_TEMPERATURE, CLIMATE_RANGE = ha::climate::TARGET_TEMPERATURE_RANGE;
+constexpr uint32_t FAN_SPEED = ha::fan::SET_SPEED;
 }
 // Material Design Icons glyphs the icon fonts carry (tile_icons.py FIXED).
 namespace glyph {
@@ -39,14 +49,15 @@ enum Command {
   MEDIA_PREVIOUS, MEDIA_PLAY_PAUSE, MEDIA_NEXT, MEDIA_MUTE, TIMER_START, TIMER_PAUSE, TIMER_CANCEL,
   HVAC_MODE, SELECT_PREVIOUS, SELECT_NEXT, RUN, TOGGLE, STEP_DOWN, STEP_UP,
   COVER_OPEN_TILT, COVER_STOP_TILT, COVER_CLOSE_TILT,
-  OPEN_CARD  // "…": the modes that did not fit are on the card (firmware 0.3.1+)
+  OPEN_CARD,  // "…": the modes that did not fit are on the card (firmware 0.3.1+)
+  RANGE_SWITCH  // the chip between a range thermostat's - and +: heat or cool is the end they move (firmware 0.19.0)
 };
 struct Key { const char *icon = ""; int command = NONE; std::string arg; bool checked = false, disabled = false; };
-struct Action { std::string service, key, value; bool valid() const { return !service.empty(); } };
+struct Action { std::string service, key, value; std::string key2 = {}, value2 = {}; bool valid() const { return !service.empty(); } };
 using runtime_tiles::Tile;
 
 // Panel kinds: keys (a row of pill buttons), stepper (-/+ pill), slider, toggle, run.
-inline bool is_key_row(const std::string &c) { return c == "buttons" || c == "mode" || c == "playback" || c == "chevrons"; }
+inline bool is_key_row(const std::string &c) { return c == "buttons" || c == "playback" || c == "chevrons"; }
 inline bool is_slider(const std::string &c) { return c == "volume" || c == "brightness" || c == "speed" || c == "position" || c == "slider"; }
 // The slider "a small slider on the tile" asks for, per domain: what a light, a fan, a blind, a player or a
 // number has to slide. A double-width card draws it as the panel's slider beside the name; a domain without
@@ -205,6 +216,20 @@ inline float numeric_state(const Tile &t) {
 }
 // Value the -/+ pill edits: the climate setpoint or the number itself.
 inline float edit_target(const Tile &t) { return t.domain() == "climate" ? t.target : numeric_state(t); }
+// A thermostat that keeps the room between two temperatures (firmware 0.19.0), decided as Home Assistant's thermostat
+// card decides it (ha-state-control-climate-temperature): a single target it supports and reports comes first; else a
+// range it supports (feature 2) with both ends reported.
+inline bool climate_range(const Tile &t) {
+  if (t.domain() != "climate" || ((t.supported & feature::CLIMATE_TEMPERATURE) && std::isfinite(t.target))) return false;
+  return (t.supported & feature::CLIMATE_RANGE) && std::isfinite(t.extra().target_low) && std::isfinite(t.extra().target_high);
+}
+// Which end of the range the climate card's -/+ moves.
+constexpr uint8_t RANGE_LOW = 1, RANGE_HIGH = 2;
+// An end of the range as the screen shows it: what the finger set while it is on its way, else what Home Assistant says.
+inline float range_end(const Tile &t, uint8_t end) {
+  if (end == RANGE_HIGH) return std::isfinite(t.edit_high) ? t.edit_high : t.extra().target_high;
+  return std::isfinite(t.edit_value) ? t.edit_value : t.extra().target_low;
+}
 inline float edit_step(const Tile &t) {
   float step = t.step;
   if (!std::isfinite(step) || step <= 0) step = t.domain() == "climate" ? 0.5f : 1.0f;
@@ -225,6 +250,13 @@ inline float step_value(float current, float step, float minimum, float maximum,
 inline std::string format_value(float value, float step, const char *suffix) {
   if (!std::isfinite(value)) return "--";
   return screen_text::decimal(value, step >= 1 ? 0 : 1) + suffix;
+}
+// A temperature a thermostat reports, written as Home Assistant writes the number it sends: 73°, 21.5°, 21.25°
+// (firmware 0.19.0; before, always one decimal, "73.0°").
+inline std::string temperature_text(float value) {
+  int digits = 0;
+  for (float scaled = value; digits < 2 && std::fabs(scaled - std::round(scaled)) > 0.01f; scaled *= 10) ++digits;
+  return screen_text::decimal(value, digits) + "°";
 }
 // Home Assistant's word for a climate fan ('f') or swing ('s') setting that Home Assistant names itself ("low" is
 // "Laag" in Dutch); an integration's own mode reads as its name ("fan_only" -> "Fan only").
@@ -351,7 +383,7 @@ inline std::string climate_card_status(const Tile &t, bool brief = false) {
                                       : std::string(climate_action_text(lower_case(t.extra().hvac_action)));
   if (status.empty()) status = climate_mode_text(lower_case(t.state));
   if (std::isfinite(t.current)) {
-    const std::string value = screen_text::decimal(t.current, 1) + "°";
+    const std::string value = temperature_text(t.current);
     status += " · " + (brief ? value : screen_text::fill(screen_text::txt::climate_now, "value", value));
   }
   if (!brief && std::isfinite(t.humidity)) status += " · " + screen_text::percent(static_cast<int>(std::lround(t.humidity)));
@@ -420,7 +452,7 @@ inline std::string status_text(const Tile &t) {
   if (d == "climate") {
     std::string text = climate_action_text(t.extra().hvac_action);
     if (text.empty()) text = climate_mode_text(t.state);
-    if (std::isfinite(t.current)) text += " · " + screen_text::decimal(t.current, 1) + "°";
+    if (std::isfinite(t.current)) text += " · " + temperature_text(t.current);
     return text;
   }
   if (d == "cover") {
@@ -488,22 +520,6 @@ inline Action cover_position_action(const Tile &t,int raw,bool tilt) {
   return tilt?Action{"cover.set_cover_tilt_position","tilt_position",std::to_string(percent)}
              :Action{"cover.set_cover_position","position",std::to_string(100-percent)};
 }
-// A climate's mode keys: the modes Home Assistant lists for this device, in its order, as many as `room` holds.
-// When they do not all fit, the last key is "…" and opens the card, which has every mode (firmware 0.3.1+).
-template <size_t N> inline unsigned climate_mode_keys(const Tile &t, std::array<Key, N> &out, unsigned room = N) {
-  room = std::min<unsigned>(room, N);
-  const auto modes = list_values(t.extra().hvac_modes, 8);
-  const bool more = modes.size() > room;
-  const unsigned shown = more ? (room ? room - 1 : 0) : (unsigned) modes.size();
-  const std::string current = lower_case(t.state);
-  unsigned n = 0;
-  for (unsigned i = 0; i < shown; ++i) {
-    const std::string mode = lower_case(modes[i]);
-    out[n++] = Key{mode_icon(mode), HVAC_MODE, mode, current == mode, false};
-  }
-  if (more && room) out[n++] = Key{glyph::MORE, OPEN_CARD, "", false, false};
-  return n;
-}
 // A thermostat tile's mode bar (firmware 0.3.3): heat and cool before the rest, so an airco shows both ways it can go
 // and not only the first Home Assistant lists; never off, which the tile's circle switches; and the mode it is in
 // always among them. When the modes do not all fit, the last place is "…" and opens the card with every mode; a bar
@@ -563,8 +579,6 @@ inline unsigned keys_for(const Tile &t, std::array<Key, 3> &out, uint32_t now = 
     if (t.supported & feature::MEDIA_PREVIOUS) add(glyph::PREVIOUS, MEDIA_PREVIOUS);
     if (t.supported & (feature::MEDIA_PLAY | feature::MEDIA_PAUSE)) add(t.state == "playing" ? glyph::PAUSE : glyph::PLAY, MEDIA_PLAY_PAUSE, !(t.supported & (t.state == "playing" ? feature::MEDIA_PAUSE : feature::MEDIA_PLAY)));
     if (t.supported & feature::MEDIA_NEXT) add(glyph::NEXT, MEDIA_NEXT);
-  } else if (c == "mode") {
-    n = climate_mode_keys(t, out);
   } else if (c == "chevrons") {
     // Nothing to step through is not a state that can lag: without two options there is no next one.
     add(glyph::LEFT, SELECT_PREVIOUS, t.extra().options.size() < 2);
@@ -698,14 +712,36 @@ inline Action choice_action(const Tile &t, char kind, const std::string &value) 
   return {"select.select_option", "option", value};
 }
 
-// The debounced -/+ edit lands as one service call.
-inline Action edit_action(const Tile &t, float value) {
-  if (!std::isfinite(value)) return {};
+// The widest temperature a thermostat's -/+ can show (firmware 0.19.0), to measure a face by once: as many digits as its
+// highest or lowest temperature has, each an 8, with the decimal its step shows ("88.8°" for 7 to 35 in halves, "88°" for
+// 45 to 95 in wholes). A face chosen by it keeps its size from one tap to the next, a size smaller where need be.
+inline std::string widest_setpoint(const Tile &t) {
+  const float reach = std::max(std::fabs(std::isfinite(t.minimum) ? t.minimum : 0.0f), std::fabs(std::isfinite(t.maximum) ? t.maximum : 0.0f));
+  float eights = 8;
+  for (int whole = static_cast<int>(reach); whole >= 10; whole /= 10) eights = eights * 10 + 8;
+  const float step = edit_step(t);
+  if (step < 1) eights += 0.8f;
+  return (std::isfinite(t.minimum) && t.minimum < 0 ? "-" : "") + format_value(eights, step, "°");
+}
+// A value as a service call takes it: a point, and no trailing zeros ("21.5", "70").
+inline std::string format_number(float value) {
   char b[24]; snprintf(b, sizeof(b), "%.2f", value);
   std::string text = b;
   while (text.size() > 1 && text.back() == '0') text.pop_back();
   if (text.back() == '.') text.pop_back();
+  return text;
+}
+// The debounced -/+ edit lands as one service call.
+inline Action edit_action(const Tile &t, float value) {
+  if (!std::isfinite(value) && !climate_range(t)) return {};
+  const std::string text = std::isfinite(value) ? format_number(value) : std::string();
   auto d = t.domain();
+  // A range goes out whole, both ends, as Home Assistant asks for it.
+  if (climate_range(t)) {
+    const float low = range_end(t, RANGE_LOW), high = range_end(t, RANGE_HIGH);
+    if (!std::isfinite(low) || !std::isfinite(high)) return {};
+    return {"climate.set_temperature", "target_temp_low", format_number(low), "target_temp_high", format_number(high)};
+  }
   if (d == "climate") return {"climate.set_temperature", "temperature", text};
   if (d == "number" || d == "input_number") return {d + ".set_value", "value", text};
   return {};
@@ -754,11 +790,13 @@ inline bool panel_available(const Tile &t) {
   if(!t.available())return false;
   const auto mode=panel_kind(t),domain=t.domain();
   if(is_key_row(mode)){std::array<Key,3> keys;return keys_for(t,keys)>0;}
+  // A thermostat's modes are its mode bar (climate_bar_keys), the same one as under its -/+ (firmware 0.19.0).
+  if(mode=="mode"){std::array<Key,6> keys;return domain=="climate"&&climate_bar_keys(t,keys)>0;}
   if(mode=="brightness")return domain=="light"&&light_dims(t);
-  if(mode=="speed")return domain=="fan"&&(t.supported&1);
+  if(mode=="speed")return domain=="fan"&&(t.supported&feature::FAN_SPEED);
   if(mode=="position")return domain=="cover"&&(t.supported&feature::COVER_POSITION);
   if(mode=="volume")return domain=="media_player"&&(t.supported&(feature::MEDIA_VOLUME_SET|feature::MEDIA_VOLUME_MUTE));
-  if(mode=="setpoint")return domain=="climate"&&(t.supported&1); // single target, not a heat/cool range
+  if(mode=="setpoint")return domain=="climate"&&(t.supported&(feature::CLIMATE_TEMPERATURE|feature::CLIMATE_RANGE)); // one or a range (firmware 0.19.0)
   if(mode=="slider"||mode=="stepper")return domain=="number"||domain=="input_number";
   if(mode=="toggle")return domain=="light"||domain=="switch"||domain=="input_boolean"||domain=="fan"||domain=="automation";
   if(mode=="run")return domain=="scene"||domain=="script"||domain=="button"||domain=="input_button"||domain=="automation";

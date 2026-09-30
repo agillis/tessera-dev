@@ -2,6 +2,8 @@
  * shared conformance fixtures keep the two document boundaries aligned.
  */
 import { t } from '../i18n';
+import { isWideSize } from './sizes';
+import { TILE, ofType, taps as catalogueTaps } from './catalogue';
 import rules from './page-rules.json';
 import type { PageLayout, PageTile } from '../types';
 
@@ -20,7 +22,8 @@ const finite = (value: any): boolean => typeof value === 'number' ? Number.isFin
 
 export function validatePageShape(layout: PageLayout) {
   fields(layout, ['title', 'homePageId', 'pages']);
-  if (typeof layout.title !== 'string' || !layout.title.trim() || layout.title !== layout.title.trim() || bytes(layout.title) > 96)
+  // An empty title is a screen without one (firmware 0.17.0+): the top bar shows its home key alone.
+  if (typeof layout.title !== 'string' || layout.title !== layout.title.trim() || bytes(layout.title) > 96)
     throw new Error(t('addon.errors.layout.title'));
   if (!Array.isArray(layout.pages)) fail();
   for (const page of layout.pages) {
@@ -72,7 +75,7 @@ export function validatePageShape(layout: PageLayout) {
         for (const child of tile.children) {
           fields(child, ['id', 'content', 'appearance', 'interaction']);
           fields(child.content, ['kind', 'entityId']);
-          fields(child.appearance, ['label', 'icon'], ['label']);
+          fields(child.appearance, ['label', 'icon', 'overlay'], ['label']);
           fields(child.interaction, ['tap', 'action', 'guard'], []);
           if (child.content.kind !== 'entity' || !entity(child.content.entityId, rules.keyDomains))
             throw new Error(t('addon.errors.layout.unsupported'));
@@ -90,16 +93,17 @@ export function validateCardOptions(tile: PageTile, entityId: string, size: stri
   if (typeof a.label !== 'string' || a.label !== a.label.trim()) fail('normalization');
   const displays = (rules.displays as Record<string, string[]>)[domain] || ['standard', 'watch'];
   const controls = ['none', ...((rules.controls as Record<string, string[]>)[domain] || [])];
-  for (const [value, choices] of [[a.display, displays], [a.background, rules.backgrounds], [a.historyHours, [1, 6, 24]],
-    [i.tap, ['auto', 'detail', 'toggle', 'none', 'action', ...(domain === 'automation' ? ['run'] : [])]], [i.inline, ['none', 'slider']], [i.controls, controls],
-    [i.guard, domain === 'lock' ? ['confirm', 'lock_only'] : []]] as [any, any[]][])
+  // Every choice from the tile catalogue (model/catalogue.ts): a type's taps, its guards, the hours a graph shows.
+  for (const [value, choices] of [[a.display, displays], [a.background, rules.backgrounds], [a.historyHours, TILE.history_hours],
+    [i.tap, catalogueTaps(domain)], [i.inline, ['none', 'slider']], [i.controls, controls],
+    [i.guard, ofType(domain)?.guards ?? []]] as [any, any[]][])
     if (value !== undefined && !choices.includes(value)) fail();
   if (a.icon !== undefined && !icon(a.icon)) fail();
-  if (rules.wideOnly.includes(a.display || '') && !['wide', 'square', 'full'].includes(size)) fail('normalization');
+  if (rules.wideOnly.includes(a.display || '') && !isWideSize(size)) fail('normalization');
   if (tile.content.kind === 'navigation' && (size === 'full' || a.display !== undefined || i.inline !== undefined ||
       i.controls !== undefined || a.historyHours !== undefined)) fail('normalization');
   if (i.tap === 'toggle' && domain === 'screen') fail();
-  if (i.inline === 'slider' && (!['light', 'fan', 'cover', 'number', 'input_number', 'media_player'].includes(domain) || a.display === 'watch')) fail();
+  if (i.inline === 'slider' && (!ofType(domain)?.inline || a.display === 'watch')) fail();
   if (a.refresh !== undefined && (a.display !== 'live' || !rules.refresh.includes(a.refresh))) fail('normalization');
   // How a live picture fills a taller card (app 0.3.8): only with the live picture, and a default is never stored.
   for (const [key, choices] of Object.entries(rules.picture) as [('fit' | 'overlay'), string[]][])

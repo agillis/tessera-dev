@@ -81,7 +81,7 @@ static void setup_firmware_ui(lv_obj_t *root) {
   lv_style_set_text_opa(style_room, static_cast<uint8_t>(255.0f));
 
   lv_style_init(style_time);
-  lv_style_set_text_font(style_time, time_label);
+  lv_style_set_text_font(style_time, headline);
   lv_style_set_text_opa(style_time, static_cast<uint8_t>(255.0f));
 
   lv_style_init(style_title);
@@ -283,6 +283,7 @@ runtime_tiles::watch_value_font = watch_value;
 runtime_tiles::watch_icon_font = watch_icon;
 runtime_tiles::clock_font = clock_digits;
 runtime_tiles::bedside_font = bedside_digits;
+runtime_tiles::display_font = display_digits;
 runtime_tiles::brand_font = brand_wordmark;
 runtime_tiles::brand_mark = tessera_mark;
 runtime_tiles::mini_icon_font = materialdesign_icons_mini;

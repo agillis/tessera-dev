@@ -135,14 +135,13 @@ int main() {
   radio.supported=feature::MEDIA_PAUSE;assert(key_action(radio,MEDIA_PLAY_PAUSE).service=="media_player.media_pause");
   radio.state="idle";assert(keys_for(radio,keys)==1&&keys[0].disabled);assert(!key_action(radio,MEDIA_PLAY_PAUSE).valid());
 
-  // Climate: Home Assistant's modes in its own order, as many as the row holds; "…" opens the card when they don't fit.
+  // Climate: one mode bar for "Mode" and for "Temperature and mode" (firmware 0.19.0), never a row of keys.
   Tile ac = make("climate.ac", "cool"); ac.edit_extra().hvac_modes = "[\"off\",\"heat_cool\",\"cool\",\"heat\",\"fan_only\",\"dry\"]"; ac.controls = "mode"; ac.current = 21.5f; ac.target = 20; ac.step = 1;
-  assert(keys_for(ac, keys) == 3);
-  assert(keys[0].arg == "off" && keys[1].arg == "heat_cool" && keys[2].command == OPEN_CARD && !keys[0].checked);
+  assert(panel_kind(ac) == "mode" && !is_key_row(panel_kind(ac)) && keys_for(ac, keys) == 0);
+  assert(panel_available(ac));
   std::array<Key, 6> mode_row;
-  assert(climate_mode_keys(ac, mode_row) == 6 && mode_row[2].arg == "cool" && mode_row[2].checked && mode_row[5].arg == "dry");
-  assert(climate_mode_keys(ac, mode_row, 4) == 4 && mode_row[2].arg == "cool" && mode_row[3].command == OPEN_CARD);
-  // The tile's mode bar (firmware 0.3.3): heat and cool first, never off, the current mode always shown.
+  // The mode bar (firmware 0.3.3): heat and cool first, never off (the tile's circle switches it), the current mode
+  // always shown.
   assert(climate_bar_keys(ac, mode_row) == 5 && mode_row[0].arg == "heat" && mode_row[1].arg == "cool" && mode_row[1].checked);
   assert(mode_row[2].arg == "heat_cool" && mode_row[3].arg == "dry" && mode_row[4].arg == "fan_only");
   for (unsigned i = 0; i < 5; ++i) assert(mode_row[i].arg != "off");
@@ -154,8 +153,10 @@ int main() {
   Tile radiator = ac; radiator.edit_extra().hvac_modes = "[\"off\",\"heat\"]";
   assert(climate_bar_keys(radiator, mode_row) == 0);
   assert(climate_bar_keys(ac, mode_row, 1) == 0);
+  // A device with one mode besides off has no bar, so "Mode" draws nothing for it; two modes make a bar.
+  assert(!panel_available(radiator));
   Tile three = ac; three.edit_extra().hvac_modes = "[\"off\",\"heat\",\"cool\"]";
-  assert(keys_for(three, keys) == 3 && keys[2].arg == "cool" && keys[2].checked);
+  assert(panel_available(three) && climate_bar_keys(three, mode_row) == 2 && mode_row[1].arg == "cool" && mode_row[1].checked);
   Action mode = key_action(ac, HVAC_MODE, "heat");
   assert(!key_action(ac, OPEN_CARD).valid());
   assert(mode.service == "climate.set_hvac_mode" && mode.key == "hvac_mode" && mode.value == "heat");
@@ -165,6 +166,31 @@ int main() {
   Action set = edit_action(ac, step_value(edit_target(ac), edit_step(ac), ac.minimum, ac.maximum, 1));
   assert(set.service == "climate.set_temperature" && set.key == "temperature" && set.value == "21");
   assert(edit_action(ac, 20.5f).value == "20.5");
+
+  // A thermostat set to a range (firmware 0.19.0), decided as Home Assistant's thermostat card decides it: a single target
+  // it supports and reports first, else a range with both ends. A -/+ edit of one end sends both.
+  Tile ecobee = make("climate.ecobee", "heat_cool", 442); ecobee.step = 1;
+  assert(!climate_range(ecobee));
+  ecobee.edit_extra().target_low = 20; ecobee.edit_extra().target_high = 24;
+  assert(climate_range(ecobee) && range_end(ecobee, RANGE_LOW) == 20 && range_end(ecobee, RANGE_HIGH) == 24);
+  ecobee.edit_high = 25;
+  assert(range_end(ecobee, RANGE_HIGH) == 25 && range_end(ecobee, RANGE_LOW) == 20);
+  Action range = edit_action(ecobee, ecobee.edit_value);
+  assert(range.service == "climate.set_temperature" && range.key == "target_temp_low" && range.value == "20" &&
+         range.key2 == "target_temp_high" && range.value2 == "25");
+  ecobee.edit_value = 21.5f; assert(edit_action(ecobee, ecobee.edit_value).value == "21.5");
+  Tile both = ecobee; both.supported = 3; assert(climate_range(both));
+  both.target = 22; assert(!climate_range(both));           // a single target it reports comes first
+  Tile single = ecobee; single.supported = 385; assert(!climate_range(single));
+  // The widest a thermostat's -/+ can show, to measure its face by once: 7 to 35 in halves, 45 to 95 in wholes, to 110.
+  Tile halves = make("climate.halves", "heat", 1); halves.minimum = 7; halves.maximum = 35; halves.step = 0.5f;
+  assert(widest_setpoint(halves) == "88.8°");
+  Tile wholes = make("climate.wholes", "heat", 1); wholes.minimum = 45; wholes.maximum = 95; wholes.step = 1;
+  assert(widest_setpoint(wholes) == "88°");
+  wholes.maximum = 110; assert(widest_setpoint(wholes) == "888°");
+  wholes.minimum = -20; wholes.maximum = 30; assert(widest_setpoint(wholes) == "-88°");
+  // The room's temperature as Home Assistant sends it, not always with one decimal.
+  assert(temperature_text(73) == "73°" && temperature_text(21.5f) == "21.5°" && temperature_text(21.25f) == "21.25°");
 
   // Numbers edit their own state; selects step through their options with wrap-around.
   Tile number = make("number.target", "55"); number.minimum = 0; number.maximum = 100; number.step = 5;
@@ -204,7 +230,7 @@ int main() {
   // Panel kinds.
   Tile lamp = make("light.lamp", "on"); lamp.controls = "brightness";
   assert(is_slider(panel_kind(lamp)) && !is_key_row(panel_kind(lamp)));
-  assert(is_key_row("playback") && is_key_row("mode") && !is_key_row("setpoint"));
+  assert(is_key_row("playback") && !is_key_row("mode") && !is_key_row("setpoint"));
 
   // Climate mode colours follow Home Assistant; anything else is grey.
   assert(mode_color("heat") == 0xFF6F22 && mode_color("cool") == 0x2196F3 && mode_color("off") == 0x9E9E9E);
@@ -419,7 +445,10 @@ int main() {
   limited.supported=4; assert(panel_available(limited));
   limited=make("fan.simple","on",0); limited.controls="speed"; assert(!panel_available(limited));
   limited.supported=1; assert(panel_available(limited));
-  limited=make("climate.range","heat_cool",2); limited.controls="setpoint"; assert(!panel_available(limited));
+  // A range thermostat has the -/+ too, with the chip for its end (firmware 0.19.0), as Home Assistant's tile has its target
+  // temperature feature for one; a thermostat without a temperature to set has none.
+  limited=make("climate.range","heat_cool",2); limited.controls="setpoint"; assert(panel_available(limited));
+  limited.supported=0; assert(!panel_available(limited));
   limited.supported=1; assert(panel_available(limited));
   limited=make("media_player.mute","playing",8); limited.controls="volume"; assert(panel_available(limited));
   limited.controls="playback"; assert(!panel_available(limited));

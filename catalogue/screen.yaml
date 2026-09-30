@@ -1,0 +1,13 @@
+# The screen's own cards: the clock, the bedside clock, the settings card and the tiles that go to a page. Nothing in
+# Home Assistant stands behind them. docs/CATALOGUE.md says what every key means.
+domain: screen
+firmware: 0.2.14   # the first firmware that draws these cards
+displays:
+  # The clock's faces; the dial and the flip clock came with firmware 0.3.6.
+  digital: {}
+  analog: {}
+  dial:
+    screen: {firmware: 0.3.6, else: digital}
+  flip:
+    screen: {firmware: 0.3.6, else: digital}
+key: false

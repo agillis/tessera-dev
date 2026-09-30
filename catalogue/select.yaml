@@ -1,0 +1,10 @@
+# Select. Home Assistant: homeassistant/components/select.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: select
+displays:
+  standard: {}
+  watch: {}
+controls:
+  stepper:
+    needs: {actions: [select.select_option]}

@@ -78,9 +78,15 @@ def caps(entity):
 
 
 class ActionsForAnEntity(unittest.TestCase):
-    def test_range_only_climate_does_not_offer_single_target_control(self):
+    def test_a_range_thermostat_offers_its_setpoint_and_one_without_a_temperature_does_not(self):
+        # Firmware 0.19.0 draws a range on the -/+ with the chip for its end, as Home Assistant's tile has its target
+        # temperature feature for one; an older screen gets it without them (core.drawn_controls).
         state = {'state': 'heat_cool', 'attributes': {'supported_features': 2}}
         result = ha_catalogue.capabilities('climate.range', ['climate.set_temperature', 'climate.set_hvac_mode'], state, SERVICES)
+        self.assertIn('setpoint', result['controls'])
+        self.assertIn('mode', result['controls'])
+        fan_only = {'state': 'fan_only', 'attributes': {'supported_features': 8}}
+        result = ha_catalogue.capabilities('climate.fan', ['climate.set_temperature', 'climate.set_hvac_mode'], fan_only, SERVICES)
         self.assertNotIn('setpoint', result['controls'])
         self.assertIn('mode', result['controls'])
 

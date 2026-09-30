@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import AppSettingsView from "../src/components/AppSettingsView.vue";
 import CommandPalette from "../src/components/CommandPalette.vue";
 import Library from "../src/components/Library.vue";
+import ChoiceField from "../src/components/ChoiceField.vue";
 import DevicePage from "../src/components/DevicePage.vue";
 import InstallerView from "../src/components/InstallerView.vue";
 import Sidebar from "../src/components/Sidebar.vue";
@@ -16,7 +17,8 @@ import TileCard from "../src/components/TileCard.vue";
 import TileInspector from "../src/components/TileInspector.vue";
 import TopbarInspector from "../src/components/TopbarInspector.vue";
 import PageInspector from "../src/components/PageInspector.vue";
-import { openBar, removePage, repeatable, setTileOption, state } from "../src/store";
+import { t } from "../src/i18n";
+import { openBar, previewed, removePage, repeatable, setTileOption, state } from "../src/store";
 import type { Inventory, Tile } from "../src/types";
 
 // The add-on's boards (screen_manager/app/boards.json, written from boards.yaml and the board files): the catalog a
@@ -151,8 +153,64 @@ describe("TileCard", () => {
     const target = placed({ entity: 'climate.a', name: 'Climate', slot: 0, options: { size: 'tall', controls: 'setpoint' } });
     expect(target.find('.target b').text()).toBe('21°');
     expect(target.find('.tall-setpoint .st').text()).toBe('Now 24°');
+    state.liveStates['climate.a'].a.hvac_modes = ['off', 'heat', 'cool', 'dry'];
     const modes = placed({ entity: 'climate.a', name: 'Climate', slot: 0, options: { size: 'square', controls: 'mode' } });
-    expect(modes.findAll('.ctl .key')).toHaveLength(2);
+    // "Mode" on a taller card is the same bar as under the -/+ of "Temperature and mode".
+    expect(modes.findAll('.ctl .mode-bar .seg').map((s) => s.classes('on'))).toEqual([false, true, false]);
+    const both = placed({ entity: 'climate.a', name: 'Climate', slot: 0, options: { size: 'square', controls: 'setpoint_mode' } });
+    expect(both.findAll('.mode-bar .seg')).toHaveLength(3);
+  });
+
+  it("writes a thermostat set to a range as Home Assistant does, with the chip for its end between - and + (firmware 0.19.0)", () => {
+    state.inventory.controls!.climate = { default: 'setpoint', choices: [] };
+    state.liveStates['climate.r'] = { state: 'heat_cool', word: 'Heat/Cool', a: { supported_features: 442, current_temperature: 73, target_temp_low: 70, target_temp_high: 75, target_temp_step: 1 } };
+    expect(placed({ entity: 'climate.r', name: 'Range', slot: 0 }).find('.st').text()).toBe('Heat/Cool · 73°');
+    // The wide tile's -/+ with the chip between them: the low end, heat, first.
+    const wide = placed({ entity: 'climate.r', name: 'Range', slot: 0, options: { size: 'wide', controls: 'setpoint' } });
+    expect(wide.find('.stp .range-chip b').text()).toBe('70°');
+    expect(wide.findAll('.stp > .mdi')).toHaveLength(2);
+    // Both features: the range only while it reports no single temperature.
+    state.liveStates['climate.b'] = { state: 'heat_cool', word: 'Heat/Cool', a: { supported_features: 3, current_temperature: 21, target_temp_low: 19, target_temp_high: 23.5, temperature: null } };
+    expect(placed({ entity: 'climate.b', name: 'Both', slot: 0, options: { size: 'tall', controls: 'setpoint' } }).find('.range-chip b').text()).toBe('19.0°');
+    state.liveStates['climate.b'].a.temperature = 20;
+    const single = placed({ entity: 'climate.b', name: 'Both', slot: 0, options: { size: 'tall', controls: 'setpoint' } });
+    expect(single.find('.range-chip').exists()).toBe(false);
+    expect(single.find('.target b').text()).toBe('20°');
+    // One set to a single temperature says it as Home Assistant sends it: 68°, 21.5°, never 68.0°.
+    state.liveStates['climate.s'] = { state: 'heat', word: 'Heat', a: { supported_features: 385, temperature: 68, current_temperature: 77 } };
+    expect(placed({ entity: 'climate.s', name: 'Single', slot: 0 }).find('.st').text()).toBe('68°');
+    state.liveStates['climate.s'].a.temperature = 21.5;
+    expect(placed({ entity: 'climate.s', name: 'Single', slot: 0 }).find('.st').text()).toBe('21.5°');
+    state.liveStates['climate.d'] = { state: 'dry', word: 'Dry', a: { supported_features: 1, current_temperature: 21.5 } };
+    expect(placed({ entity: 'climate.d', name: 'Dry', slot: 0 }).find('.st').text()).toBe('Dry · 21.5°');
+  });
+  it("draws a range thermostat without its -/+ for a screen before firmware 0.19.0, as that screen gets it", () => {
+    state.inventory.controls!.climate = { default: 'setpoint', choices: [] };
+    state.liveStates['climate.r'] = { state: 'heat_cool', word: 'Heat/Cool', a: { supported_features: 442, current_temperature: 73, target_temp_low: 70, target_temp_high: 75 } };
+    const screen = state.inventory.screens[0];
+    const before = screen.climate_range;
+    screen.climate_range = false;
+    try {
+      const wide = placed({ entity: 'climate.r', name: 'Range', slot: 0, options: { size: 'wide', controls: 'setpoint' } });
+      expect(wide.find('.stp').exists()).toBe(false);
+      expect(wide.find('.range-chip').exists()).toBe(false);
+    } finally { screen.climate_range = before; }
+  });
+
+  it("draws a wide card's keys as the screen does for that entity, not a fixed set (app 0.4.32)", () => {
+    state.inventory.controls!.climate = { default: 'setpoint', choices: [] };
+    state.liveStates['climate.m'] = { state: 'heat', word: 'Heat', a: { supported_features: 1, hvac_modes: ['off', 'heat', 'cool'], temperature: 20 } };
+    const modes = placed({ entity: 'climate.m', name: 'Modes', slot: 0, options: { size: 'wide', controls: 'mode' } });
+    // Its mode bar, as the screen draws it: heat and cool, its own modes; off is the tile's circle.
+    expect(modes.findAll('.ctl .mode-bar .seg')).toHaveLength(2);
+    expect(modes.find('.mode-bar .seg.on').exists()).toBe(true);
+    state.liveStates['climate.m'].a.hvac_modes = ['off', 'heat'];
+    // One mode besides off makes no bar.
+    expect(placed({ entity: 'climate.m', name: 'Modes', slot: 0, options: { size: 'wide', controls: 'mode' } }).findAll('.mode-bar .seg')).toHaveLength(0);
+    state.inventory.controls!.vacuum = { default: 'buttons', choices: [] };
+    state.liveStates['vacuum.v'] = { state: 'docked', word: 'Docked', a: { supported_features: 8192 | 8 } };
+    const vacuum = placed({ entity: 'vacuum.v', name: 'Robot', slot: 0, options: { size: 'wide', controls: 'buttons' } });
+    expect(vacuum.findAll('.ctl .key')).toHaveLength(2);   // start and stop: it cannot go back to its base
   });
 
   it("shows a sensor's value with its unit and a light that is on as lit", () => {
@@ -216,50 +274,56 @@ describe("TileCard", () => {
 });
 
 describe("Library", () => {
-  it("filters by room and hides what is placed, and tints the avatars by state", async () => {
+  beforeEach(() => { state.libraryOpen = true; });
+  const room = (library: ReturnType<typeof mount>, name: string) => library.findAll("#room button").find((b) => b.find(".dn").text() === name)!;
+  it("groups by room, filters by room and hides what is placed, and tints the avatars by state", async () => {
     appendTiles({ entity: "light.a", name: "", slot: 0 });
     const library = mount(Library);
     const names = () => library.findAll(".ent .tx b").map((b) => b.text());
-    expect(names()).toEqual(["Clock", "Go to page 1", "Lamp A", "Lamp B", "Temperature", "Curtains"]);
+    // Browsing, each room under its name and the screen's own cards last (app 0.4.32).
+    expect(library.findAll(".lib-group-title").map((h) => h.text())).toEqual(["Kitchen 1", "Living room 3", "Screen 2"]);
+    expect(names()).toEqual(["Lamp B", "Lamp A", "Temperature", "Curtains", "Clock", "Go to page 1"]);
     expect(library.find('.ent[title="light.a"]').attributes("disabled")).toBeDefined();
     expect(library.find('.ent[title="light.a"] .av').classes()).toContain("on");
     expect(library.find('.ent[title="light.b"] .av').classes()).toContain("gone");
-    expect(library.findAll("#room option").map((o) => o.text())).toEqual(["All rooms", "Kitchen", "Living room"]);
-    await library.find("#room").setValue("Kitchen");
+    expect(library.findAll("#room button .dn").map((o) => o.text())).toEqual(["Kitchen", "Living room"]);
+    await room(library, "Kitchen").trigger("click");
     expect(names()).toEqual(["Lamp B"]);
-    await library.find("#room").setValue("");
+    expect(library.find(".lib-group-title").exists()).toBe(false);
+    // The chosen room again is all rooms.
+    await room(library, "Kitchen").trigger("click");
+    expect(state.room).toBe("");
     await library.find("#hide-placed").trigger("click");
-    expect(names()).toEqual(["Clock", "Go to page 1", "Lamp B", "Temperature", "Curtains"]);
+    expect(names()).toEqual(["Lamp B", "Temperature", "Curtains", "Clock", "Go to page 1"]);
     state.filter = "light";
     await library.vm.$nextTick();
     expect(names()).toEqual(["Lamp B"]);
   });
 });
 
-// The nineteen domain chips used to sit on one sideways scroller with its scrollbar hidden (app 0.2.74). A trackpad
-// swipes such a strip, but an ordinary mouse has no bar to grab and no drag to start, so fifteen of the nineteen could
-// not be reached at all. They wrap now, they follow the results the way the list does, and the tail of a long one
-// folds behind "More" (app 0.2.116).
-describe("Library: every domain chip is reachable without a trackpad", () => {
-  // Every chip but All and the More/Fewer one carries its domain's glyph in front of the label.
-  const label = (b: { text: () => string }) => b.text().replace(/^[^\p{L}]+/u, "");
-  const chips = (library: ReturnType<typeof mount>) => library.findAll("#filters button").map(label);
-  const domains = (library: ReturnType<typeof mount>) => chips(library).filter((c) => !/^(More|Fewer)/.test(c));
+// The domains were a strip of chips: first on a sideways scroller a mouse could not reach (app 0.2.74), then wrapped
+// with the tail behind "More" (app 0.2.116). In the drawer along the bottom they are one column, every one in reach,
+// following the results the way the list does (app 0.4.32).
+describe("Library: the drawer along the bottom, with every domain in one column (app 0.4.32)", () => {
+  const label = (b: { find: (s: string) => { text: () => string } }) => b.find(".dn").text();
+  const domains = (library: ReturnType<typeof mount>) => library.findAll("#filters button").map(label);
+  const counts = (library: ReturnType<typeof mount>) => library.findAll("#filters button").map((b) => `${label(b)} ${b.find("small").text()}`);
   const chip = (library: ReturnType<typeof mount>, name: string) =>
     library.findAll("#filters button").find((b) => label(b) === name)!;
-  // One entity in each of nine domains, so the strip is longer than the head can hold.
+  // One entity in each of nine domains, more than the old strip of chips could hold.
   const manyDomains = () => state.inventory.entities.push(
     { id: "climate.c", name: "Heating", state: "heat" }, { id: "switch.s", name: "Plug", state: "on" },
     { id: "binary_sensor.b", name: "Door", state: "off" }, { id: "script.r", name: "Run", state: "off" },
     { id: "fan.f", name: "Fan", state: "off" }, { id: "scene.n", name: "Night", state: "on" },
     { id: "media_player.m", name: "Sonos", state: "idle" }, { id: "person.p", name: "Sam", state: "home" },
   ) as unknown as void;
+  beforeEach(() => { state.libraryOpen = true; });
 
-  it("offers the domains the results hold, and narrows them as the search narrows the list", async () => {
+  it("offers the domains the results hold, each with its count, and narrows them as the search narrows the list", async () => {
     const library = mount(Library);
-    // Four domains in this home, plus All. A chip for a domain with nothing behind it would filter to an empty list.
+    // Four domains in this home, plus All. A domain with nothing behind it would filter to an empty list.
     expect(domains(library)).toEqual(["All", "Lights", "Covers", "Sensors", "Screen"]);
-    expect(library.find("#more-filters").exists()).toBe(false);
+    expect(counts(library).slice(0, 2)).toEqual([`All ${library.findAll(".ent").length}`, "Lights 2"]);
 
     state.search = "lamp";
     await library.vm.$nextTick();
@@ -269,11 +333,11 @@ describe("Library: every domain chip is reachable without a trackpad", () => {
     expect(domains(library)).toEqual(["All", "Sensors"]);
   });
 
-  it("keeps every other chip once one is chosen, so a domain is never a dead end", async () => {
+  it("keeps every other domain once one is chosen, so a domain is never a dead end", async () => {
     const library = mount(Library);
     await chip(library, "Lights").trigger("click");
     expect(state.filter).toBe("light");
-    expect(library.findAll(".ent .tx b").map((b) => b.text())).toEqual(["Lamp A", "Lamp B"]);
+    expect(library.findAll(".ent .tx b").map((b) => b.text())).toEqual(["Lamp B", "Lamp A"]);
     // Read off the domain filter itself and picking Lights would have taken Sensors and Covers away with it.
     expect(domains(library)).toEqual(["All", "Lights", "Covers", "Sensors", "Screen"]);
     expect(chip(library, "Lights").attributes("aria-pressed")).toBe("true");
@@ -285,49 +349,95 @@ describe("Library: every domain chip is reachable without a trackpad", () => {
     state.search = "temp";
     await library.vm.$nextTick();
     expect(library.findAll(".ent").length).toBe(0);
-    // An empty list needs the chip that empties it on show, or there is nothing to explain it and nothing to undo.
+    // An empty list needs the domain that empties it on show, or there is nothing to explain it and nothing to undo.
     expect(domains(library)).toContain("Lights");
     expect(chip(library, "Lights").attributes("aria-pressed")).toBe("true");
   });
 
-  it("folds a long strip behind More and opens the rest in place", async () => {
+  it("lists every domain at once, however many there are", () => {
     manyDomains();
     const library = mount(Library);
-    expect(domains(library)).toHaveLength(7);
-    expect(chips(library).at(-1)).toBe("More (6)");
-    expect(library.find("#more-filters").attributes("aria-expanded")).toBe("false");
-
-    await library.find("#more-filters").trigger("click");
-    expect(library.find("#more-filters").attributes("aria-expanded")).toBe("true");
     expect(domains(library)).toEqual([
       "All", "Lights", "Climate", "Switches", "Status", "Scripts", "Fans", "Covers", "Scenes", "Sensors",
       "Media", "People", "Screen",
     ]);
-    expect(chips(library).at(-1)).toBe("Fewer");
-
-    await library.find("#more-filters").trigger("click");
-    expect(domains(library)).toHaveLength(7);
+    expect(library.find("#more-filters").exists()).toBe(false);
   });
 
-  it("carries a folded-away chip into the head once it is the chosen one", async () => {
-    manyDomains();
+  it("folds to its head, keeps the search there, and opens again on typing", async () => {
     const library = mount(Library);
-    await library.find("#more-filters").trigger("click");
-    await chip(library, "People").trigger("click");
-    await library.find("#more-filters").trigger("click");
-    expect(domains(library)).toContain("People");
-    expect(chips(library).at(-1)).toBe("More (5)");
-    const pressed = library.findAll("#filters button").filter((b) => b.attributes("aria-pressed") === "true");
-    expect(pressed.map(label)).toEqual(["People"]);
+    await library.find("#library-toggle").trigger("click");
+    expect(state.libraryOpen).toBe(false);
+    expect(library.find("#library-body").attributes("inert")).toBeDefined();
+    expect(library.find("#search").exists()).toBe(true);
+    await library.find("#search").setValue("lamp");
+    expect(state.libraryOpen).toBe(true);
+    expect(library.findAll(".ent .tx b").map((b) => b.text())).toEqual(["Lamp A", "Lamp B"]);
   });
 
-  it("never hides the strip behind a scrollbar a mouse cannot reach", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const rule = css.split("\n").find((line) => line.startsWith(".filters {"))!;
-    expect(rule).toContain("flex-wrap: wrap");
-    expect(rule).not.toContain("overflow");
-    expect(rule).not.toContain("scrollbar-width");
-    expect(css).not.toContain(".filters::-webkit-scrollbar");
+  it("starts a search from a key typed anywhere, and leaves a field's keys to the field", async () => {
+    const library = mount(Library, { attachTo: document.body });
+    state.libraryOpen = false;
+    state.tab = "layout";
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "l", bubbles: true, cancelable: true }));
+    await nextTick();
+    expect(state.search).toBe("l");
+    expect(state.libraryOpen).toBe(true);
+    const field = document.createElement("input");
+    document.body.append(field);
+    field.dispatchEvent(new KeyboardEvent("keydown", { key: "x", bubbles: true, cancelable: true }));
+    expect(state.search).toBe("l");
+    // A shortcut is not a letter to search for.
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "z", metaKey: true, bubbles: true, cancelable: true }));
+    expect(state.search).toBe("l");
+    field.remove();
+    library.unmount();
+  });
+
+  it("selects nothing on the page while its edge is dragged", async () => {
+    const library = mount(Library, { attachTo: document.body });
+    const grip = library.find(".lib-grip").element as HTMLElement;
+    grip.setPointerCapture = () => {};
+    const down = Object.assign(new Event("pointerdown", { bubbles: true, cancelable: true }), { clientY: 400, pointerId: 1 });
+    grip.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+    expect(document.body.style.userSelect).toBe("none");
+    grip.dispatchEvent(new Event("pointerup", { bubbles: true }));
+    expect(document.body.style.userSelect).toBe("");
+    library.unmount();
+  });
+
+  it("walks the results with the arrows, adds with Enter, and clears then folds with Escape", async () => {
+    const library = mount(Library);
+    const search = library.find("#search");
+    await search.setValue("lamp");
+    expect(library.find(".ent.active .tx b").text()).toBe("Lamp A");
+    await search.trigger("keydown", { key: "ArrowDown" });
+    expect(library.find(".ent.active .tx b").text()).toBe("Lamp B");
+    await search.trigger("keydown", { key: "Enter" });
+    expect(state.layout!.tiles.map((tile) => tile.entity)).toContain("light.b");
+    await search.trigger("keydown", { key: "Escape" });
+    expect(state.search).toBe("");
+    expect(state.libraryOpen).toBe(true);
+    await search.trigger("keydown", { key: "Escape" });
+    expect(state.libraryOpen).toBe(false);
+  });
+
+  it("names an entity without its device's name in front, and puts the device under it", async () => {
+    state.inventory.entities.push({ id: "switch.n", name: "Bedroom screen night mode", state: "off", area: "Bedroom", device: "Bedroom screen" } as any);
+    const library = mount(Library);
+    const row = library.find('.ent[title="switch.n"]');
+    expect(row.find(".tx b").text()).toBe("Night mode");
+    expect(row.find(".tx small").text()).toBe("Bedroom screen");
+  });
+
+  it("opens when an empty cell is marked for the next entity", async () => {
+    const library = mount(Library);
+    state.libraryOpen = false;
+    await library.vm.$nextTick();
+    state.insertAt = 3;
+    await library.vm.$nextTick();
+    expect(state.libraryOpen).toBe(true);
   });
 });
 
@@ -402,7 +512,7 @@ describe("several tiles of one entity in the library (firmware 0.2.65 for a page
 
 describe("TileInspector: a live picture on a camera tile (app 0.2.91)", () => {
   const row = (wrapper: ReturnType<typeof mount>, label: string) =>
-    wrapper.findAll(".f").find((f) => f.find(".f-label").exists() && f.find(".f-label").text() === label)!;
+    wrapper.findAll(".prop").find((f) => f.find(".prop-label").text().replace(/^[^\p{L}\d]+/u, "").trim() === label)!;
   const choices = (wrapper: ReturnType<typeof mount>, label: string) => row(wrapper, label).findAll(".seg button").map((b) => b.text());
   it("offers the live picture for a camera, with its pace once chosen, and says which firmware it needs", async () => {
     state.inventory.entities.push({ id: "camera.front", name: "Front", state: "idle", area: "Hall" } as any);
@@ -510,7 +620,7 @@ describe("TileInspector: a live picture on a camera tile (app 0.2.91)", () => {
 
 describe("TileInspector: pages (app 0.2.78)", () => {
   const row = (wrapper: ReturnType<typeof mount>, label: string) =>
-    wrapper.findAll(".f").find((f) => f.find(".f-label").exists() && f.find(".f-label").text() === label)!;
+    wrapper.findAll(".prop").find((f) => f.find(".prop-label").text().replace(/^[^\p{L}\d]+/u, "").trim() === label)!;
   const choices = (wrapper: ReturnType<typeof mount>, label: string) => row(wrapper, label).findAll(".seg button").map((b) => b.text());
   function open(tiles: any[], index: number) {
     appendTiles(...tiles);
@@ -531,27 +641,7 @@ describe("TileInspector: pages (app 0.2.78)", () => {
     expect(choices(drawer, "Goes to page")).toEqual(["1", "2", "3 (empty)", "4 (empty)"]);
     expect(row(drawer, "Goes to page").find(".warn").exists()).toBe(false);
   });
-  it("moves the tile to another page or a new one with a tap", async () => {
-    const { tile, drawer } = open([{ entity: "light.a", name: "", slot: 0 }, { entity: "sensor.t", name: "", slot: 6 }], 0);
-    expect(choices(drawer, "Page")).toEqual(["1", "2", "New page"]);
-    expect(row(drawer, "Page").find('[aria-pressed="true"]').text()).toBe("1");
-    await row(drawer, "Page").findAll(".seg button")[1].trigger("click");
-    expect(current(tile).slot).toBe(7);
-    expect(state.dirty).toBe(true);
-    // Alone on the last page now: a new page would only leave this one empty.
-    const sensor = state.layout!.tiles.find((t) => t.entity === "sensor.t")!;
-    await row(drawer, "Page").findAll(".seg button")[0].trigger("click");
-    expect(current(tile).slot).toBe(0);
-    expect(current(sensor).slot).toBe(6);
-    const other = inspector(sensor);
-    expect(choices(other, "Page")).toEqual(["1", "2"]);
-    await row(other, "Page").findAll(".seg button")[0].trigger("click");
-    expect(current(sensor).slot).toBe(1);
-    // One tile on one page: nowhere to go, so no row.
-    seedTiles([]);
-    const only = open([{ entity: "light.b", name: "", slot: 0 }], 0).drawer;
-    expect(row(only, "Page")).toBeUndefined();
-  });
+
 });
 
 describe("Sidebar", () => {
@@ -567,14 +657,13 @@ describe("Sidebar", () => {
     expect(state.dirty).toBe(true);
     expect(state.tab).toBe("layout");
   });
-  it("shows a screen's name and light alone, and its details behind the chevron (app 0.4.0)", async () => {
+  it("shows a screen's name alone on one line, and its details behind the chevron (app 0.4.32)", async () => {
     state.selected = null;
     const sidebar = mount(Sidebar);
     const item = sidebar.find("#screens .screen-item");
-    expect(item.find(".led").classes()).toContain("ok");
+    expect(item.find(".led").exists()).toBe(false);
     expect(item.find(".sub").exists()).toBe(false);
     expect(item.find(".screen-details").exists()).toBe(false);
-    expect(item.find(".details-toggle").exists()).toBe(false);
     // Chosen, a healthy screen keeps its details folded: the chevron at its right opens them.
     await item.find(".nav-item").trigger("click");
     expect(item.classes()).not.toContain("open");
@@ -585,27 +674,70 @@ describe("Sidebar", () => {
     expect(item.findAll(".facts dd").map((dd) => dd.text())).toEqual(["0.2.60", "Guition · 4 inch"]);
     await item.find(".details-toggle").trigger("click");
     expect(item.classes()).not.toContain("open");
-    // A screen that is off shows why in red, and opens its details by itself once it is chosen.
+    // A screen that is off says so on its row, and keeps its details folded: there is nothing more to say there.
     Object.assign(state.inventory.screens[0], { online: false });
     state.selected = null;
     await nextTick();
-    expect(item.find(".led").classes()).toContain("down");
+    expect(item.classes()).toContain("down");
     expect(item.find(".sub").text()).toBe("Offline");
     await item.find(".nav-item").trigger("click");
-    expect(item.classes()).toContain("open");
+    expect(item.classes()).not.toContain("open");
   });
-  it("opens the details of a chosen screen with an update waiting (app 0.4.0)", async () => {
+  it("downloads a screen's files, to build it with ESPHome on your own computer", async () => {
+    Object.assign(state.inventory.screens[0], { update: { profile: "living room.yaml" } });
+    state.inventory.pending = [{ file: "hall.yaml", friendly: "Hall", api_key: "key" } as any];
+    const sidebar = mount(Sidebar);
+    const item = sidebar.find("#screens .screen-item");
+    await item.find(".nav-item").trigger("click");
+    if (!item.classes().includes("open")) await item.find(".details-toggle").trigger("click");
+    const own = item.find("a.screen-files");
+    expect(own.attributes("href")).toBe("api/firmware/profiles/living%20room.yaml/files");
+    expect(own.attributes("download")).toBeDefined();
+    // A screen that isn't in Home Assistant yet has it in sight, not behind its API key.
+    const pending = sidebar.find("#pending a.screen-files");
+    expect(pending.attributes("href")).toBe("api/firmware/profiles/hall.yaml/files");
+    expect(pending.element.closest("details")).toBeNull();
+    // Without a profile the add-on has no files to give.
+    Object.assign(state.inventory.screens[0], { update: { profile: null } });
+    await nextTick();
+    expect(item.find("a.screen-files").exists()).toBe(false);
+    state.inventory.pending = [];
+  });
+  it("puts the update's one button on the row, and keeps the details folded (app 0.4.32)", async () => {
     Object.assign(state.inventory.screens[0], { update: { available: true, target: "0.4.0", profile: "living.yaml" } });
     const sidebar = mount(Sidebar);
     const item = sidebar.find("#screens .screen-item");
-    expect(item.classes()).toContain("open");
-    expect(item.find(".screen-update .btn.primary").exists()).toBe(true);
+    expect(item.classes()).not.toContain("open");
+    expect(item.find(".update-pill").attributes("aria-label")).toBe("Update: Living room");
+    expect(item.find(".update-pill").attributes("title")).toContain("0.4.0");
+    // Without a profile nothing here can build it: the row says Update, the details say why.
+    Object.assign(state.inventory.screens[0], { update: { available: true, target: "0.4.0", profile: null } });
+    await nextTick();
+    expect(item.find(".update-pill").exists()).toBe(false);
+    expect(item.find(".sub").text()).toBe("Update");
   });
   it("goes home from the logo: the overview, nothing chosen (app 0.4.0)", async () => {
     const sidebar = mount(Sidebar);
     await sidebar.find(".brand").trigger("click");
     expect(state.selected).toBeNull();
     expect(state.layout).toBeNull();
+  });
+  it("removes a screen that never got its firmware, after asking (GitHub #114)", async () => {
+    state.inventory.pending = [{ file: "hall.yaml", friendly: "Hall", node: "hall" } as any];
+    const calls: [string, RequestInit][] = [];
+    vi.stubGlobal("fetch", vi.fn((path: string, options: RequestInit) => {
+      calls.push([path, options]);
+      return Promise.resolve(new Response(JSON.stringify({ removed: ["hall.yaml"] }), { status: 200 }));
+    }));
+    const sidebar = mount(Sidebar);
+    await sidebar.find("#pending .remove-pending").trigger("click");
+    expect(sidebar.find("#pending .screen-remove").text()).toContain("hall.yaml");
+    expect(calls).toEqual([]);
+    await sidebar.find("#pending .forget-pending").trigger("click");
+    await flushPromises();
+    expect(calls.some(([path, options]) => path.endsWith("api/firmware/profiles/hall.yaml") && options.method === "DELETE")).toBe(true);
+    expect(state.inventory.pending).toEqual([]);
+    expect(sidebar.find("#pending .pending").exists()).toBe(false);
   });
   it("asks what goes before it removes a screen, and then removes it (app 0.2.112)", async () => {
     Object.assign(state.inventory.screens[0], { online: false, update: { profile: "living.yaml" } });
@@ -617,6 +749,7 @@ describe("Sidebar", () => {
     const sidebar = mount(Sidebar);
     const item = sidebar.find("#screens .screen-item");
     await item.find(".nav-item").trigger("click");
+    await item.find(".details-toggle").trigger("click");
     await item.find(".remove-screen").trigger("click");
     // What goes, before anything is asked of Home Assistant: the device, the profile and what is kept here.
     const said = item.find(".screen-remove").text();
@@ -832,30 +965,102 @@ describe("the title above a page (app 0.2.105, in the page's settings since 0.3.
 // nowhere else; the numbers beside each way come from the board files through the add-on, never from this page.
 // A screen may not take a name another screen already carries (app 0.2.123): Home Assistant cannot tell two
 // devices of one name apart, so New screen says it while the name is typed and the add-on refuses it as well.
+// A screen that does not reach its Wi-Fi (app 0.4.32): another network before the build, and after the build the page
+// follows Home Assistant finding it on the network, or after three minutes says what fixes it.
+describe("New screen and the Wi-Fi", () => {
+  const flush = async () => { for (let i = 0; i < 4; i++) await Promise.resolve(); await new Promise((done) => setTimeout(done, 0)); };
+  function addon(job: any) {
+    const calls: { url: string; method: string; body?: any }[] = [];
+    const inventory = { screens: [] as any[], pending: [{ file: "hall.yaml", friendly: "Hall", node: "hall", installed: true, seen: false }] };
+    vi.stubGlobal("fetch", vi.fn((url: string, options: any = {}) => {
+      const method = options.method || "GET";
+      calls.push({ url: String(url), method, body: options.body ? JSON.parse(options.body) : undefined });
+      if (String(url).endsWith("api/firmware")) return Promise.resolve({ ok: true, json: () => Promise.resolve({ available: true, ports: ["/dev/ttyUSB0"], profiles: [], logs: [], wifi: { state: "ready", missing: [] }, boards: BOARD_CHOICES, taken: { nodes: [], prefixes: [] }, job: calls.some((c) => c.url.endsWith("firmware/profiles")) ? job : null }) });
+      if (String(url).includes("inventory")) return Promise.resolve({ ok: true, json: () => Promise.resolve({ ...state.inventory, ...inventory }) });
+      const answer = String(url).endsWith("firmware/profiles") ? { file: "hall.yaml", api_key: "k", job } : String(url).endsWith("firmware/jobs") ? job : { state: "ready" };
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(answer)), json: () => Promise.resolve(answer) });
+    }));
+    return { calls, inventory };
+  }
+  async function toDone(view: ReturnType<typeof mount>) {
+    await view.find('input[value="guition"]').setValue();
+    await view.find("#setup-next").trigger("click");
+    await view.find("#friendly_name").setValue("Hall");
+  }
+  it("writes another network before it makes the profile", async () => {
+    const { calls } = addon({ file: "hall.yaml", action: "install", state: "success", stage: "upload" });
+    const view = mount(InstallerView);
+    await flush();
+    await toDone(view);
+    await view.find("#wifi-other").trigger("click");
+    await view.find("#wifi_ssid").setValue("Home");
+    await view.find("#wifi_password").setValue("secret");
+    await view.find("#install-form").trigger("submit");
+    await flush();
+    const writes = calls.filter((c) => c.method !== "GET");
+    expect(writes.map((c) => [c.url, c.method])).toEqual([["api/firmware/wifi", "PUT"], ["api/firmware/profiles", "POST"]]);
+    expect(writes[0].body).toEqual({ wifi_ssid: "Home", wifi_password: "secret" });
+    expect(writes[1].body.wifi_password).toBeUndefined();
+  });
+  it("follows the screen onto the network, and after three minutes without it offers the fix", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { calls, inventory } = addon({ file: "hall.yaml", action: "install", state: "success", stage: "upload" });
+      const view = mount(InstallerView);
+      await flush();
+      await toDone(view);
+      await view.find("#install-form").trigger("submit");
+      await flush();
+      expect(view.find("#arrive").classes()).toContain("waiting");
+      // Home Assistant found it: the page says so.
+      state.inventory.pending = [{ ...inventory.pending[0], seen: true }];
+      await flush();
+      expect(view.find("#arrive").classes()).toContain("seen");
+      // Not found for three minutes: what fixes it, with the right network and the installation again.
+      state.inventory.pending = [{ ...inventory.pending[0], seen: false }];
+      await vi.advanceTimersByTimeAsync(181000);
+      await flush();
+      expect(view.find("#arrive").classes()).toContain("missing");
+      // It says what Another network says: every screen builds with this Wi-Fi, so the others take it too.
+      expect(view.find("#arrive").text()).toContain(t("editor.installer.wifi.other_note"));
+      await view.find("#fix_ssid").setValue("Right");
+      await view.find("#fix_password").setValue("pw");
+      await view.find("#arrive-wifi").trigger("submit");
+      await flush();
+      const writes = calls.filter((c) => c.method !== "GET").map((c) => c.url);
+      expect(writes.slice(-2)).toEqual(["api/firmware/wifi", "api/firmware/jobs"]);
+      // Paired: nothing left to wait for.
+      state.inventory.screens = [{ ...state.inventory.screens[0], node: "hall" } as any];
+      await flush();
+    } finally { vi.useRealTimers(); }
+  });
+});
+
 describe("a name another screen already carries", () => {
   const flush = async () => { await Promise.resolve(); await Promise.resolve(); await new Promise((done) => setTimeout(done, 0)); };
   async function installer(taken: any) {
     vi.stubGlobal("fetch", vi.fn((url: string) => (String(url).endsWith("api/firmware")
-      ? Promise.resolve({ ok: true, json: () => Promise.resolve({ available: true, ports: ["/dev/ttyUSB0"], profiles: [], logs: [], wifi: { state: "ready" }, boards: {}, taken }) })
+      ? Promise.resolve({ ok: true, json: () => Promise.resolve({ available: true, ports: ["/dev/ttyUSB0"], profiles: [], logs: [], wifi: { state: "ready" }, boards: BOARD_CHOICES, taken }) })
       : Promise.resolve({ ok: true, text: () => Promise.resolve("{}") }))));
     const view = mount(InstallerView);
     await flush();
     return view;
   }
-  it("says so under the name and holds the button until the name is the screen's own", async () => {
+  it("says so under the name and holds the step until the name is the screen's own", async () => {
     const view = await installer({ nodes: ["hall"], prefixes: ["living_room"] });
+    await view.find("#setup-next").trigger("click");
     await view.find("#friendly_name").setValue("Living room");
     expect(view.find("#name-taken").exists()).toBe(true);
-    expect(view.find("#install-go").attributes("disabled")).toBeDefined();
+    expect(view.find("#setup-next").attributes("disabled")).toBeDefined();
     await view.find("#friendly_name").setValue("Kitchen");
     expect(view.find("#name-taken").exists()).toBe(false);
     expect(view.find("#node-taken").exists()).toBe(false);
-    expect(view.find("#install-go").attributes("disabled")).toBeUndefined();
+    expect(view.find("#setup-next").attributes("disabled")).toBeUndefined();
     // The device name follows the name, and can be the one that clashes.
     await view.find("#friendly_name").setValue("Hall");
     expect(view.find("#name-taken").exists()).toBe(false);
     expect(view.find("#node-taken").exists()).toBe(true);
-    expect(view.find("#install-go").attributes("disabled")).toBeDefined();
+    expect(view.find("#setup-next").attributes("disabled")).toBeDefined();
   });
 });
 
@@ -903,21 +1108,78 @@ describe("the orientation of a new screen", () => {
   it("lists every board of the catalog in its order, named and described from its data alone", async () => {
     const view = await installer();
     const rows = view.findAll(".board");
-    expect(rows.map((row) => row.find("input").attributes("value"))).toEqual(
-      Object.values(boards).sort((a: any, b: any) => a.order - b.order).map((board: any) => Object.keys(boards).find((key) => boards[key] === board)));
+    // One card per screen: the models of one brand and size share it, in the catalog's order (app 0.4.32).
+    const ordered = Object.entries(boards).sort(([, a]: any, [, b]: any) => a.order - b.order);
+    const firsts = ordered.filter(([, board]: any, index) => ordered.findIndex(([, other]: any) => other.name === board.name && other.inch === board.inch) === index).map(([key]) => key);
+    expect(rows.map((row) => row.find("input").attributes("value"))).toEqual(firsts);
     expect(rows[0].find("b").text()).toBe("CYD · 2.8 inch");
-    expect(rows[0].findAll("small").map((line) => line.text())).toEqual(["ESP32-2432S028", "320 × 240 · XPT2046"]);
+    expect(rows[0].findAll("small").map((line) => line.text())).toEqual(["320 × 240 · XPT2046", "2 models"]);
+    expect(view.find('input[value="guition"]').element.closest("label")!.textContent).toContain("480 × 480 · GT911");
     expect(view.find('input[value="jc8012p4a1"]').element.closest("label")?.textContent).toContain("Guition · 10.1 inch");
-    // Each glass in its own proportions with the cells of one page lying down.
-    const glass = (key: string) => view.find(`input[value="${key}"]`).element.closest("label")!.querySelector(".orient-glass") as HTMLElement;
-    expect(glass("jc8012p4a1").getAttribute("style")).toContain("1280 / 800");
-    expect(glass("jc8012p4a1").querySelectorAll(".orient-cells i")).toHaveLength(20);
-    expect(glass("guition").getAttribute("style")).toContain("480 / 480");
+    // Each board drawn in its own proportions with the tiles of one page lying down, and to scale by its size (app 0.4.32).
+    const art = (key: string) => view.find(`input[value="${key}"]`).element.closest("label")!.querySelector(".board-art") as HTMLElement;
+    expect(art("jc8012p4a1").querySelector("svg")!.getAttribute("viewBox")).toBe("-7 -7 174 114");
+    expect(art("jc8012p4a1").querySelectorAll(".da-tile")).toHaveLength(25);
+    expect(art("guition").querySelector("svg")!.getAttribute("viewBox")).toBe("-7 -7 114 114");
+    expect(art("jc8012p4a1").getAttribute("style")).toContain("--inch: 10.1");
     // The first board is chosen to begin with, with what it can do; the CYD asks for a touch calibration first.
     expect((rows[0].find("input").element as HTMLInputElement).checked).toBe(true);
     expect(view.findAll("#board-abilities li").map((li) => li.text())).toEqual(
       ["No camera pictures", "Dimmable backlight", "Standby and night", "Touch calibration on first start"]);
     expect(view.find("#board-status").exists()).toBe(false);
+  });
+
+  it("finds a board by brand, size or what is printed on it, and narrows by size (app 0.4.32)", async () => {
+    const view = await installer();
+    const names = () => view.findAll(".board b").map((b) => b.text());
+    await view.find("#board-search").setValue("guition 4");
+    expect(names()).toContain("Guition · 4 inch");
+    expect(names().every((name) => name.startsWith("Guition"))).toBe(true);
+    await view.find("#board-search").setValue("2432S028");
+    expect(names()).toEqual(expect.arrayContaining(["CYD · 2.8 inch"]));
+    await view.find("#board-search").setValue("nothing like it");
+    expect(view.find(".pick-none").text()).toContain("nothing like it");
+    await view.find("#board-search").setValue("");
+    await view.findAll(".pick-sizes button").find((b) => b.text().startsWith("7 inch"))!.trigger("click");
+    expect(names().length).toBeGreaterThan(0);
+    expect(view.findAll(".board").every((row) => Number(row.find(".board-art").attributes("style")!.match(/--inch: ([\d.]+)/)![1]) >= 6)).toBe(true);
+  });
+
+  it("asks which model a screen of several models is, in sight in the second step (app 0.4.32)", async () => {
+    const view = await installer();
+    await view.find('input[value="jc8012p4a1"]').setValue();
+    await view.find("#setup-next").trigger("click");
+    const models = view.findAll("#board-model .model");
+    expect(models.map((row) => row.find("b").text())).toEqual(["JC8012P4A1", "JC8012P4A1 V3", "JC8012P4A1 V2"]);
+    await models[1].find("input").setValue();
+    await view.find("#friendly_name").setValue("Hall");
+    await view.find("#install-form").trigger("submit");
+    await flush();
+    expect(answers.at(-1).board).toBe("jc8012p4a1v3");
+    // A board with one model asks nothing.
+    const other = await installer();
+    await other.find('input[value="guition"]').setValue();
+    await other.find("#setup-next").trigger("click");
+    expect(other.find("#board-model").exists()).toBe(false);
+  });
+
+  it("walks the three steps: Next only with a board, and on only with a name (app 0.4.32)", async () => {
+    const view = await installer();
+    const shown = () => view.findAll(".setup-step").filter((step) => (step.element as HTMLElement).style.display !== "none").map((step) => step.classes()[1]);
+    expect(shown()).toEqual(["pick"]);
+    await view.find("#setup-next").trigger("click");
+    expect(shown()).toEqual(["make"]);
+    await view.find("#setup-next").trigger("click");
+    // No name yet: the step stays.
+    expect(shown()).toEqual(["make"]);
+    await view.find("#friendly_name").setValue("Hall");
+    await view.find("#setup-next").trigger("click");
+    expect(shown()).toEqual(["ways"]);
+    expect(view.find("#install-go").exists()).toBe(true);
+    await view.find("#setup-back").trigger("click");
+    expect(shown()).toEqual(["make"]);
+    // The name shows in the drawing of the screen as it is typed.
+    expect(view.find(".make-art .da-name").text()).toBe("Hall");
   });
 
   it("explains an experimental board by what it can do and submits its selected orientation", async () => {
@@ -967,6 +1229,16 @@ describe("the orientation of a new screen", () => {
     const third = await installer();
     await third.find('input[value="guition"]').setValue("guition");
     expect(third.find("#choice-DISPLAY_MODEL").exists()).toBe(false);
+    // The Guition's rows (app 0.4.31): said in words, the usual size first, and four rows sent only when chosen.
+    const rows = third.findAll("#choice-GRID_ROWS .choice");
+    expect(third.find("#choice-GRID_ROWS legend").text()).toBe("Tiles on a page");
+    expect(rows.map((option) => option.find("b").text())).toEqual(["3 rows", "4 rows, smaller tiles"]);
+    expect(rows[0].find("small").text()).toBe("the usual size");
+    await rows[1].find("input").setValue("4");
+    await third.find("#friendly_name").setValue("Hall");
+    await third.find("#install-form").trigger("submit");
+    await flush();
+    expect(answers.pop()).toMatchObject({ board: "guition", choices: { GRID_ROWS: "4" } });
   });
 
   it("sends the chosen way with the new screen", async () => {
@@ -1122,5 +1394,46 @@ describe("Alerts: one screen through the event (app 0.2.133)", () => {
     expect(page.find("[data-jump='alerts-one']").text()).toBe("One screen");
     expect(page.text()).toContain("screen: [living-screen, desk]");
     page.unmount();
+  });
+});
+
+describe("ChoiceField: the choice under the pointer is drawn on its tile first (app 0.4.32)", () => {
+  const choices = [["standard", "Name"], ["big", "Big"]] as const;
+  const tile: Tile = { id: "t1", entity: "sensor.t", name: "", slot: 0, options: { display: "standard" } };
+  it("shows a choice on the tile while the pointer rests on it, and nothing once it leaves or picks", async () => {
+    Object.assign(state.drag, { active: false, moving: null, preview: null, page: null });
+    appendTiles({ entity: "sensor.t", name: "", slot: 0, options: { display: "standard" } });
+    const placed = state.layout!.tiles.find((item) => item.entity === "sensor.t")!;
+    const field = mount(ChoiceField, { props: { choices, value: "standard", tile: placed, previewKey: "display" } });
+    const [, big] = field.findAll("button");
+    await big.trigger("pointerenter");
+    expect(state.optionPreview).toEqual({ tileId: placed.id, key: "display", value: "big" });
+    // The preview is drawn only while that tile's own settings are open, and never during a drag.
+    expect(previewed(placed)).toBe(placed);
+    state.selectedTile = placed;
+    expect(previewed(placed).options?.display).toBe("big");
+    state.drag.active = true;
+    expect(previewed(placed)).toBe(placed);
+    state.drag.active = false;
+    // Only that tile: another is drawn as it is.
+    expect(previewed({ ...placed, id: "other" }).options?.display).toBe("standard");
+    await field.find(".seg").trigger("pointerleave");
+    expect(state.optionPreview).toBeNull();
+    expect(previewed(placed)).toBe(placed);
+    await big.trigger("pointerenter");
+    await big.trigger("click");
+    expect(state.optionPreview).toBeNull();
+    expect(field.emitted("pick")).toEqual([["big"]]);
+  });
+  it("previews nothing for the choice already made", async () => {
+    const field = mount(ChoiceField, { props: { choices, value: "standard", tile, previewKey: "display" } });
+    await field.findAll("button")[0].trigger("pointerenter");
+    expect(state.optionPreview).toBeNull();
+  });
+  it("folds a longer list into one field with the current choice", () => {
+    const long = [["a", "Automatic"], ["b", "Nothing"], ["c", "A value"], ["d", "Own text"]] as const;
+    const field = mount(ChoiceField, { props: { choices: long, value: "c" } });
+    expect(field.find(".seg").exists()).toBe(false);
+    expect(field.find(".choice-field .choice-text").text()).toBe("A value");
   });
 });

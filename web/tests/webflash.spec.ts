@@ -197,6 +197,13 @@ describe("one installation from the browser", () => {
 });
 
 // New screen: This computer builds as Download does, then writes the image from the page, erased first.
+// The wizard's third step, where the way in is chosen (app 0.4.32): past the board and the name.
+async function toInstall(view: ReturnType<typeof mount>) {
+  await view.find("#setup-next").trigger("click");
+  await view.find("#friendly_name").setValue("Hall");
+  await view.find("#setup-next").trigger("click");
+}
+
 describe("New screen from this browser", () => {
   const SHAPES = JSON.parse(readFileSync("../screen_manager/app/boards.json", "utf8"));
   const boards = { cyd: { ...SHAPES.cyd, ...SHAPES.cyd.catalog, orientations: SHAPES.cyd.orientations } };
@@ -222,10 +229,11 @@ describe("New screen from this browser", () => {
     addonWithBuild(new Uint8Array());
     const view = mount(InstallerView);
     await flush();
-    await view.find("#install-target").setValue("browser");
+    await toInstall(view);
+    await view.find('#install-target input[value="browser"]').setValue();
     expect(view.find("#target-hint").text()).toContain("https");
     expect(view.find("#install-go").attributes("disabled")).toBeDefined();
-    expect(view.find('#install-target option[value="download"]').exists()).toBe(true);
+    expect(view.find('#install-target input[value="download"]').exists()).toBe(true);
   });
 
   it("picks the port on the click, builds with the download target, and installs erased", async () => {
@@ -233,7 +241,8 @@ describe("New screen from this browser", () => {
     const { posted, calls } = addonWithBuild(factoryImage(0, 0x1000));
     const view = mount(InstallerView);
     await flush();
-    await view.find("#install-target").setValue("browser");
+    await toInstall(view);
+    await view.find('#install-target input[value="browser"]').setValue();
     expect(view.find("#install-go").text()).toBe("Connect & install");
     await view.find("#friendly_name").setValue("Hall");
     await view.find("#install-form").trigger("submit");
@@ -251,7 +260,8 @@ describe("New screen from this browser", () => {
     const { posted } = addonWithBuild(factoryImage(9, 0));
     const view = mount(InstallerView);
     await flush();
-    await view.find("#install-target").setValue("browser");
+    await toInstall(view);
+    await view.find('#install-target input[value="browser"]').setValue();
     await view.find("#friendly_name").setValue("Hall");
     await view.find("#install-form").trigger("submit");
     await flush();

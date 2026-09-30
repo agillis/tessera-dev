@@ -9,9 +9,12 @@ import re
 import secrets
 
 from i18n import english, screen_t, t
+import catalogue
 import tile_icons
 
-DOMAINS = frozenset('light switch input_boolean scene script climate vacuum fan cover sensor binary_sensor input_select select number input_number weather media_player button input_button sun timer person screen camera image alarm_control_panel lock automation'.split())
+# The entity types a tile shows, as the tile catalogue has them (catalogue/*.yaml, catalogue.py): a type exists here only
+# where it has a file there, which comes after the firmware's UI for it (docs/CATALOGUE.md).
+DOMAINS = catalogue.DOMAINS
 # Built-in cards without a Home Assistant entity; firmware 0.2.14+ renders them. The names in English: a screen gets them in
 # its language and the editor in its own (builtin_name, app 0.2.90).
 BUILTIN = {'screen.clock': 'Clock', 'screen.nightstand': 'Bedside clock', 'screen.settings': 'Settings', **{f'screen.page_{n}': f'Go to page {n}' for n in range(1, 9)}}
@@ -21,6 +24,11 @@ BUILTIN = {'screen.clock': 'Clock', 'screen.nightstand': 'Bedside clock', 'scree
 PAGE_TILE = 'screen.page_'
 PAGE_TILE_REPEAT_MIN_FIRMWARE = (0, 2, 65)
 ENTITY_REPEAT_MIN_FIRMWARE = (0, 16, 0)
+# A screen without a title (firmware 0.17.0+): the top bar shows its home key alone. Older firmware said "Home" instead.
+NO_TITLE_MIN_FIRMWARE = (0, 17, 0)
+# Eight pages on every grid (firmware 0.18.0+), at most 64 tiles over all of them; older firmware had 64 / cells pages
+# (Grid.legacy_pages), three on a 5 x 4 grid. It says so in its hello (`free_pages`, page_delivery.Sender).
+FREE_PAGES_MIN_FIRMWARE = (0, 18, 0)
 
 def page_target(entity):
     """The page a navigation tile opens, counted from one; 0 for any other entity."""
@@ -35,7 +43,6 @@ def builtin_name(entity, text=screen_t):
     if entity == 'screen.nightstand':
         return text('addon.screen.builtin.nightstand')
     return text('screen.settings.title' if entity == 'screen.settings' else 'addon.screen.builtin.clock')
-NEW_DOMAINS = frozenset('sun timer person screen'.split())
 # A camera or an image entity opens full screen on a Guition with firmware 0.2.57+ (camera_feed.py).
 CAMERA_DOMAINS = frozenset(('camera', 'image'))
 CAMERA_MIN_FIRMWARE = (0, 2, 57)
@@ -43,7 +50,7 @@ CAMERA_MIN_FIRMWARE = (0, 2, 57)
 LIVE_MIN_FIRMWARE = (0, 2, 77)
 # The paces a live tile may choose, in seconds (5 and 10 since app 0.3.13; every firmware with live pictures takes
 # 5 to 3600), and the one it has when it chose none.
-LIVE_REFRESH = (5, 10, 15, 30)
+LIVE_REFRESH = tuple(catalogue.of_type('camera')['picture']['refresh'])
 LIVE_REFRESH_DEFAULT = 15
 # A media tile's album cover in the icon's place ("display": "cover", app 0.2.92): the same strip, firmware from here.
 COVER_TILE_MIN_FIRMWARE = (0, 2, 78)
@@ -62,8 +69,9 @@ NIGHTSTAND_KEYS = 3
 # tiles. The tiles that hold keys and how many each holds; a key takes a tile's own settings but its size, and any
 # domain but a picture, which has no round form.
 KEY_HOLDERS = {NIGHTSTAND: NIGHTSTAND_KEYS}
-KEY_OPTIONS = ('icon', 'tap', 'action', 'guard')
-KEY_DOMAINS = frozenset(DOMAINS - {'screen', 'camera', 'image'})
+# A key's name under its circle can be hidden (`overlay`: "none", firmware 0.17.0+), as a picture's name on it can.
+KEY_OPTIONS = ('icon', 'tap', 'action', 'guard', 'overlay')
+KEY_DOMAINS = catalogue.key_domains()
 
 def is_key(tile):
     """A key of a bedside clock: a tile that stands under another instead of in a cell."""
@@ -88,7 +96,7 @@ REF = 'main'
 # The shared firmware of this app release: packages/core.yaml's SCREEN_FIRMWARE_VERSION, what every board builds
 # unless its own board file went ahead with a fix for that board alone (firmware_target, docs/BOARD_RELEASES.md). The
 # middle number is the core: the feature gates below name a shared X.Y.0, so a feature always ships with a new core.
-FIRMWARE_VERSION = '0.19.0'
+FIRMWARE_VERSION = '0.20.0'
 # The Auto standby switch a screen offers Home Assistant automations.
 AUTO_STANDBY_MIN_FIRMWARE = '0.2.41'
 # The settings page the screen opens itself, and the screen.settings tile that opens it.
@@ -108,18 +116,19 @@ HOME_BUTTON_MIN_FIRMWARE = '0.2.100'
 TOP_BAR_MIN_FIRMWARE = '0.17.0'
 # Open a page from Home Assistant (esphome.<node>_show_page), the way a Go to page tile does.
 SHOW_PAGE_MIN_FIRMWARE = '0.2.87'
+# The first firmware of the three types below is the `firmware:` of their file in catalogue/, named here for the tests.
 # An alarm panel as a tile with its card and keypad (components/smart_display/alarm_panel.h); older firmware refuses the
 # domain, so a layout with one waits for the update.
-ALARM_MIN_FIRMWARE = (0, 3, 3)
+ALARM_MIN_FIRMWARE = catalogue.parse_version(catalogue.of_type('alarm_control_panel')['firmware'])
 # A lock as a tile with its card (components/smart_display/lock_panel.h): locks with one tap, unlocks after a second, the
 # alarm panel's keypad for a code. Older firmware refuses the domain, so a layout with one waits for the update.
-LOCK_MIN_FIRMWARE = (0, 5, 0)
+LOCK_MIN_FIRMWARE = catalogue.parse_version(catalogue.of_type('lock')['firmware'])
 # How far a lock's tile may go (the `guard` option): unlock after a second tap, or lock only.
-LOCK_GUARDS = ('confirm', 'lock_only')
+LOCK_GUARDS = tuple(catalogue.of_type('lock')['guards'])
 # An automation as a tile (GitHub #62): a tap switches it on or off and holding runs its actions, or with the tap option
 # `run` the other way round. Older firmware refuses the domain, so a layout with one waits for the update.
-AUTOMATION_MIN_FIRMWARE = (0, 7, 0)
-ATTRS = frozenset('brightness percentage current_position current_tilt_position current_temperature temperature current_humidity min_temp max_temp target_temp_step supported_color_modes hvac_modes hvac_action hs_color color_temp_kelvin min_color_temp_kelvin max_color_temp_kelvin fan_speed_list unit_of_measurement battery_level fan_speed volume_level is_volume_muted media_title options min max step temperature_unit supported_features device_class next_rising next_setting finishes_at duration remaining humidity wind_speed wind_speed_unit apparent_temperature fan_modes swing_modes fan_mode swing_mode effect code_format code_arm_required changed_by assumed_state'.split())
+AUTOMATION_MIN_FIRMWARE = catalogue.parse_version(catalogue.of_type('automation')['firmware'])
+ATTRS = frozenset('brightness percentage current_position current_tilt_position current_temperature temperature target_temp_low target_temp_high current_humidity min_temp max_temp target_temp_step supported_color_modes hvac_modes hvac_action hs_color color_temp_kelvin min_color_temp_kelvin max_color_temp_kelvin fan_speed_list unit_of_measurement battery_level fan_speed volume_level is_volume_muted media_title options min max step temperature_unit supported_features device_class next_rising next_setting finishes_at duration remaining humidity wind_speed wind_speed_unit apparent_temperature fan_modes swing_modes fan_mode swing_mode effect code_format code_arm_required changed_by assumed_state'.split())
 # Attributes whose boolean value the screen needs; every other bool stays behind.
 BOOL_ATTRS = frozenset(['is_volume_muted', 'code_arm_required', 'assumed_state'])
 
@@ -144,14 +153,14 @@ def backgrounds():
     """TILE_BACKGROUNDS with their labels in the editor's language (app 0.2.90)."""
     return {name: {**item, 'label': t(f'addon.labels.backgrounds.{name}')} for name, item in TILE_BACKGROUNDS.items()}
 
-# Display modes per domain; everything else offers standard and watch (large value).
-DISPLAYS = {'weather': ('standard', 'watch', 'forecast'), 'sensor': ('standard', 'watch', 'graph'), 'screen': ('digital', 'analog', 'dial', 'flip'), 'sun': ('standard', 'watch', 'sunpath'),
-            'camera': ('standard', 'live'), 'image': ('standard', 'live'), 'media_player': ('standard', 'watch', 'cover')}
+# Display modes per domain, as the catalogue has them; a type that only has standard and watch (large value) is left out.
+DISPLAYS = {domain: tuple(catalogue.display_keys(domain)) for domain in sorted(DOMAINS)
+            if catalogue.display_keys(domain) != ['standard', 'watch']}
 # A live picture on a 1x2 or 2x2 tile fills the card (app 0.3.8, firmware 0.3.3): cut to fill it or whole on black, with
 # its name on it or nothing. The first choice of each is the default and is never stored.
-PICTURE_OPTIONS = {'fit': ('fill', 'contain'), 'overlay': ('name', 'none')}
-# Displays that only work on a double-width card.
-WIDE_ONLY = ('forecast', 'sunpath')
+PICTURE_OPTIONS = {key: tuple(catalogue.of_type('camera')['picture'][key]) for key in ('fit', 'overlay')}
+# Displays that only work on a double-width card (`wide` in the catalogue).
+WIDE_ONLY = tuple(sorted({item['key'] for entry in catalogue.TYPES.values() for item in entry['displays'] if item.get('wide')}))
 
 # ----- The grid of a screen's pages -----
 # A page is a grid of cells, and each screen has its own: two columns of three on the boards that shipped first,
@@ -159,21 +168,28 @@ WIDE_ONLY = ('forecast', 'sunpath')
 # cell (page * cells + row * columns + column); a wide tile starts in a column that has a cell to its right and
 # covers both; a full tile (firmware 0.2.62+) starts a page and covers every cell of it. Empty cells are allowed.
 #
-# The rules are the firmware's (components/smart_display/runtime_model.h): at most eight pages, and never more
-# than 64 tiles on one screen (one dirty bit each), so a page of nine cells gives seven pages. Everything that
+# The rules are the firmware's (components/smart_display/runtime_model.h): eight pages whatever the grid, and never more
+# than 64 tiles on one screen (one dirty bit each), so a page need not be full (firmware 0.18.0+). Older firmware had
+# as many pages as 64 tiles fill (legacy_pages): seven of nine cells, three of twenty. Everything that
 # counts cells, rows, pages or tiles goes through the screen's Grid (`grid_of(screen)`); DEFAULT_GRID is the two
 # by three of the first boards, which is also what every layout stored before app 0.2.94 was made on.
 FIRMWARE_MAX_PAGES = 8
 FIRMWARE_MAX_TILES = 64
 
 class Grid:
-    __slots__ = ('columns', 'rows')
+    __slots__ = ('columns', 'rows', 'page_cap')
 
-    def __init__(self, columns=2, rows=3):
+    def __init__(self, columns=2, rows=3, pages=FIRMWARE_MAX_PAGES):
         columns, rows = int(columns), int(rows)
         if columns < 1 or rows < 1 or columns * rows > FIRMWARE_MAX_TILES:
             raise ValueError(f'no screen holds a page of {columns} x {rows} cells')
         self.columns, self.rows = columns, rows
+        # The pages the screen's firmware takes (for_firmware); the cells alone say nothing about them any more.
+        self.page_cap = max(1, min(FIRMWARE_MAX_PAGES, int(pages)))
+
+    def for_firmware(self, version):
+        """The same cells with the pages firmware `version` takes (page_limit): eight from 0.18.0, fewer before."""
+        return Grid(self.columns, self.rows, page_limit(version, Grid(self.columns, self.rows)))
 
     def __eq__(self, other):
         return isinstance(other, Grid) and (self.columns, self.rows) == (other.columns, other.rows)
@@ -191,13 +207,20 @@ class Grid:
 
     @property
     def pages(self):
+        return self.page_cap
+
+    @property
+    def legacy_pages(self):
+        """The pages firmware before 0.18.0 takes on this grid: as many as 64 tiles fill, eight at most."""
         return min(FIRMWARE_MAX_PAGES, FIRMWARE_MAX_TILES // self.slots)
 
     @property
     def max_slots(self):
         return self.pages * self.slots
 
-    max_tiles = max_slots
+    @property
+    def max_tiles(self):
+        return min(FIRMWARE_MAX_TILES, self.max_slots)
 
     @property
     def wide_span(self):
@@ -210,6 +233,8 @@ class Grid:
         if size in ('wide', True): return self.wide_span, 1
         if size == 'tall': return 1, 2
         if size == 'square': return 2, 2
+        span = span_of(size)
+        if span: return span
         return 1, 1
 
     def cells(self, size):
@@ -293,11 +318,37 @@ MAX_SLOTS = DEFAULT_GRID.max_slots
 MAX_TILES = DEFAULT_GRID.max_tiles
 
 TILE_SIZES_ON_SCREEN = ('single', 'wide', 'tall', 'square', 'full')
+# A span (app 0.4.32, firmware 0.19.0): "CxR", a tile of C columns and R rows, set with the tile's handles. The five
+# names keep their sizes; a span is every other rectangle smaller than the grid, and a screen says in its hello which
+# of them its grid takes (tile_sizes), so an older screen is never sent one.
+SPAN = re.compile(r'^([1-9])x([1-9])$')
+
+def span_of(size):
+    """(columns, rows) of a span such as "3x2", or None for a name or anything else."""
+    found = SPAN.match(size) if isinstance(size, str) else None
+    return (int(found[1]), int(found[2])) if found else None
+
+def span_offered(columns, rows, grid):
+    """Whether a grid takes this rectangle as a span: smaller than the grid, and more than the names say (2 x 2)."""
+    return columns <= grid.columns and rows <= grid.rows and (columns, rows) != (grid.columns, grid.rows) and (columns > 2 or rows > 2)
+
+def is_size(size):
+    return size in TILE_SIZES_ON_SCREEN or span_of(size) is not None
+
+def size_rows(size):
+    """How many rows a size is high, apart from the whole page: tall and square two, a span its own."""
+    span = span_of(size)
+    return span[1] if span else 2 if size in ('tall', 'square') else 1
+
+def size_columns(size):
+    """How many columns a size is wide, apart from the whole page and a wide tile's grid: a span its own."""
+    span = span_of(size)
+    return span[0] if span else 2 if size in ('wide', 'square') else 1
 
 def tile_size(tile):
     """The symbolic presentation size; dimensions are resolved by the screen's grid."""
     size = tile.get('options', {}).get('size', 'single')
-    return size if size in TILE_SIZES_ON_SCREEN else 'single'
+    return size if is_size(size) else 'single'
 
 def is_wide(tile):
     """Double width or the whole page: the card spans two columns."""
@@ -338,28 +389,10 @@ def has_gaps(tiles, grid=DEFAULT_GRID):
 # Home Assistant's own entity rows. The first choice is what a wide card shows
 # when the tile has no explicit choice; 'none' keeps the plain card. The labels in English,
 # as the Claude skill writes them; the editor gets them in its language (controls_catalogue).
-CONTROLS = {
-    'climate': (('setpoint', 'Temperature − / +'), ('mode', 'Mode keys'), ('setpoint_mode', 'Temperature − / + and mode keys')),
-    'switch': (('toggle', 'On/off switch'),),
-    'input_boolean': (('toggle', 'On/off switch'),),
-    'automation': (('toggle', 'On/off switch'), ('run', 'Run button')),
-    'light': (('toggle', 'On/off switch'), ('brightness', 'Brightness slider')),
-    'fan': (('toggle', 'On/off switch'), ('speed', 'Speed slider')),
-    'vacuum': (('buttons', 'Start, stop, dock'),),
-    'cover': (('buttons', 'Open, stop, close'), ('position', 'Position slider'),
-              ('tilt', 'Slat tilt'), ('buttons_tilt', 'Open, stop, close and slat tilt'),
-              ('position_tilt', 'Position and slat tilt')),
-    'media_player': (('volume', 'Volume and mute'), ('playback', 'Previous, play/pause, next')),
-    'number': (('stepper', 'Value − / +'), ('slider', 'Slider')),
-    'input_number': (('stepper', 'Value − / +'), ('slider', 'Slider')),
-    'select': (('stepper', 'Previous / next choice'),),
-    'input_select': (('stepper', 'Previous / next choice'),),
-    'timer': (('buttons', 'Start/pause and cancel'),),
-    'scene': (('run', 'Activate button'),),
-    'script': (('run', 'Run button'),),
-    'button': (('run', 'Press button'),),
-    'input_button': (('run', 'Press button'),),
-}
+# The direct controls per type, as the catalogue has them, the default first, with their words in English (the Claude
+# skill writes them; the editor gets them in its language, controls_catalogue).
+CONTROLS = {domain: tuple((key, english(f'addon.labels.controls.{domain}.{key}')) for key in catalogue.control_keys(domain))
+            for domain in sorted(DOMAINS) if catalogue.control_keys(domain)}
 
 def controls_catalogue():
     """Editor choices per domain: the default first, then 'none'; labels in the editor's language (app 0.2.90)."""
@@ -368,20 +401,9 @@ def controls_catalogue():
             for domain, choices in CONTROLS.items()}
 
 def resolve_controls(tile):
-    """Control set a card shows on the screen, or None: only wide cards in the standard layout have room for one."""
-    options = tile.get('options', {})
-    domain = tile['entity'].split('.')[0]
-    # The album cover in the icon's place (app 0.2.92) is the standard layout with a picture: the controls stay.
-    if domain not in CONTROLS or options.get('size') not in ('wide', 'tall', 'square', 'full') or options.get('display', 'standard') not in ('standard', 'cover') or options.get('inline') == 'slider':
-        return None
-    # A full-page card is one big button unless a control was chosen for it; a wide card shows its usual one.
-    choice = options.get('controls', 'none' if options.get('size') in ('tall', 'full') else CONTROLS[domain][0][0])
-    if domain == 'cover' and options.get('size') == 'wide':
-        choice = 'none' if choice == 'tilt' else choice.removesuffix('_tilt')
-    # A card one row high has room for one group: the setpoint (firmware 0.3.1 draws both on 1 x 2, 2 x 2 and full).
-    if choice == 'setpoint_mode' and options.get('size') == 'wide':
-        choice = 'setpoint'
-    return None if choice == 'none' else choice
+    """Control set a card shows on the screen, or None (catalogue.resolve_controls: the chosen one or its type's default,
+    and on a card one row high what fits there)."""
+    return catalogue.resolve_controls(tile, span_of)
 
 # Diagnostic entities every ESP Screens firmware exposes; the manager watches them for screens.
 # Firmware built before the English translation still registers the Dutch originals, so both
@@ -585,6 +607,11 @@ def shape_of(screen):
     # Which way it hangs, in the order of what knows best as well: the canvas the screen reports is one of its
     # board's two, and only when it says nothing does the word from its own profile decide.
     shape = board_shape(board, orientation_shown(board, reported) or screen.get('orientation'))
+    # The rows its own YAML was built with (a Guition with four rows, app 0.4.31), for the grid lying down, which on
+    # square glass is the grid either way.
+    rows = screen.get('grid_rows')
+    if type(rows) is int and rows > 0 and shape.get('width', 0) >= shape.get('height', 0):
+        shape = {**shape, 'rows': rows}
     if reported:
         shape = {**shape, **reported}
     return shape
@@ -629,19 +656,30 @@ def version_text(version):
     """"0.2.65" for (0, 2, 65); None for None."""
     return '.'.join(str(part) for part in version) if version else None
 
+def page_limit(version, grid=DEFAULT_GRID):
+    """How many pages firmware `version` (a tuple, or None when unknown) takes on a screen with this grid: eight from
+    firmware 0.18.0, as many as 64 tiles fill before."""
+    return grid.pages if (version or (0, 0, 0)) >= FREE_PAGES_MIN_FIRMWARE else grid.legacy_pages
+
 def tile_limit(version, grid=DEFAULT_GRID):
-    """How many tiles firmware `version` (a tuple, or None when unknown) takes on a screen with this grid: one per
-    cell of its pages (firmware 0.2.62+), twenty from 0.2.7, ten before."""
+    """How many tiles firmware `version` (a tuple, or None when unknown) takes on a screen with this grid: 64 over its
+    pages (firmware 0.18.0+), one per cell of its pages (0.2.62+), twenty from 0.2.7, ten before."""
     version = version or (0, 0, 0)
-    return grid.max_tiles if version >= FULL_PAGE_MIN_FIRMWARE else LEGACY_MAX_TILES if version >= TWENTY_TILES_MIN_FIRMWARE else FIRST_MAX_TILES
+    if version >= FREE_PAGES_MIN_FIRMWARE: return grid.max_tiles
+    return grid.legacy_pages * grid.slots if version >= FULL_PAGE_MIN_FIRMWARE else LEGACY_MAX_TILES if version >= TWENTY_TILES_MIN_FIRMWARE else FIRST_MAX_TILES
+
+CLIMATE_RANGE_MIN_FIRMWARE = (0, 19, 0)
 
 def firmware_features(version, grid=DEFAULT_GRID):
     """What the editor may offer a screen with firmware `version` (a tuple, or None): the tile limit, full-page and
-    navigation tiles, the same navigation tile on several pages and any entity on several tiles."""
+    navigation tiles, the same navigation tile on several pages, any entity on several tiles and a screen without a
+    title."""
     version = version or (0, 0, 0)
-    return {'tile_limit': tile_limit(version, grid), 'full_page': version >= FULL_PAGE_MIN_FIRMWARE,
+    return {'tile_limit': tile_limit(version, grid), 'page_limit': page_limit(version, grid), 'full_page': version >= FULL_PAGE_MIN_FIRMWARE,
             'page_tiles_repeat': version >= PAGE_TILE_REPEAT_MIN_FIRMWARE,
-            'entity_tiles_repeat': version >= ENTITY_REPEAT_MIN_FIRMWARE}
+            'entity_tiles_repeat': version >= ENTITY_REPEAT_MIN_FIRMWARE, 'no_title': version >= NO_TITLE_MIN_FIRMWARE,
+            # A thermostat with only a range on its -/+ (drawn_controls sends older screens the tile without them).
+            'climate_range': version >= CLIMATE_RANGE_MIN_FIRMWARE}
 
 def entity_slug(name):
     """The end of an entity id Home Assistant derives from an entity name (ASCII names)."""
@@ -933,21 +971,16 @@ def min_firmware(layout):
     tiles = layout['tiles']
     domains = {t['entity'].split('.')[0] for t in tiles}
     options = [t.get('options', {}) for t in tiles]
-    gates = [
-        (any(o.get('controls') in ('tilt', 'buttons_tilt', 'position_tilt', 'setpoint_mode') for o in options), (0, 3, 1)),
-        ('alarm_control_panel' in domains, ALARM_MIN_FIRMWARE),
-        ('lock' in domains, LOCK_MIN_FIRMWARE),
-        ('automation' in domains, AUTOMATION_MIN_FIRMWARE),
+    # What each tile's type and chosen options ask (the catalogue: a type's `firmware`, an option's screen requirement
+    # without an `else`), and what the layout as a whole asks.
+    gates = [(True, version) for tile in tiles for version, _ in catalogue.gates(tile)] + [
         (any(t['entity'] == NIGHTSTAND or is_key(t) for t in tiles), NIGHTSTAND_MIN_FIRMWARE),
         (repeated_page_tiles(tiles), PAGE_TILE_REPEAT_MIN_FIRMWARE),
         (repeated_entities(tiles), ENTITY_REPEAT_MIN_FIRMWARE),
+        (layout.get('title') == '', NO_TITLE_MIN_FIRMWARE),
         (len(tiles) > LEGACY_MAX_TILES or any(is_full(t) or page_target(t['entity']) for t in tiles), FULL_PAGE_MIN_FIRMWARE),
-        (any(o.get('display') == 'cover' for o in options), COVER_TILE_MIN_FIRMWARE),
-        (any(o.get('display') == 'live' for o in options), LIVE_MIN_FIRMWARE),
-        (bool(domains & set(CAMERA_DOMAINS)), CAMERA_MIN_FIRMWARE),
         (any(t['entity'] == 'screen.settings' for t in tiles), (0, 2, 44)),
         (any(o.get('background') == 'none' for o in options), (0, 2, 16)),
-        (bool(domains & set(NEW_DOMAINS)), (0, 2, 14)),
         (len(tiles) > FIRST_MAX_TILES, TWENTY_TILES_MIN_FIRMWARE),
     ]
     needed = [version for used, version in gates if used]
@@ -976,7 +1009,7 @@ TILE_EVENT_OPTIONS = {'size': 'size', 'controls': 'controls', 'display': 'displa
                       'history_hours': 'history_hours', 'refresh': 'refresh', 'fit': 'fit', 'overlay': 'overlay'}
 TILE_SIZES = {'full': 'full', 'fullscreen': 'full', 'full screen': 'full', 'full-screen': 'full', 'page': 'full', 'whole page': 'full',
               'wide': 'wide', 'double': 'wide', 'large': 'wide', 'big': 'wide',
-              'single': 'single', 'small': 'single', 'normal': 'single'}
+              'single': 'single', 'small': 'single', 'normal': 'single', 'tall': 'tall', 'high': 'tall', 'square': 'square'}
 
 def loose(text):
     """A name as people write it: case, spaces, dashes and underscores don't matter."""
@@ -1068,9 +1101,34 @@ def tile_options(data, current=None):
         options['action'] = {'action': str(data['action']).strip(), **({'data': data['data']} if isinstance(data.get('data'), dict) and data['data'] else {})}
         if data.get('tap') in (None, ''):
             options['tap'] = 'action'
-    if (options.get('controls', 'none') != 'none' or options.get('display') in WIDE_ONLY) and options.get('size') not in ('tall', 'square', 'full'):
+    if (options.get('controls', 'none') != 'none' or options.get('display') in WIDE_ONLY) and options.get('size') not in ('tall', 'square', 'full') and span_of(options.get('size')) is None:
         options['size'] = 'wide'
     return {key: value for key, value in options.items() if value not in (None, '')}
+
+EVENT_SPAN = re.compile(r'^([1-9])\s*[x×*]\s*([1-9])$')
+
+def sizes_of(grid):
+    """Every size this grid takes: the names that fit it, then its spans (app 0.4.32)."""
+    names = ['single', 'wide', *(['tall'] if grid.rows > 1 else []), *(['square'] if grid.rows > 1 and grid.columns > 1 else []), 'full']
+    return names + [f'{c}x{r}' for r in range(1, grid.rows + 1) for c in range(1, grid.columns + 1) if span_offered(c, r, grid)]
+
+def event_size(size, grid=DEFAULT_GRID):
+    """The size an event asks for on this grid (app 0.4.32): a name, or columns x rows as "3x2". A rectangle a name
+    already says is that name ("2x2" is square, the whole grid full); one the grid does not take is refused, naming
+    the sizes it does take."""
+    if size in TILE_SIZES_ON_SCREEN:
+        return size  # where it goes is checked when it is placed
+    found = EVENT_SPAN.match(loose(size))
+    if found:
+        columns, rows = int(found[1]), int(found[2])
+        if (columns, rows) == (grid.columns, grid.rows):
+            return 'full'
+        named = {(1, 1): 'single', (2, 1): 'wide', (1, 2): 'tall', (2, 2): 'square'}.get((columns, rows))
+        if named and columns <= grid.columns and rows <= grid.rows:
+            return named
+        if span_offered(columns, rows, grid):
+            return f'{columns}x{rows}'
+    raise ValueError(t('addon.errors.events.size', size=size, sizes=', '.join(sizes_of(grid))))
 
 def event_page(data, grid=DEFAULT_GRID):
     """The page an event names, counted from one as people do; None when it doesn't name one."""
@@ -1269,6 +1327,8 @@ def run_placed_event(layout, action, data, repeat_pages=False, grid=DEFAULT_GRID
             chosen = found is not None
         was_size, had_slot = tile_size(found) if found else 'single', (found or {}).get('slot')
         options = tile_options(data, (found or {}).get('options'))
+        if 'size' in options:
+            options['size'] = event_size(options['size'], grid)
         # A new clock starts with the calm dial, as in the editor (app 0.3.12); an older screen draws it as the digital clock.
         if found is None and entity == 'screen.clock' and 'display' not in options:
             options['display'] = CLOCK_DEFAULT_DISPLAY
@@ -1392,7 +1452,8 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
         raise ValueError(t('addon.errors.layout.invalid'))
     title, tiles = data.get('title'), data.get('tiles')
     most = grid.max_tiles if grid else FIRMWARE_MAX_TILES
-    if not isinstance(title, str) or not title.strip() or len(title.encode()) > 96:
+    # An empty title is a screen without one (firmware 0.17.0+, min_firmware): its top bar shows the home key alone.
+    if not isinstance(title, str) or len(title.encode()) > 96:
         raise ValueError(t('addon.errors.layout.title'))
     if not isinstance(tiles, list) or len(tiles) > most:
         raise ValueError(t('addon.errors.layout.tiles_max', n=most))
@@ -1444,9 +1505,11 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
             if is_key(tile) and set(options) - set(KEY_OPTIONS):
                 raise ValueError(t('addon.errors.layout.unknown_settings'))
             displays = DISPLAYS.get(domain, ('standard', 'watch'))
-            # Run its actions on a tap (firmware 0.7.0+) is an automation's alone.
-            taps = ('auto', 'detail', 'toggle', 'none', 'action') + (('run',) if domain == 'automation' else ())
-            choices = {'tap': taps, 'display': displays, 'inline': ('none', 'slider'), 'size': TILE_SIZES_ON_SCREEN}
+            # Every tile's taps and its type's own (run, an automation's alone: firmware 0.7.0+), from the catalogue.
+            taps = tuple(catalogue.taps(domain))
+            choices = {'tap': taps, 'display': displays, 'inline': ('none', 'slider')}
+            if 'size' in options and not is_size(options['size']):
+                raise ValueError(t('addon.errors.layout.invalid_setting', setting='size'))
             # A lock's tile (firmware 0.5.0+) unlocks after a second tap or only locks; no other tile has the choice.
             if 'guard' in options:
                 if domain != 'lock' or options['guard'] not in LOCK_GUARDS:
@@ -1475,7 +1538,7 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
                 if sub == 'auto':
                     options = {k: v for k, v in options.items() if k != 'sub'}
             # The five-day strip and the sun path only fit a double-width card (or the whole page).
-            if options.get('display') in WIDE_ONLY and options.get('size') not in ('wide', 'square', 'full'):
+            if options.get('display') in WIDE_ONLY and options.get('size') not in ('wide', 'square', 'full') and size_columns(options.get('size')) < 2:
                 options = {**options, 'size': 'wide'}
             # On / off sends <domain>.toggle. Whether Home Assistant offers that for the entity is checked when saving
             # (Manager.check_supported, app 0.2.67); the built-in cards have nothing to switch.
@@ -1488,9 +1551,9 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
                 options = {**options, 'action': validate_tap_action(options.get('action'))}
             elif 'action' in options:
                 options = {key: value for key, value in options.items() if key != 'action'}
-            if options.get('inline') == 'slider' and domain not in {'light','fan','cover','number','input_number','media_player'}:
+            if options.get('inline') == 'slider' and not (catalogue.of_type(domain) or {}).get('inline'):   # a type with a small slider
                 raise ValueError(t('addon.errors.layout.no_mini_slider'))
-            if 'history_hours' in options and (type(options['history_hours']) is not int or options['history_hours'] not in (1,6,24)):
+            if 'history_hours' in options and (type(options['history_hours']) is not int or options['history_hours'] not in catalogue.TILE['history_hours']):
                 raise ValueError(t('addon.errors.layout.history_hours'))
             # A live picture's pace (app 0.2.91) belongs to the live display; another display leaves a stale one behind.
             # So does how its picture fills a taller card and whether its name is on it (app 0.3.8); the defaults are
@@ -1502,6 +1565,11 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
                     if key in options and options[key] not in allowed:
                         raise ValueError(t('addon.errors.layout.invalid_setting', setting=key))
                 options = {key: value for key, value in options.items() if key not in PICTURE_OPTIONS or value != PICTURE_OPTIONS[key][0]}
+            elif is_key(tile) and 'overlay' in options:
+                if options['overlay'] not in PICTURE_OPTIONS['overlay']:
+                    raise ValueError(t('addon.errors.layout.invalid_setting', setting='overlay'))
+                if options['overlay'] == PICTURE_OPTIONS['overlay'][0]:
+                    options = {key: value for key, value in options.items() if key != 'overlay'}
             elif set(options) & {'refresh', *PICTURE_OPTIONS}:
                 options = {key: value for key, value in options.items() if key not in ('refresh', *PICTURE_OPTIONS)}
             if options.get('display') == 'watch' and options.get('inline') == 'slider':
@@ -1538,6 +1606,9 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
                 raise ValueError(t('addon.errors.layout.full_page_top'))
             if size == 'wide' and not grid.wide_fits(slot):
                 raise ValueError(t('addon.errors.layout.wide_left'))
+            # A span must be one this grid takes: a rectangle the names already say, or the whole page, is refused.
+            if span_of(size) and not span_offered(*span_of(size), grid):
+                raise ValueError(t('addon.errors.layout.position'))
             if not grid.fits(slot, size):
                 raise ValueError(t('addon.errors.layout.position'))
             for cell in grid.footprint(slot, size):
@@ -1970,7 +2041,7 @@ def attribute_word(entity_id, attribute, value, attributes, entry, words):
         return None
     return ha_word(entity_id, f'state_attributes.{attribute}.state.{value}', attributes, entry, words)
 
-def state_message(index, tile, states, extra=None, precision=None, entry=None):
+def state_message(index, tile, states, extra=None, precision=None, entry=None, units=None):
     if tile['entity'] in BUILTIN:
         message = {'v': 1, 'op': 'state', 'i': index, 'entity': tile['entity'],
                    'name': short(tile['name'] or builtin_name(tile['entity']), 80), 'state': 'ok', 'a': {}}
@@ -2003,11 +2074,21 @@ def state_message(index, tile, states, extra=None, precision=None, entry=None):
             limit = 2 if key == 'hs_color' else 4 if key == 'fan_speed_list' else 16 if key == 'options' else 8
             bounded[key] = [short(v, 48) if isinstance(v, str) else v for v in value[:limit]
                             if isinstance(v, str) or isinstance(v, (float, int)) and math.isfinite(v) and abs(v) <= 1000000]
+    # A thermostat without a step of its own steps as Home Assistant's own controls step it: 1 degree in Fahrenheit,
+    # half a degree otherwise (hui-target-temperature-card-feature), which also decides the decimals it shows.
+    if tile['entity'].startswith('climate.') and 'target_temp_step' not in bounded and units is not None:
+        bounded['target_temp_step'] = 1 if units.get('temperature') == '°F' else 0.5
     options = screen_options(tile, attrs, state.get('state'), entry)
     return {'v': 1, 'op': 'state', 'i': index, 'entity': tile['entity'],
             'name': short(tile['name'] or attrs.get('friendly_name') or tile['entity'], 80),
             'state': short(rounded_state(state.get('state', 'unavailable'), precision) if tile['entity'].startswith('sensor.') else state.get('state', 'unavailable'), 160), 'a': bounded,
             **({'o': options} if options is not None else {}), **({'x': extra} if extra else {})}
+
+def drawn_controls(message, features):
+    """The controls a screen draws right for this tile (app 0.4.32), in place of ones it would get wrong: what the entity
+    can draw and what the screen's hello says it draws (catalogue.drawn_controls). `features`: the list the screen's
+    hello said, None where it is not known (the editor's preview, which runs the newest firmware)."""
+    return catalogue.drawn_controls(message, features)
 
 def encode(message):
     """The message as the firmware parses it: compact JSON, at most 4096 bytes."""
@@ -2405,9 +2486,10 @@ def installation_yaml(data):
     key, ota = base64.b64encode(secrets.token_bytes(32)).decode(), secrets.token_urlsafe(24)
     # The Wi-Fi fallback hotspot and its captive portal, where the board has room for them (boards.json `hotspot`,
     # app 0.4.5+): a board with 4 MB of flash leaves both out, some 90 KB of its 1.75 MB update slot. A screen whose
-    # Wi-Fi changed is then installed again over USB (docs/EASY_SETUP.md).
+    # Wi-Fi changed is then installed again over USB (docs/EASY_SETUP.md). A network name holds at most 32 characters,
+    # so a long device name is cut to leave room for " Setup" (app 0.4.32): ESPHome refuses the build otherwise.
     hotspot = (f'''  ap:
-    ssid: {quote(name + ' Setup')}
+    ssid: {quote(name[:26] + ' Setup')}
     password: {quote(secrets.token_urlsafe(12))}
 captive_portal:
 ''' if SHAPES[board].get('hotspot', True) else '')

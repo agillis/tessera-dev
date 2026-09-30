@@ -181,7 +181,7 @@ std::string receive(const std::string &payload) {
         seen_tiles |= uint64_t{1} << index;
       }
       const std::string title = string(root["title"], 96);
-      model.title = title.empty() ? tr(txt::status_home) : title;
+      model.title = title;
       for (JsonVariant item : pages) model.page_data.records[item["p"].as<unsigned>()].title = string(item["title"], 96);
       transfer.revision = revision;
       layout_rev = protocol_key(revision);
@@ -447,7 +447,10 @@ std::string receive(const std::string &payload) {
         model.tiles[index].key = static_cast<uint8_t>(place);
       } else {
         if (!page_protocol::accepts_size(size, grid.columns, grid.rows)) return false;
-        if (!model.valid_placement(index, root["slot"].as<unsigned>(), size == "full", size == "wide" || size == "square", (size == "tall" || size == "square") ? 2 : 1)) return false;
+        unsigned span_columns = 0, span_rows = 0;
+        const bool spanned = page_protocol::span_of(size, span_columns, span_rows);
+        if (!model.valid_placement(index, root["slot"].as<unsigned>(), size == "full", spanned ? span_columns > 1 : size == "wide" || size == "square",
+                                   spanned ? span_rows : (size == "tall" || size == "square") ? 2 : 1, spanned ? span_columns : 0)) return false;
         if (page_entity(entity) && static_cast<unsigned>(entity[12] - '0') > model.pages) return false;
         model.slots[index] = root["slot"].as<unsigned>();
       }
@@ -502,6 +505,14 @@ std::string receive(const std::string &payload) {
     tile.full = size == "full";
     tile.wide = tile.full || size == "wide" || size == "square";
     tile.height = (size == "tall" || size == "square") ? 2 : 1;
+    // A span (firmware 0.19.0) is as wide and as high as it says; more than one column draws the wide layouts.
+    unsigned span_columns = 0, span_rows = 0;
+    tile.span = 0;
+    if (page_protocol::span_of(size, span_columns, span_rows)) {
+      tile.span = static_cast<uint8_t>(span_columns);
+      tile.wide = span_columns > 1;
+      tile.height = static_cast<uint8_t>(span_rows);
+    }
 
     }
     // Pre-computed extras: the manager converts time zones and fetches forecasts. What only some tiles
@@ -596,6 +607,7 @@ std::string receive(const std::string &payload) {
     next.hvac_modes = list(a["hvac_modes"]);
     next.fan_modes = list(a["fan_modes"]); next.swing_modes = list(a["swing_modes"]);
     next.fan_mode = string(a["fan_mode"], 48); next.swing_mode = string(a["swing_mode"], 48);
+    next.target_low = number(a["target_temp_low"]); next.target_high = number(a["target_temp_high"]);
     float hue = number(a["hs_color"][0]);
     float saturation = number(a["hs_color"][1]);
     tile.has_hs_color = std::isfinite(hue) && std::isfinite(saturation);
@@ -694,7 +706,11 @@ std::string receive(const std::string &payload) {
     }
     tile.set_extra(std::move(next));
     // Home Assistant reports the edited value: the -/+ pill follows its state again.
-    if(std::isfinite(tile.edit_value) && tile.edit_sent && std::fabs(tile_controls::edit_target(tile)-tile.edit_value)<0.051f)tile.edit_value=NAN;
+    if(tile_controls::climate_range(tile)){
+      // A range: each end follows Home Assistant again once it reports what was sent.
+      if(tile.edit_sent && std::fabs(tile.extra().target_low-tile.edit_value)<0.051f)tile.edit_value=NAN;
+      if(tile.edit_sent && std::fabs(tile.extra().target_high-tile.edit_high)<0.051f)tile.edit_high=NAN;
+    }else if(std::isfinite(tile.edit_value) && tile.edit_sent && std::fabs(tile_controls::edit_target(tile)-tile.edit_value)<0.051f)tile.edit_value=NAN;
     tile.received = true;
     for(auto &w:widgets)if(w.index==index)w.cached_active=-1;
     last_received = esphome::millis();

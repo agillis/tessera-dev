@@ -85,6 +85,18 @@ int main() {
   // Segments share the bar evenly.
   const auto seg = segments(metrics(170), {0, 0, 300, 48}, 3);
   assert(seg[0].w == seg[2].w && seg[2].right() <= 300);
+  // The one rule for a mode bar (firmware 0.19.0): a finger per segment inside the inset, at most the modes there are,
+  // none for fewer than two; a bar beside something is a finger per segment, one on its own the whole reach.
+  const Metrics bar_m = metrics(170);
+  const int in = bar_m.inset(), finger = bar_m.touch;
+  assert(bar_room(bar_m, 6 * finger + 2 * in, 6) == 6 && bar_room(bar_m, 6 * finger + 2 * in - 1, 6) == 5);
+  assert(bar_room(bar_m, 10 * finger, 4) == 4 && bar_room(bar_m, 10 * finger, 1) == 0);
+  assert(bar_room(bar_m, 2 * finger + 2 * in - 1, 5) == 0);
+  assert(bar_width(bar_m, 400, 3, false) == 3 * finger + 2 * in && bar_width(bar_m, 400, 3, true) == 400);
+  assert(bar_width(bar_m, 400, 0, true) == 0);
+  // The big form's bar holds what the rule gives for its reach.
+  const auto big = layout(bar_m, 424, 0, 300, 5);
+  assert(big.form == Form::big && big.room == bar_room(bar_m, big.bar.w, 5));
   std::printf("climate tile: all shapes sound\n");
   return 0;
 }

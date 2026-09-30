@@ -1,0 +1,28 @@
+# Thermostat. Home Assistant: homeassistant/components/climate.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: climate
+displays:
+  standard: {}
+  watch: {}
+controls:
+  # The temperature it is set to between - and +: one number, or a range with the chip for its end (firmware 0.19.0).
+  setpoint:
+    needs: {actions: [climate.set_temperature], features: [TARGET_TEMPERATURE, TARGET_TEMPERATURE_RANGE]}
+    # A thermostat with a range and no single temperature: the chip for its end between - and +, on a screen whose
+    # hello lists climate_range (firmware 0.19.0); an older one draws it without them. Which of the two a thermostat
+    # shows at a given moment is the screen's own choice (tile_controls::climate_range, as Home Assistant's card).
+    range:
+      when: {features: [TARGET_TEMPERATURE_RANGE], unless: {features: [TARGET_TEMPERATURE]}}
+      screen: {feature: climate_range, else: none}
+    # Without a temperature to set (a fan-only device) it draws none.
+    fallback: none
+  mode:
+    needs: {actions: [climate.set_hvac_mode]}
+  # Both, on a card with a second row for the mode keys.
+  setpoint_mode:
+    of: [setpoint, mode]
+    rows: 2
+    screen: {firmware: 0.3.1}
+    one_row: setpoint
+    fallback: mode

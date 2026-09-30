@@ -1,0 +1,10 @@
+# Toggle helper. Home Assistant: homeassistant/components/input_boolean.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: input_boolean
+displays:
+  standard: {}
+  watch: {}
+controls:
+  toggle:
+    needs: {actions: [input_boolean.toggle]}

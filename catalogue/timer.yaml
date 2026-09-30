@@ -1,0 +1,11 @@
+# Timer. Home Assistant: homeassistant/components/timer.
+# Home Assistant's own facts for it (flags, actions) come from its source: catalogue/_ha.json (tools/read_ha_source.py).
+# docs/CATALOGUE.md says what every key means.
+domain: timer
+firmware: 0.2.14   # the first firmware that draws this type
+displays:
+  standard: {}
+  watch: {}
+controls:
+  buttons:
+    needs: {actions: [timer.start, timer.cancel]}

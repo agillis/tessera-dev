@@ -7,7 +7,11 @@
 #   tools/check.sh --firmware        compiles every board profile (tools/profiles.py) and applies the CYD's flash budget
 #   --board KEY                      with --firmware: only this board (repeat for more); a fix for one board builds one
 #   --affected                       with --firmware: only the boards a build of the change needs (affected_boards.py --build-keys);
-#                                    nothing to build when it reaches none (docs/BOARD_RELEASES.md)
+#                                    nothing to build when it reaches none (docs/BOARD_RELEASES.md); a change that reaches
+#                                    every board builds the sample instead (app 0.4.32)
+#   --sample                         with --firmware: the four boards of tools/profiles.py SAMPLE (CYD and Guition always);
+#                                    with --render: the three of RENDER_SAMPLE (the smallest, a middle and the largest glass)
+#   --every-board                    with --firmware --affected: every board the change reaches, also when that is all of them
 #   tools/check.sh --all             both
 #   tools/check.sh --render          builds every board as a host program (tools/render/run.py): its self test must pass,
 #                                    and what it draws is saved as PNGs under .esphome/render/out (needs SDL2)
@@ -33,7 +37,7 @@ read -r -a ESPHOME_CMD <<< "${ESPHOME:-esphome}"
 
 usage() { sed -n '2,/^set -euo/p' "${BASH_SOURCE[0]}" | sed '$d; s/^# \{0,1\}//'; }
 
-want_fast=1 want_firmware=0 want_render=0 saw_firmware=0 saw_all=0 saw_render=0 baseline="" only=() affected=0
+want_fast=1 want_firmware=0 want_render=0 saw_firmware=0 saw_all=0 saw_render=0 baseline="" only=() affected=0 sample=0 every_board=0
 while (($#)); do
   case $1 in
     --firmware) saw_firmware=1 ;;
@@ -48,6 +52,8 @@ while (($#)); do
       only+=("$2")
       shift ;;
     --affected) affected=1 ;;
+    --sample) sample=1 ;;
+    --every-board) every_board=1 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1 (see tools/check.sh --help)" >&2; exit 2 ;;
   esac
@@ -57,6 +63,14 @@ if ((saw_firmware || saw_all)); then want_firmware=1; fi
 if ((saw_firmware && !saw_all)); then want_fast=0; fi
 if ((saw_render)); then want_render=1; if ((!saw_all && !saw_firmware)); then want_fast=0; fi; fi
 if ((${#only[@]} || affected)) && ((!want_firmware)); then echo "--board and --affected go with --firmware or --all" >&2; exit 2; fi
+if ((sample)) && ((!want_firmware && !want_render)); then echo "--sample goes with --firmware, --render or --all" >&2; exit 2; fi
+# The sample's boards, from tools/profiles.py (the one list).
+sample_keys() { (cd "$ROOT/tools" && "$PYTHON" -c "import profiles; print(' '.join(profiles.$1))"); }
+render_only=()
+if ((sample)); then
+  if ((want_firmware)); then read -r -a picked <<< "$(sample_keys SAMPLE)"; only+=("${picked[@]}"); fi
+  if ((want_render)); then read -r -a render_only <<< "$(sample_keys RENDER_SAMPLE)"; fi
+fi
 
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/esp-screens-check.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
@@ -140,6 +154,15 @@ packages_current() { cd "$ROOT" && "$PYTHON" tools/check_packages.py; }
 # One card per cell of a board's grid: the files are written, not hand-kept (docs/RESPONSIVE.md).
 cells_current() { cd "$ROOT" && "$PYTHON" tools/generate_cells.py --check; }
 icons_current() { cd "$ROOT" && "$PYTHON" tools/generate_icons.py --check; }
+# The tile catalogue (docs/CATALOGUE.md): what each entity type can do, from catalogue/*.yaml to what the add-on, the
+# editor and the firmware read. With HA_CORE naming a home-assistant/core checkout, also Home Assistant's own facts
+# (catalogue/_ha.json) against its source; that needs Python 3.14, which Home Assistant's code is written in.
+catalogue_current() {
+  cd "$ROOT" && "$PYTHON" tools/generate_catalogue.py --check || return 1
+  if [[ -n ${HA_CORE:-} ]]; then
+    uv run -q --no-project --python 3.14 python tools/read_ha_source.py "$HA_CORE" --check || return 1
+  fi
+}
 # What every board looks like, as the manager reads it (screen_manager/app/boards.json from the board files).
 shapes_current() { cd "$ROOT" && "$PYTHON" tools/generate_board_shapes.py --check; }
 entries_current() { cd "$ROOT" && "$PYTHON" tools/generate_entries.py --check; }
@@ -383,6 +406,7 @@ if ((want_fast)); then
   run "Issue template boards" issue_templates_current
   run "Firmware numbers for what changed" firmware_numbers_raised
   run "Icons match tile_icons.py" icons_current
+  run "Tile catalogue" catalogue_current
   run "Translations" translations_check
   run "Editor: npm ci" editor_install
   if ((last_ok)); then
@@ -405,6 +429,13 @@ if ((want_firmware && affected)); then
     exit 2
   fi
   read -r -a reached <<< "$keys"
+  # A change that reaches every board (a shared release) builds the sample (app 0.4.32): the same code runs on all of
+  # them, and four that differ where a build breaks say as much. --every-board still builds them all.
+  total=$(cd "$ROOT/tools" && "$PYTHON" -c "import profiles; print(len(profiles.CATALOG))")
+  if ((${#reached[@]} == total && !every_board)); then
+    read -r -a reached <<< "$(sample_keys SAMPLE)"
+    echo "The change reaches every board: building the sample (tools/profiles.py SAMPLE)."
+  fi
   only+=(${reached[@]+"${reached[@]}"})
   choosing=1
   if ((${#only[@]} == 0)); then
@@ -452,7 +483,7 @@ render_boards() {
   fi
   command -v sdl2-config > /dev/null || { echo "SDL2 is missing: brew install sdl2, or apt install libsdl2-dev"; return 1; }
   cd "$ROOT" || return 1
-  ESPHOME="${ESPHOME_CMD[*]}" "$python" tools/render/run.py --out "$out" || { note "see $out/summary.json"; return 1; }
+  ESPHOME="${ESPHOME_CMD[*]}" "$python" tools/render/run.py --out "$out" ${render_only[@]+"${render_only[@]}"} || { note "see $out/summary.json"; return 1; }
   note "$(tail -n 1 "$out/summary.txt" 2>/dev/null)"
 }
 

@@ -97,6 +97,13 @@ and screens for lookups and tests. If that file is missing you are not on his ma
 
 ## Code and regressions
 
+- What a tile of each entity type can do lives in the tile catalogue: `catalogue/<type>.yaml`, generated into the add-on,
+  the editor and the firmware by `tools/generate_catalogue.py`, with Home Assistant's own facts read from its source by
+  `tools/read_ha_source.py`. A type exists only where it has a file, and only after the firmware draws it. Never write
+  a capability rule (a feature bit, an allowed control, a firmware gate for an option) in the add-on, the editor or the
+  firmware by hand: docs/CATALOGUE.md is the recipe. `tests/test_compat_0431.py` must stay green: updating from 0.4.31
+  keeps every saved layout.
+
 - The page-owned layout release deliberately replaces the old firmware decoder.
   Future protocol extensions must be negotiated, as with `tile_sizes`, rather
   than requiring another protocol break. Keep legacy delivery in the add-on,
@@ -133,10 +140,12 @@ and screens for lookups and tests. If that file is missing you are not on his ma
 - The calibration wizard assumes swap_xy=false, mirror_x=true, mirror_y=false,
   and LVGL 90°. A changed orientation also requires a new projection/tests.
 - Run `tools/check.sh` on code changes (the Python tests, every C++ test, the package check, the icon
-  generator's check, the editor's tests, types and build); on a firmware change also `tools/check.sh --firmware`, which
-  compiles every board and applies the CYD's flash budget (docs/RELEASING.md step 2); a change that reaches one board
-  or a few builds only those with `tools/check.sh --firmware --affected` (docs/BOARD_RELEASES.md). CI runs the
-  same script. Firmware tests and hardware acceptance are different checks.
+  generator's check, the editor's tests, types and build); on a firmware change also `tools/check.sh --firmware --affected`.
+  A change that reaches one board or a few builds only those (docs/BOARD_RELEASES.md); a change that reaches every board
+  builds the sample of four in `tools/profiles.py` SAMPLE (the CYD with its flash budget and the Guition always, and two
+  boards that differ in chip, flash or glass), not all of them; `--sample` asks for it directly. UI renders use
+  RENDER_SAMPLE: the smallest, a middle and the largest glass (`tools/check.sh --render --sample`). CI runs the same
+  script. Firmware tests and hardware acceptance are different checks.
 - `diagnostics/run_ui_test.py` renders without HA actions; don't touch the screen
   during that test. Use `--name` for the expected device identity.
   `diagnostics/send_layout.py` pushes a demo layout with every card type to a
