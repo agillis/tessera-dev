@@ -1,3 +1,17 @@
+## 0.4.31 (firmware 0.19.0)
+
+- **Tessera Dev is its own project, in its own repository.** It lives at github.com/agillis/tessera-dev instead of a
+  fork of the project it came from, and the screens build their firmware from there. Add the new repository in Home
+  Assistant (Add-on store, the three dots, Repositories) and install Tessera Dev Screen Manager from it; the old
+  repository can then be removed. A screen already installed has to be built again once, from New screen or
+  Firmware & USB, to move onto this repository's packages.
+- Nothing else changed: no screen behaves differently and no setting moved. Every board gets a new firmware number
+  because the packages it builds from live somewhere else now, and a screen is only offered a rebuild by its number.
+- The line to the project it came from is kept, under `upstream/`: its releases can still be taken over and work done
+  here can still be sent back to it. `LICENSE` keeps its copyright and `NOTICE` records where this project comes from.
+- Tested: tools/check.sh, every board built on ESPHome 2026.9.0, and a screen's own YAML built from this repository
+  over GitHub as the add-on writes it, which is the path a real installation takes. Not tried on a screen by hand yet.
+
 ## 0.4.30 (firmware 0.18.0)
 
 - **Tessera Dev is a project of its own.** The screens now build their firmware from this repository instead of the
